@@ -100,6 +100,24 @@ class Keep_Tracked(db.Model):
     )
 
 
+class Modlist_Mods(db.Model):
+    """Connection of a modlist to the mods it contains."""
+
+    __tablename__ = 'mlist_mods'
+
+    modlist_id = db.Column(
+        db.Integer,
+        db.ForeignKey('modlists.id', ondelete='CASCADE'),
+        primary_key=True
+    )
+
+    mod_id = db.Column(
+        db.Integer,
+        db.ForeignKey('mods.id', ondelete='CASCADE'),
+        primary_key=True
+    )
+
+
 class Modlist(db.Model):
     """A list of game mods made by a user."""
 
@@ -133,6 +151,12 @@ class Modlist(db.Model):
         nullable=False
     )
     game = db.relationship('Game') # game the modlist is built for
+
+    # list of mods added to the modlist
+    mods = db.relationship(
+        'Mod',
+        secondary='mlist_mods'
+    )
 
     # users that follow this modlist
     followers = db.relationship(
