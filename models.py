@@ -4,6 +4,46 @@ from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
+class Modlist(db.Model):
+    """A list of game mods made by a user."""
+
+    __tablename__ = 'modlists'
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True
+    )
+
+    name = db.Column(
+        db.String(60),
+        nullable=False
+    )
+
+    description = db.Column(
+        db.Text
+    )
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey('users.id', ondelete='cascade'),
+        nullable=False
+    )
+    user = db.relationship('User') # user that made/owns the modlist
+
+    
+    game_id = db.Column(
+        db.Integer,
+        db.ForeignKey('games.id', ondelete='CASCADE'),
+        nullable=False
+    )
+    game = db.relationship('Game') # game the modlist is built for
+
+    def __repr__(self):
+        return f'<ModList #{self.id}: "{self.name}", by {self.user.username}>'
+
+	############################ Need function to check modlist for NSFW, or bool attribute for entire list
+
+
 class Mod(db.Model):
     """A package of files used to modify games hosted on Nexus Mods website."""
 
