@@ -4,6 +4,26 @@ from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
+class Follow_User(db.Model):
+    """Connection of a user to the users they follow."""
+
+    __tablename__ = 'fol_users'
+
+    # user that is signed in (and clicked follow)
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey('users.id', ondelete='CASCADE'),
+        primary_key=True
+    )
+
+    # profile the user is following
+    followed_profile_id = db.Column(
+        db.Integer,
+        db.ForeignKey('users.id', ondelete='CASCADE'),
+        primary_key=True
+    )
+
+
 class Modlist(db.Model):
     """A list of game mods made by a user."""
 
@@ -196,6 +216,43 @@ class User(db.Model):
         default=True,
         nullable=False
     )
+
+    # modlists made/owned by the user
+    modlists = db.relationship('Modlist')
+
+    # profiles this user follows
+    followed_profiles = db.relationship(
+        'User',
+        secondary="fol_users",
+        primaryjoin=(Follow_User.user_id == id),
+        secondaryjoin=(Follow_User.followed_profile_id == id)
+    )
+
+    # profiles that follow this user
+    followers = db.relationship(
+        'User',
+        secondary="fol_users",
+        primaryjoin=(Follow_User.followed_profile_id == id),
+        secondaryjoin=(Follow_User.user_id == id)
+    )
+
+    def is_followed_by_profile(self, profile):
+        """Is this user followed by `profile`? Returns bool"""
+
+        found_users = [user for user in self.followers if user == profile]
+        return len(found_users) == 1
+
+    def is_following_profile(self, profile):
+        """Is this user following 'profile'? Returns bool"""
+
+        found_users = [user for user in self.followed_profiles if user == profile]
+        return len(found_users) == 1
+
+    def is_following_modlist(self, modlist):
+        """Is this user following 'modlist'? Returns bool"""
+
+        found_modlists = [mlist for mlist in self.followed_modlists if mlist == modlist]
+        return len(found_modlists) == 1
 
     def __repr__(self):
         return f"<User #{self.id}: {self.username}, {self.email}>"
