@@ -24,6 +24,25 @@ class Follow_User(db.Model):
     )
 
 
+class Follow_Modlist(db.Model):
+    """Connection of a user to the modlists they follow."""
+
+    __tablename__ = 'fol_mlists'
+
+    # the user who follows the modlist
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey('users.id', ondelete='CASCADE'),
+        primary_key=True
+    )
+
+    followed_mlist_id = db.Column(
+        db.Integer,
+        db.ForeignKey('modlists.id', ondelete='CASCADE'),
+        primary_key=True
+    )
+
+
 class Modlist(db.Model):
     """A list of game mods made by a user."""
 
@@ -57,6 +76,12 @@ class Modlist(db.Model):
         nullable=False
     )
     game = db.relationship('Game') # game the modlist is built for
+
+    # users that follow this modlist
+    followers = db.relationship(
+        'User',
+        secondary='fol_mlists'
+    )
 
     def __repr__(self):
         return f'<ModList #{self.id}: "{self.name}", by {self.user.username}>'
@@ -219,6 +244,12 @@ class User(db.Model):
 
     # modlists made/owned by the user
     modlists = db.relationship('Modlist')
+
+    # modlists the user follows
+    followed_modlists = db.relationship(
+        'Modlist',
+        secondary='fol_mlists'
+    )
 
     # profiles this user follows
     followed_profiles = db.relationship(
