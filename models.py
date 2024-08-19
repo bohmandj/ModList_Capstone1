@@ -373,6 +373,12 @@ class User(db.Model):
         found_modlists = [mlist for mlist in self.followed_modlists if mlist == modlist]
         return len(found_modlists) == 1
 
+    def get_games(self):
+        """Get list of games the user has made 
+        lists for (probably owns the game)"""
+
+        found_games = [mlist.game for mlist in self.modlists if mlist.game not in found_games]
+
     def __repr__(self):
         return f"<User #{self.id}: {self.username}, {self.email}>"
 
