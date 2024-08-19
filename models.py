@@ -81,6 +81,25 @@ class Required_Mod(db.Model):
     )
 
 
+class Keep_Tracked(db.Model):
+    """Connection of a user to the mods they want to put in the 'Keep Tracked' 
+    section of their 'Tracked on Nexus' modlist."""
+
+    __tablename__ = 'keep_tracked'
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey('users.id', ondelete='CASCADE'),
+        primary_key=True
+    )
+
+    mod_id = db.Column(
+        db.Integer,
+        db.ForeignKey('mods.id', ondelete='CASCADE'),
+        primary_key=True
+    )
+
+
 class Modlist(db.Model):
     """A list of game mods made by a user."""
 
@@ -288,6 +307,12 @@ class User(db.Model):
     followed_modlists = db.relationship(
         'Modlist',
         secondary='fol_mlists'
+    )
+
+    #  mods user is actually using Nexus Tracking for
+    keep_tracked = db.relationship(
+        'Mod',
+        secondary='keep_tracked'
     )
 
     # profiles this user follows
