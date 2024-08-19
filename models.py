@@ -43,6 +43,44 @@ class Follow_Modlist(db.Model):
     )
 
 
+class Conflicting_Mod(db.Model):
+    """Connection of a mod to the mods it conflicts 
+    with and should not be installed together."""
+
+    __tablename__ = 'con_mods'
+
+    mod_id = db.Column(
+        db.Integer,
+        db.ForeignKey('mods.id', ondelete='CASCADE'),
+        primary_key=True
+    )
+
+    conflicting_mod_id = db.Column(
+        db.Integer,
+        db.ForeignKey('mods.id', ondelete='CASCADE'),
+        primary_key=True
+    )
+
+
+class Required_Mod(db.Model):
+    """Connection of a mod to the mods required 
+    for it to function."""
+
+    __tablename__ = 'req_mods'
+
+    mod_id = db.Column(
+        db.Integer,
+        db.ForeignKey('mods.id', ondelete='CASCADE'),
+        primary_key=True
+    )
+
+    required_mod_id = db.Column(
+        db.Integer,
+        db.ForeignKey('mods.id', ondelete='CASCADE'),
+        primary_key=True
+    )
+
+
 class Modlist(db.Model):
     """A list of game mods made by a user."""
 
@@ -90,7 +128,8 @@ class Modlist(db.Model):
 
 
 class Mod(db.Model):
-    """A package of files used to modify games hosted on Nexus Mods website."""
+    """A package of files used to modify games 
+    hosted on Nexus Mods website."""
 
     __tablename__ = 'mods'
 
