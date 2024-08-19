@@ -36,6 +36,28 @@ connect_db(app)
 # Homepage and error pages
 
 
+@app.route('/')
+def homepage():
+    """Show homepage:
+
+    - anon users: sign up pitch page 
+      (must be signed in Modlist & Nexus SSO for API to function)
+
+    - logged in: show list of popular games Nexus hosts mods for 
+    and alphabetical list of all games Nexus hosts mods for 
+    separated by letter
+    """ 
+    # maybe also lists of 10 newest mods and 10 latest 
+    # mod updates for games the user has built lists for
+
+    if g.user:
+
+        return render_template('home.html', messages=messages)
+
+    else:
+        return render_template('home-anon.html')
+
+
 ##############################################################################
 # Turn off all caching in Flask
 #   (useful for dev; in production, this kind of stuff is typically
