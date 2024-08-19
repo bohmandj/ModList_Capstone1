@@ -1,56 +1,41 @@
-# Capstone Project One
+# Capstone One: ModList
 
-We have broken down the Capstone Project into easy-to-follow steps. Each step of the capstone contains a link with instructions for that step. Here’s a quick overview of what you’ll do for each step of your capstone project:
+## API
 
-1. Step One: Initial Project Ideas: You’ll pick up to 3 project ideas to propose to your mentor and the Springboard community. You’ll also explore some potential APIs.
-2. Step Two: Project Proposal: For this step, you’ll write a proposal for the site you want to build. This will help your mentor better understand your chosen capstone project idea.
-3. Step Three: Schema Design and API Selection: After your mentor approves of your capstone project proposal, you’ll figure out the database design of your application and which API you’ll be using.
-4. Step Four: Coding User Flows: Once you’ve figured out what you’re building, you’ll write the code to implement it. It’s important to think about what you want a user’s experience to be like as they navigate your site.
-5. Step Five: Polishing Your Application: Once you have the core functionality implemented, you’ll focus on additional UI enhancements and styling for your application.
-6. Step Six: Documenting and Submission: You’ve done a lot of work so now it’s time to show your mentor your progress! Create a README in markdown, make sure your GitHub is organized, and submit your finalized project.
+**Nexus Mods Public API**
 
-## Overview
+The Nexus Mods Public API allows third-party applications to access the Nexus Mods database, provided they are supplying a valid API Key for a user. Users can view their own API Keys by visiting their [API Keys](https://www.nexusmods.com/users/myaccount?tab=api%20access) page on Nexus.
 
-For your first Capstone Project, you’ll build a database-driven website off an external
-API of your choice. Your finished capstone will be an integral part of your portfolio; it will demonstrate to potential employers everything you’ve learned from this course.
+Applications can also implement integrations without the user having to manage their own keys by using the Nexus Mods [Single Sign-On (SSO)](https://github.com/Nexus-Mods/sso-integration-demo). Head to the link for documentation and a simple demo of the SSO.
 
-We want you to work on a challenging project that will incorporate all of the back-end
-skills you’ve been developing and some of your front-end skills from the last section.
-The goal of this project isn’t to create something that’s never been done before. You
-could potentially create a website similar to one that already exists, or use a popular
-API. That being said, we do encourage you to be creative when building your site. You’re free to choose any API you’d like to use and we encourage you to tap into your
-imagination throughout the project.
+Nexus utilizes user-based rate limiting on their API, with rate limits of: 2,500 requests within 24 hours and once this limit has been exceeded by a user they are then restricted to 100 requests per hour.
 
-There is a term in software development called CRUD - Create, Read, Update, Delete. This refers to all of the basic operations that a relational database performs. Your website should have more functionality than simple CRUD.
+## ModList Project Overview
 
-## Examples
+**Problem:**
 
-There are thousands of free, publically available APIs. If you love cars, you can pick
-from dozens of automotive APIs to build something that will reflect your passion. If you’re more into history, look into an API that lists the nobility of Europe. If you love sports, build a site about India’s top cricketers or your local football league.
+ The popular video game mod hosting website Nexus Mods ([nexusmods.com](https://nexusmods.com)) lacks a good way to bookmark, save, or otherwise organize non-downloaded mods as you browse the 600,000+ mods (across 3000+ games) hosted on their site looking for interesting new things to add to your game.
 
-Let’s give you an example of what a site could look like. Say you choose an API like The
-Movie Database, your site could have a landing page saying “Welcome To MyMovieDB” and a separate page that displays a sortable list of all the movies in the API. This would be CRUD.
+**Solution Concept:**
 
-You could implement various filtering methods - to filter based on an actor, a director,
-the year the movie was released, etc. When you click on the record associated with the movie, you could redirect a user to a separate page that displays all of the data
-associated with that movie.
+Create the ModList website to provide mod bookmarking and organization functionality currently unavailable to the video game modding community using Nexus Mods. 
 
-Now let’s talk about bells and whistles. If you were to implement ONE feature like
-creating sharable lists of your favorite movies, finding and playing a trailer for the movie on-page, or a simple “recommendation system” that would recommend new movies based on similarities to movies you liked, this would go beyond CRUD. A simple
-“recommendation system” would be along the lines of, if you like Big Daddy with Adam
-Sandler, recommending other Adam Sandler comedies from the 90s or recommending
-movies his co-stars like Steve Buscemi starred in. This does not mean creating a
-complicated system from scratch like Netflix.
+To use ModList, the user must first have an account on Nexus Mods. Nexus has very good mod browsing and search functionality, which is not available to third party sites through their API, so all finding of new mods will be done there. The Tracking feature on Nexus can allow users to keep tabs on mods they want to bookmark with a single click, and will automatically import to their 'Nexus Tracking' mod list on the ModList site when they log in and connect to Nexus through the Single Sign On feature. 
 
-It is better to pick a project that errs on the side of simple and boring than a complex
-project with a million moving parts you can get stuck in.
+Once logged in to ModList and connected to Nexus, users can add or move mods from the base import list, 'Nexus Tracking', to any number of custom lists they make. Lists can be used to plan new builds, group similar mods into custom categories, or just however else they want to organize them. Users can also follow other users to see what new lists they're building or which mods they're adding to their lists. Individual lists can also be followed for easy reference.
 
-[Here is an example of a previous project.](https://github.com/juliahazer/chart-my-team)
+## Problem Background Info: 
 
-## Guidelines
+**What is Nexus?**
 
-1. You will use the following technologies in this project: Python/Flask, PostgreSQL, SQLAlchemy, Heroku, Jinja, RESTful APIs, JavaScript, HTML, CSS. Depending on your idea, you might end up using WTForms and other technologies discussed in the course.
-2. Every step of the project has submissions. This will alert your mentor to evaluate your work. Pay attention to the instructions so you submit the right thing. You will submit the link to your GitHub repo several times, this is for your mentor’s convenience. Your URL on GitHub is static and will not change.
-3. The first two steps require mentor approval to proceed, but after that, you are free to continue working on the project after you submit your work. For instance, you don’t need your mentor to approve your database schema before you start working on your site. Likewise, you don’t need your mentor to approve the first iteration of your site before you start polishing it.
-4. If you get stuck, there is a wealth of resources at your disposal. The course contains all of the material you will need to complete this project, but a well-phrased Google search might yield you an immediate solution to your problem. Don’t forget that your Slack community, TAs, and your mentor there to help you out.
-5. Make sure you use a free API and deploy your project on Heroku , so everyone can see your work!
+ This capstone project is intended to be a website for gamers who modify their video games, also known as "modders". To get their mods, many from the modding community use the popular video game mod hosting website **Nexus Mods**, [nexusmods.com](https://nexusmods.com/), to browse and download. It is a fantastic resource, hosting over 600,000+ mods across 3000+ games, and has some built in tools that work great for what they're intended to do. There is a new '**Collections**' feature that can group and publish your mod collection from Vortex Mod Manager to Nexus as a pre-made build list for other users to download with all the same versions and settings from the curator's build. Nexus also has a '**Tracking**' feature that is intended to notify users when mods they've downloaded and are using get new updates.  
+ 
+**What did I think needed fixing?**
+
+ Nexus obviously has a TON of mods. So what do you do if you're browsing Nexus' "popular mods" page and find 30 new mods that look interesting but don't fit the current build you're working on? For many computers, drive space is too precious to download them all before you know when or even if you'll want to use them. Plus, right now you're just browsing to see what is out there! You might realize, once you dig a little deeper, that many of these mods might conflict with each other and won't work right if downloaded and deployed together. 
+ 
+ But these mods seem awesome and you still don't want to lose them! How are you supposed to keep track of these non-downloaded mods?
+
+ Nexus Collections are great, but it's a tool for, and intended to be used in, Vortex Mod Manager. In Vortex the curator can copy one of their profiles' installed, deployed, load order corrected, and tested build lists. The Collection's curator can also build from scratch, but either case, Vortex only has access to mods you've already installed so you need to download mods before they can be added. 
+ 
+ Nexus Tracking could be a good way to keep track of mods, but since it is not the intended purpose of the tracking feature, the filtering and organization on the tracking page has sub-par sorting capabilities and no way to group mods or organize them to make finding the one you want easy.
