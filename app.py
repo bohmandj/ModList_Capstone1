@@ -27,6 +27,16 @@ connect_db(app)
 ##############################################################################
 # User signup/login/logout
 
+@app.before_request
+def add_user_to_g():
+    """If we're logged in, add curr user to Flask global."""
+
+    if CURR_USER_KEY in session:
+        g.user = User.query.get(session[CURR_USER_KEY])
+
+    else:
+        g.user = None
+
 
 ##############################################################################
 # General user routes:
@@ -41,7 +51,8 @@ def homepage():
     """Show homepage:
 
     - anon users: sign up pitch page 
-      (must be signed in Modlist & Nexus SSO for API to function)
+      (can't show content: must be signed in to 
+      Modlist & Nexus SSO for API to function)
 
     - logged in: show list of popular games Nexus hosts mods for 
     and alphabetical list of all games Nexus hosts mods for 
