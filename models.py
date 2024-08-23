@@ -132,6 +132,43 @@ modlist_mod = db.Table(
 )
 
 
+###########################################################
+# Association Object:
+
+class User_Mod_Notes(db.Model):
+    """Connection of a modlist to the mods it contains.
+    Also retains user's notes for this mod in this list.
+    
+    !!!! Do not attempt to read AND write in same transaction. 
+    Changes on one will not show up in another until the 
+    Session is expired, which normally occurs automatically 
+    after Session.commit(). !!!!"""
+
+    __tablename__ = 'user_mod_connection'
+
+    modlist_id: Mapped[int] = mapped_column(
+        db.ForeignKey('modlists.id'), 
+        primary_key=True,
+        autoincrement=False
+    )
+    mod_id: Mapped[int] = mapped_column(
+        db.ForeignKey('mods.id'), 
+        primary_key=True,
+        autoincrement=False
+    )
+
+    notes: Mapped[str] = mapped_column(db.Text, default='')
+
+    # association between User_Mod_Notes -> Mod
+    mod: Mapped['Mod'] = db.relationship(back_populates='user_mod_notes')
+
+    # association between User_Mod_Notes -> Modlist
+    modlist: Mapped['Modlist'] = db.relationship(back_populates='user_mod_notes')
+
+
+###########################################################
+# Model Classes:
+
 class Modlist(db.Model):
     """A list of game mods made by a user."""
 
