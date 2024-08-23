@@ -174,51 +174,43 @@ class Modlist(db.Model):
 
     __tablename__ = 'modlists'
 
-    id = db.Column(
-        db.Integer,
-        primary_key=True
+    id: Mapped[int] = mapped_column(
+        primary_key=True,
+        autoincrement=True
     )
 
-    name = db.Column(
-        db.String(60),
-        nullable=False
+    name: Mapped[str] = mapped_column(db.String(60))
+
+    description: Mapped[Optional[str]]
+
+    has_nsfw: Mapped[bool] = mapped_column(
+        db.Boolean, 
+        default=False
     )
 
-    description = db.Column(
-        db.Text
+    mods: Mapped[List[Mod]] = db.relationship(
+        secondary=modlist_mod, 
+        back_populates='in_modlists'
     )
 
-    user_id = db.Column(
-        db.Integer,
-        db.ForeignKey('users.id', ondelete='cascade'),
-        nullable=False
+    user_id: Mapped[int] = mapped_column(
+        db.ForeignKey('users.id'), 
+        ondelete='cascade'
     )
-    user = db.relationship('User') # user that made/owns the modlist
+    user: Mapped['User'] = db.relationship(back_populates='modlists') # user that made/owns the modlist
 
-    
-    game_id = db.Column(
-        db.Integer,
-        db.ForeignKey('games.id', ondelete='CASCADE'),
-        nullable=False
-    )
-    game = db.relationship('Game') # game the modlist is built for
-
-    # list of mods added to the modlist
-    mods = db.relationship(
-        'Mod',
-        secondary='mlist_mods'
-    )
+    game_id: Mapped[int] = mapped_column(
+        db.ForeignKey('games.id'), ondelete='cascade')
+    for_game: Mapped['Game'] = db.relationship(back_populates='subject_of_modlists') # game the modlist is built for
 
     # users that follow this modlist
-    followers = db.relationship(
-        'User',
-        secondary='fol_mlists'
+    followers: Mapped[List['User']] = db.relationship(
+        secondary='follow_modlist', 
+        back_populates='followed_modlists'
     )
 
     def __repr__(self):
         return f'<ModList #{self.id}: "{self.name}", by {self.user.username}>'
-
-	############################ Need function to check modlist for NSFW, or bool attribute for entire list
 
 
 class Mod(db.Model):
