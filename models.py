@@ -113,22 +113,23 @@ keep_tracked = db.Table(
 )
 
 
-class Modlist_Mods(db.Model):
-    """Connection of a modlist to the mods it contains."""
-
-    __tablename__ = 'mlist_mods'
-
-    modlist_id = db.Column(
-        db.Integer,
-        db.ForeignKey('modlists.id', ondelete='CASCADE'),
+modlist_mod = db.Table(
+    """Connection of a modlist to the user who created/owns it."""
+    
+    'modlist_mod',
+        
+    db.Column(
+        'modlist_id', 
+        db.ForeignKey('Modlist.id', ondelete='CASCADE'), 
         primary_key=True
-    )
+    ),
 
-    mod_id = db.Column(
-        db.Integer,
-        db.ForeignKey('mods.id', ondelete='CASCADE'),
+    db.Column(
+        'mod_id', 
+        db.ForeignKey('Mod.id', ondelete='CASCADE'), 
         primary_key=True
-    )
+    ),
+)
 
 
 class Modlist(db.Model):
