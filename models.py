@@ -1,27 +1,35 @@
 """SWLAlchemy models for Capstone"""
 
+from app import app
+
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm import DeclarativeBase
 
-db = SQLAlchemy()
+class Base(DeclarativeBase):
+    pass
+    
+db = SQLAlchemy(app, model_class=Base)
 
-class Follow_User(db.Model):
-    """Connection of a user to the users they follow."""
+###########################################################
+# Association Tables:
 
-    __tablename__ = 'fol_users'
+follow_user = db.Table(
+    """Connection of a user to the user profiles they follow."""
+    
+    'follow_user',
 
-    # user that is signed in (and clicked follow)
-    user_id = db.Column(
-        db.Integer,
-        db.ForeignKey('users.id', ondelete='CASCADE'),
+    db.Column(
+        'user_id', 
+        db.ForeignKey('User.id', ondelete='CASCADE'), 
         primary_key=True
-    )
-
-    # profile the user is following
-    followed_profile_id = db.Column(
-        db.Integer,
-        db.ForeignKey('users.id', ondelete='CASCADE'),
+    ),
+        
+    db.Column(
+        'followed_profile_id', 
+        db.ForeignKey('User.id', ondelete='CASCADE'), 
         primary_key=True
-    )
+    ),
+)
 
 
 class Follow_Modlist(db.Model):
