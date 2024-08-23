@@ -93,23 +93,24 @@ required_mod = db.Table(
 )
 
 
-class Keep_Tracked(db.Model):
+keep_tracked = db.Table(
     """Connection of a user to the mods they want to put in the 'Keep Tracked' 
     section of their 'Tracked on Nexus' modlist."""
+    
+    'keep_tracked',
 
-    __tablename__ = 'keep_tracked'
-
-    user_id = db.Column(
-        db.Integer,
-        db.ForeignKey('users.id', ondelete='CASCADE'),
+    db.Column(
+        'user_id', 
+        db.ForeignKey('User.id', ondelete='CASCADE'), 
         primary_key=True
-    )
-
-    mod_id = db.Column(
-        db.Integer,
-        db.ForeignKey('mods.id', ondelete='CASCADE'),
+    ),
+        
+    db.Column(
+        'tracked_mod_id', 
+        db.ForeignKey('Mod.id', ondelete='CASCADE'), 
         primary_key=True
-    )
+    ),
+)
 
 
 class Modlist_Mods(db.Model):
