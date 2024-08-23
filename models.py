@@ -32,23 +32,23 @@ follow_user = db.Table(
 )
 
 
-class Follow_Modlist(db.Model):
+follow_modlist = db.Table(
     """Connection of a user to the modlists they follow."""
+    
+    'follow_modlist',
 
-    __tablename__ = 'fol_mlists'
-
-    # the user who follows the modlist
-    user_id = db.Column(
-        db.Integer,
-        db.ForeignKey('users.id', ondelete='CASCADE'),
+    db.Column(
+        'user_id', 
+        db.ForeignKey('User.id', ondelete='CASCADE'), 
         primary_key=True
-    )
-
-    followed_mlist_id = db.Column(
-        db.Integer,
-        db.ForeignKey('modlists.id', ondelete='CASCADE'),
+    ),
+        
+    db.Column(
+        'modlist_id', 
+        db.ForeignKey('Modlist.id', ondelete='CASCADE'), 
         primary_key=True
-    )
+    ),
+)
 
 
 class Conflicting_Mod(db.Model):
