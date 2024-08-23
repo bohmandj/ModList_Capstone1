@@ -73,23 +73,24 @@ conflicting_mod = db.Table(
 )
 
 
-class Required_Mod(db.Model):
+required_mod = db.Table(
     """Connection of a mod to the mods required 
     for it to function."""
+    
+    'required_mod',
 
-    __tablename__ = 'req_mods'
-
-    mod_id = db.Column(
-        db.Integer,
-        db.ForeignKey('mods.id', ondelete='CASCADE'),
+    db.Column(
+        'mod_id', 
+        db.ForeignKey('Mod.id', ondelete='CASCADE'), 
         primary_key=True
-    )
-
-    required_mod_id = db.Column(
-        db.Integer,
-        db.ForeignKey('mods.id', ondelete='CASCADE'),
+    ),
+        
+    db.Column(
+        'required_mod_id', 
+        db.ForeignKey('Mod.id', ondelete='CASCADE'), 
         primary_key=True
-    )
+    ),
+)
 
 
 class Keep_Tracked(db.Model):
