@@ -20,13 +20,13 @@ follow_user = db.Table(
 
     db.Column(
         'user_id', 
-        db.ForeignKey('User.id', ondelete='CASCADE'), 
+        db.ForeignKey('User.id'), 
         primary_key=True
     ),
         
     db.Column(
         'followed_profile_id', 
-        db.ForeignKey('User.id', ondelete='CASCADE'), 
+        db.ForeignKey('User.id'), 
         primary_key=True
     ),
 )
@@ -39,13 +39,13 @@ follow_modlist = db.Table(
 
     db.Column(
         'user_id', 
-        db.ForeignKey('User.id', ondelete='CASCADE'), 
+        db.ForeignKey('User.id'), 
         primary_key=True
     ),
         
     db.Column(
         'modlist_id', 
-        db.ForeignKey('Modlist.id', ondelete='CASCADE'), 
+        db.ForeignKey('Modlist.id'), 
         primary_key=True
     ),
 )
@@ -60,14 +60,14 @@ conflicting_mod = db.Table(
     db.Column( 
         'left_mod_id', 
         db.Integer,
-        db.ForeignKey('Mod.id', ondelete='CASCADE'), 
+        db.ForeignKey('Mod.id'), 
         primary_key=True
     ),
         
     db.Column( 
         'right_mod_id', 
         db.Integer,
-        db.ForeignKey('Mod.id', ondelete='CASCADE'), 
+        db.ForeignKey('Mod.id'), 
         primary_key=True
     ),
 )
@@ -81,13 +81,13 @@ required_mod = db.Table(
 
     db.Column(
         'mod_id', 
-        db.ForeignKey('Mod.id', ondelete='CASCADE'), 
+        db.ForeignKey('Mod.id'), 
         primary_key=True
     ),
         
     db.Column(
         'required_mod_id', 
-        db.ForeignKey('Mod.id', ondelete='CASCADE'), 
+        db.ForeignKey('Mod.id'), 
         primary_key=True
     ),
 )
@@ -101,13 +101,13 @@ keep_tracked = db.Table(
 
     db.Column(
         'user_id', 
-        db.ForeignKey('User.id', ondelete='CASCADE'), 
+        db.ForeignKey('User.id'), 
         primary_key=True
     ),
         
     db.Column(
         'tracked_mod_id', 
-        db.ForeignKey('Mod.id', ondelete='CASCADE'), 
+        db.ForeignKey('Mod.id'), 
         primary_key=True
     ),
 )
@@ -120,17 +120,35 @@ modlist_mod = db.Table(
         
     db.Column(
         'modlist_id', 
-        db.ForeignKey('Modlist.id', ondelete='CASCADE'), 
+        db.ForeignKey('Modlist.id'), 
         primary_key=True
     ),
 
     db.Column(
         'mod_id', 
-        db.ForeignKey('Mod.id', ondelete='CASCADE'), 
+        db.ForeignKey('Mod.id'), 
         primary_key=True
     ),
 )
 
+
+game_mod = db.Table(
+    """Connection of a game to the mod that is made for it."""
+    
+    'game_mod',
+        
+    db.Column(
+        'game_id', 
+        db.ForeignKey('Game.id'), 
+        primary_key=True
+    ),
+
+    db.Column(
+        'mod_id', 
+        db.ForeignKey('Mod.id'), 
+        primary_key=True
+    ),
+)
 
 ###########################################################
 # Association Object:
@@ -219,79 +237,109 @@ class Mod(db.Model):
 
     __tablename__ = 'mods'
 
-    # mod id will match the id stored on Nexus
-    id = db.Column(
-        db.Integer,
-        primary_key=True
+    # mod id must match the id stored on Nexus
+    id: Mapped[int] = mapped_column(
+        primary_key=True,
+        autoincrement=False
     )
 
-    name = db.Column(
-        db.String(60),
-        nullable=False
+    name: Mapped[str] = mapped_column(db.String(60))
+
+    summary: Mapped[str] = mapped_column(
+        db.Text, 
+        default=''
     )
 
-    summary = db.Column(
-        db.Text
+    in_modlists: Mapped[List[Modlist]] = db.relationship(
+        secondary=modlist_mod, 
+        back_populates='mods'
     )
     
-    game_id = db.Column(
-        db.Integer,
-        db.ForeignKey('games.id', ondelete='CASCADE'),
-        nullable=False
+    for_games: Mapped[List[Game]] = db.relationship(
+        secondary=game_mod,
+        back_populates='subject_of_mods'
     )
-    game = db.relationship('Game') # game the modlist is built for
 
-    required_mods = db.relationship(
+    # List of Users who have taken notes on this mod, 
+    #   bypassing the `User_Mod_Notes` class
+    users_with_notes: Mapped[List['User']] = db.relationship(
+        secondary='user_mod_connection', 
+        back_populates='mods_with_notes',
+        viewonly=True
+    )
+
+    # List of 'User_Mod_Notes' objects for 
+    #   User -> User_Mod_Notes -> Mod associated with this mod 
+    # Each 'User_Mod_Notes' contains 'notes' by 'user' about 'mod'
+    user_mod_notes: Mapped[List['User_Mod_Notes']] = db.relationship(
+        back_populates='mod'
+    )
+    
+    required_mods: Mapped[List['Mod']] = db.relationship(
         'Mod',
         secondary="req_mods",
-        primaryjoin=(Required_Mod.mod_id == id),
-        secondaryjoin=(Required_Mod.required_mod_id == id)
-    )
-
-    #################  NOT SURE BEST WAY TO CHECK KEY>VAL AND VAL>KEY  ###################### #askMentor
-    conflicting_mods = db.relationship(
-        'Mod',
-        secondary="con_mods",
-        primaryjoin=(Conflicting_Mod.mod_id == id),
-        secondaryjoin=(Conflicting_Mod.conflicting_mod_id == id)
+        primaryjoin=id == required_mod.mod_id,
+        secondaryjoin=id == required_mod.required_mod_id
     )
     
-    mods_with_conflicts = db.relationship(
+    right_conflicting_mods: Mapped[List['Mod']] = db.relationship(
         'Mod',
-        secondary="con_mods",
-        primaryjoin=(Conflicting_Mod.conflicting_mod_id == id),
-        secondaryjoin=(Conflicting_Mod.mod_id == id)
+        secondary="conflicting_mod",
+        primaryjoin=id == conflicting_mod.right_mod_id,
+        secondaryjoin=id == conflicting_mod.left_mod_id,
+        back_populates="left_conflicting_mods"
     )
 
-    def check_conflicts(self, checked_mlist):
-        """Does this mod conflict with `other_mod`? 
+    left_conflicting_mods: Mapped[List['Mod']] = db.relationship(
+        'Mod',
+        secondary="conflicting_mod",
+        primaryjoin=id == conflicting_mod.c.left_mod_id,
+        secondaryjoin=id == conflicting_mod.c.right_mod_id,
+        back_populates="right_conflicting_mods"
+    )
+
+    def check_conflicts(self, mlist_dot_mods):
+        """Does this mod conflict with any mods in `mlist_dot_mods`? 
         
         Returns list of mods: [{mod},{mod}] or None
         """
 
-        con_mods = [mod for mod in self.conflicting_mods if mod in checked_mlist]
-        con_mods.extend([mod for mod in self.mods_with_conflicts if mod in checked_mlist and mod not in con_mods])
+        if self.left_conflicting_mods:
+            con_mods = [mod for mod in self.left_conflicting_mods if mod in mlist_dot_mods]
+            con_mods.extend([mod for mod in self.right_conflicting_mods if mod in mlist_dot_mods and mod not in con_mods])
 
-        if len(con_mods) >= 1:
-            return con_mods
+            if len(con_mods) >= 1:
+                return con_mods
 
         return None
 
-    def check_requirements(self, checked_mlist):
+    def check_requirements(self, mlist_dot_mods):
         """Does this list have all the requirements stored for this mod?
         
         Returns list of required mods not in the list: [{mod},{mod}] or None
         """
 
-        req_mods = [mod for mod in self.required_mods if mod not in checked_mlist]
+        if self.required_mods:
+            req_mods = [mod for mod in self.required_mods if mod not in mlist_dot_mods]
 
-        if len(req_mods) >= 1:
-            return req_mods
+            if len(req_mods) >= 1:
+                return req_mods
 
         return None
 
+    def get_notes_by(self, author):
+        """Returns 'notes' str from User_Mod_Notes obj associated 
+        with both this mod and author(user)"""
+
+        if self.user_mod_notes:
+            notes = [(UMNotes.notes for UMNotes in self.user_mod_notes if UMNotes.user == author)]
+
+            return notes[0]
+        
+        return None
+
     def __repr__(self):
-        return f'<Nexus Mod #{self.id}: "{self.name}" for "{self.game_id}"\nDescription: {self.summary}>'
+        return f'<Nexus Mod #{self.id}: "{self.name}" for "{self.for_game.name}"\nDescription: {self.summary}>'
 
 
 
