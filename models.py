@@ -51,23 +51,26 @@ follow_modlist = db.Table(
 )
 
 
-class Conflicting_Mod(db.Model):
+conflicting_mod = db.Table(
     """Connection of a mod to the mods it conflicts 
     with and should not be installed together."""
+    
+    'conflicting_mod',
 
-    __tablename__ = 'con_mods'
-
-    mod_id = db.Column(
+    db.Column( 
+        'left_mod_id', 
         db.Integer,
-        db.ForeignKey('mods.id', ondelete='CASCADE'),
+        db.ForeignKey('Mod.id', ondelete='CASCADE'), 
         primary_key=True
-    )
-
-    conflicting_mod_id = db.Column(
+    ),
+        
+    db.Column( 
+        'right_mod_id', 
         db.Integer,
-        db.ForeignKey('mods.id', ondelete='CASCADE'),
+        db.ForeignKey('Mod.id', ondelete='CASCADE'), 
         primary_key=True
-    )
+    ),
+)
 
 
 class Required_Mod(db.Model):
