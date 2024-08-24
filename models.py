@@ -20,13 +20,13 @@ follow_user = db.Table(
 
     db.Column(
         'user_id', 
-        db.ForeignKey('User.id'), 
+        db.ForeignKey('users.id'), 
         primary_key=True
     ),
         
     db.Column(
         'followed_profile_id', 
-        db.ForeignKey('User.id'), 
+        db.ForeignKey('users.id'), 
         primary_key=True
     ),
 )
@@ -39,13 +39,13 @@ follow_modlist = db.Table(
 
     db.Column(
         'user_id', 
-        db.ForeignKey('User.id'), 
+        db.ForeignKey('users.id'), 
         primary_key=True
     ),
         
     db.Column(
         'modlist_id', 
-        db.ForeignKey('Modlist.id'), 
+        db.ForeignKey('modlists.id'), 
         primary_key=True
     ),
 )
@@ -60,14 +60,14 @@ conflicting_mod = db.Table(
     db.Column( 
         'left_mod_id', 
         db.Integer,
-        db.ForeignKey('Mod.id'), 
+        db.ForeignKey('mods.id'), 
         primary_key=True
     ),
         
     db.Column( 
         'right_mod_id', 
         db.Integer,
-        db.ForeignKey('Mod.id'), 
+        db.ForeignKey('mods.id'), 
         primary_key=True
     ),
 )
@@ -81,13 +81,13 @@ required_mod = db.Table(
 
     db.Column(
         'mod_id', 
-        db.ForeignKey('Mod.id'), 
+        db.ForeignKey('mods.id'), 
         primary_key=True
     ),
         
     db.Column(
         'required_mod_id', 
-        db.ForeignKey('Mod.id'), 
+        db.ForeignKey('mods.id'), 
         primary_key=True
     ),
 )
@@ -101,13 +101,13 @@ keep_tracked = db.Table(
 
     db.Column(
         'user_id', 
-        db.ForeignKey('User.id'), 
+        db.ForeignKey('users.id'), 
         primary_key=True
     ),
         
     db.Column(
         'tracked_mod_id', 
-        db.ForeignKey('Mod.id'), 
+        db.ForeignKey('mods.id'), 
         primary_key=True
     ),
 )
@@ -120,13 +120,13 @@ modlist_mod = db.Table(
         
     db.Column(
         'modlist_id', 
-        db.ForeignKey('Modlist.id'), 
+        db.ForeignKey('modlists.id'), 
         primary_key=True
     ),
 
     db.Column(
         'mod_id', 
-        db.ForeignKey('Mod.id'), 
+        db.ForeignKey('mods.id'), 
         primary_key=True
     ),
 )
@@ -139,13 +139,13 @@ game_mod = db.Table(
         
     db.Column(
         'game_id', 
-        db.ForeignKey('Game.id'), 
+        db.ForeignKey('games.id'), 
         primary_key=True
     ),
 
     db.Column(
         'mod_id', 
-        db.ForeignKey('Mod.id'), 
+        db.ForeignKey('mods.id'), 
         primary_key=True
     ),
 )
@@ -164,10 +164,9 @@ class User_Mod_Notes(db.Model):
 
     __tablename__ = 'user_mod_connection'
 
-    modlist_id: Mapped[int] = mapped_column(
-        db.ForeignKey('modlists.id'), 
-        primary_key=True,
-        autoincrement=False
+    user_id: Mapped[int] = mapped_column(
+        db.ForeignKey('users.id'), 
+        primary_key=True
     )
     mod_id: Mapped[int] = mapped_column(
         db.ForeignKey('mods.id'), 
@@ -181,7 +180,7 @@ class User_Mod_Notes(db.Model):
     mod: Mapped['Mod'] = db.relationship(back_populates='user_mod_notes')
 
     # association between User_Mod_Notes -> Modlist
-    modlist: Mapped['Modlist'] = db.relationship(back_populates='user_mod_notes')
+    user: Mapped['User'] = db.relationship(back_populates='user_mod_notes')
 
 
 ###########################################################
@@ -222,8 +221,8 @@ class Modlist(db.Model):
     for_game: Mapped['Game'] = db.relationship(back_populates='subject_of_modlists') # game the modlist is built for
 
     # users that follow this modlist
-    followers: Mapped[List['User']] = db.relationship(
-        secondary='follow_modlist', 
+    followers: Mapped[List[User]] = db.relationship(
+        secondary=follow_modlist, 
         back_populates='followed_modlists'
     )
 
@@ -332,7 +331,7 @@ class Mod(db.Model):
         with both this mod and author(user)"""
 
         if self.user_mod_notes:
-            notes = [(UMNotes.notes for UMNotes in self.user_mod_notes if UMNotes.user == author)]
+            notes = [(UMNote.notes for UMNote in self.user_mod_notes if UMNote.user == author)]
 
             return notes[0]
         
@@ -342,29 +341,28 @@ class Mod(db.Model):
         return f'<Nexus Mod #{self.id}: "{self.name}" for "{self.for_game.name}"\nDescription: {self.summary}>'
 
 
-
-
 class Game(db.Model):
     """A game for which Nexus hosts mods."""
 
     __tablename__ = 'games'
 
-    # ID in this model will match Nexus game ID
-    id = db.Column(
-        db.Integer,
-        primary_key=True
+    # ID in this model must match Nexus game ID
+    id: Mapped[int] = mapped_column(
+        primary_key=True,
+        autoincrement=False
     )
 
     # slug of game name used by Nexus for game page url
-    domain_name = db.Column(
-        db.Text,
-        nullable=False
-    )
+    domain_name: Mapped[str]
 
-    name = db.Column(
-        db.Text,
-        nullable=False
-    )
+    # full name of game on Nexus (w/ caps & spaces)
+    name: Mapped[str]
+
+    subject_of_modlists: Mapped[List["Modlist"]] = db.relationship(back_populates='for_game')
+
+    subject_of_mods: Mapped[List[Mod]] = db.relationship(
+        secondary=game_mod, 
+        back_populates='for_games')
 
     def __repr__(self):
         return f'<Game #{self.id}: "{self.name}">'
