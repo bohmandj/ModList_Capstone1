@@ -1,7 +1,5 @@
 """SWLAlchemy models for Capstone"""
 
-from app import app
-
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from typing import List, Optional
@@ -9,7 +7,7 @@ from typing import List, Optional
 class Base(DeclarativeBase):
     pass
     
-db = SQLAlchemy(app, model_class=Base)
+db = SQLAlchemy(model_class=Base)
 
 ###########################################################
 # Association Tables:
@@ -206,23 +204,19 @@ class Modlist(db.Model):
         default=False
     )
 
-    mods: Mapped[List[Mod]] = db.relationship(
+    mods: Mapped[List['Mod']] = db.relationship(
         secondary=modlist_mod, 
         back_populates='in_modlists'
     )
 
-    user_id: Mapped[int] = mapped_column(
-        db.ForeignKey('users.id'), 
-        ondelete='cascade'
-    )
+    user_id: Mapped[int] = mapped_column(db.ForeignKey('users.id', ondelete='CASCADE'))
     user: Mapped['User'] = db.relationship(back_populates='modlists') # user that made/owns the modlist
 
-    game_id: Mapped[int] = mapped_column(
-        db.ForeignKey('games.id'), ondelete='cascade')
+    game_id: Mapped[int] = mapped_column(db.ForeignKey('games.id', ondelete='SET NULL'))
     for_game: Mapped['Game'] = db.relationship(back_populates='subject_of_modlists') # game the modlist is built for
 
     # users that follow this modlist
-    followers: Mapped[List[User]] = db.relationship(
+    followers: Mapped[List['User']] = db.relationship(
         secondary=follow_modlist, 
         back_populates='followed_modlists'
     )
@@ -250,12 +244,12 @@ class Mod(db.Model):
         default=''
     )
 
-    in_modlists: Mapped[List[Modlist]] = db.relationship(
+    in_modlists: Mapped[List['Modlist']] = db.relationship(
         secondary=modlist_mod, 
         back_populates='mods'
     )
     
-    for_games: Mapped[List[Game]] = db.relationship(
+    for_games: Mapped[List['Game']] = db.relationship(
         secondary=game_mod,
         back_populates='subject_of_mods'
     )
@@ -280,10 +274,10 @@ class Mod(db.Model):
         secondary="required_mod",
         primaryjoin=id == required_mod.c.mod_id,
         secondaryjoin=id == required_mod.c.required_mod_id, 
-        back_populates='required_by_mods'
+        back_populates='mods_that_require_this'
     )
     
-    required_by_mods: Mapped[List['Mod']] = db.relationship(
+    mods_that_require_this: Mapped[List['Mod']] = db.relationship(
         'Mod',
         secondary="required_mod",
         primaryjoin=id == required_mod.c.required_mod_id,
@@ -372,7 +366,7 @@ class Game(db.Model):
 
     subject_of_modlists: Mapped[List["Modlist"]] = db.relationship(back_populates='for_game')
 
-    subject_of_mods: Mapped[List[Mod]] = db.relationship(
+    subject_of_mods: Mapped[List['Mod']] = db.relationship(
         secondary=game_mod, 
         back_populates='for_games')
 
@@ -412,10 +406,14 @@ class User(db.Model):
     )
 
     # modlists made/owned by the user
-    modlists: Mapped[List['Modlist']] = db.relationship(back_populates='user')
+    modlists: Mapped[List['Modlist']] = db.relationship(
+        back_populates='user',
+        cascade='all, delete',
+        passive_deletes=True,
+    )
 
     # modlists the user follows
-    followed_modlists: Mapped[List[Modlist]] = db.relationship(
+    followed_modlists: Mapped[List['Modlist']] = db.relationship(
         secondary='follow_modlist',
         back_populates='followers'
     )
