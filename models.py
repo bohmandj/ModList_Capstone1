@@ -3,7 +3,8 @@
 from app import app
 
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from typing import List, Optional
 
 class Base(DeclarativeBase):
     pass
@@ -114,7 +115,7 @@ keep_tracked = db.Table(
 
 
 modlist_mod = db.Table(
-    """Connection of a modlist to the user who created/owns it."""
+    """Connection of a modlist to the mods in it."""
     
     'modlist_mod',
         
@@ -276,24 +277,33 @@ class Mod(db.Model):
     
     required_mods: Mapped[List['Mod']] = db.relationship(
         'Mod',
-        secondary="req_mods",
-        primaryjoin=id == required_mod.mod_id,
-        secondaryjoin=id == required_mod.required_mod_id
+        secondary="required_mod",
+        primaryjoin=id == required_mod.c.mod_id,
+        secondaryjoin=id == required_mod.c.required_mod_id, 
+        back_populates='required_by_mods'
+    )
+    
+    required_by_mods: Mapped[List['Mod']] = db.relationship(
+        'Mod',
+        secondary="required_mod",
+        primaryjoin=id == required_mod.c.required_mod_id,
+        secondaryjoin=id == required_mod.c.mod_id, 
+        back_populates='required_mods'
     )
     
     right_conflicting_mods: Mapped[List['Mod']] = db.relationship(
         'Mod',
         secondary="conflicting_mod",
-        primaryjoin=id == conflicting_mod.right_mod_id,
-        secondaryjoin=id == conflicting_mod.left_mod_id,
+        primaryjoin=id == conflicting_mod.c.left_mod_id,
+        secondaryjoin=id == conflicting_mod.c.right_mod_id,
         back_populates="left_conflicting_mods"
     )
 
     left_conflicting_mods: Mapped[List['Mod']] = db.relationship(
         'Mod',
         secondary="conflicting_mod",
-        primaryjoin=id == conflicting_mod.c.left_mod_id,
-        secondaryjoin=id == conflicting_mod.c.right_mod_id,
+        primaryjoin=id == conflicting_mod.right_mod_id,
+        secondaryjoin=id == conflicting_mod.left_mod_id,
         back_populates="right_conflicting_mods"
     )
 
@@ -302,13 +312,15 @@ class Mod(db.Model):
         
         Returns list of mods: [{mod},{mod}] or None
         """
+        con_mods = []
 
         if self.left_conflicting_mods:
             con_mods = [mod for mod in self.left_conflicting_mods if mod in mlist_dot_mods]
+        if self.right_conflicting_mods:
             con_mods.extend([mod for mod in self.right_conflicting_mods if mod in mlist_dot_mods and mod not in con_mods])
 
-            if len(con_mods) >= 1:
-                return con_mods
+        if len(con_mods) >= 1:
+            return con_mods
 
         return None
 
@@ -373,53 +385,53 @@ class User(db.Model):
 
     __tablename__ = 'users'
 
-    id = db.Column(
-        db.Integer,
-        primary_key=True
+    id: Mapped[int] = mapped_column(
+        primary_key=True,
+        autoincrement=True
     )
 
-    username = db.Column(
-        db.Text,
-        nullable=False,
-        unique=True
+    username: Mapped[str] = mapped_column(db.String(30))
+
+    email: Mapped[str] = mapped_column(db.String(30))
+
+    password: Mapped[str] = mapped_column(db.String(40))
+
+    is_admin: Mapped[bool] = mapped_column(
+        db.Boolean, 
+        default=False
     )
 
-    email = db.Column(
-        db.Text,
-        nullable=False,
-        unique=True
+    is_moderator: Mapped[bool] = mapped_column(
+        db.Boolean, 
+        default=False
     )
 
-    password = db.Column(
-        db.Text,
-        nullable=False
-    )
-
-    is_admin = db.Column(
-        db.Boolean,
-        default=False,
-        nullable=False
-    )
-
-    is_moderator = db.Column(
-        db.Boolean,
-        default=False,
-        nullable=False
-    )
-
-    hide_nsfw = db.Column(
-        db.Boolean,
-        default=True,
-        nullable=False
+    hide_nsfw: Mapped[bool] = mapped_column(
+        db.Boolean, 
+        default=True
     )
 
     # modlists made/owned by the user
-    modlists = db.relationship('Modlist')
+    modlists: Mapped[List['Modlist']] = db.relationship(back_populates='user')
 
     # modlists the user follows
-    followed_modlists = db.relationship(
-        'Modlist',
-        secondary='fol_mlists'
+    followed_modlists: Mapped[List[Modlist]] = db.relationship(
+        secondary='follow_modlist',
+        back_populates='followers'
+    )
+
+    # List of Mods user has taken notes about, bypassing the `User_Mod_notes` class
+    mods_with_notes: Mapped[List['Mod']] = db.relationship(
+        secondary='user_mod_connection', 
+        back_populates='users_with_notes',
+        viewonly=True
+    )
+
+    # List of 'User_Mod_Notes' objects for 
+    #   User -> User_Mod_Notes -> Mod associated with this user 
+    # Each 'User_Mod_Notes' contains 'notes' by 'user' about 'mod'
+    user_mod_notes: Mapped[List['User_Mod_Notes']] = db.relationship(
+        back_populates='user'
     )
 
     #  mods user is actually using Nexus Tracking for
@@ -429,19 +441,19 @@ class User(db.Model):
     )
 
     # profiles this user follows
-    followed_profiles = db.relationship(
+    followed_profiles: Mapped[List["User"]] = db.relationship(
         'User',
-        secondary="fol_users",
-        primaryjoin=(Follow_User.user_id == id),
-        secondaryjoin=(Follow_User.followed_profile_id == id)
+        secondary='follow_user',
+        primaryjoin=(follow_user.c.user_id == id),
+        secondaryjoin=(follow_user.c.followed_profile_id == id)
     )
 
     # profiles that follow this user
     followers = db.relationship(
         'User',
-        secondary="fol_users",
-        primaryjoin=(Follow_User.followed_profile_id == id),
-        secondaryjoin=(Follow_User.user_id == id)
+        secondary='follow_user',
+        primaryjoin=(follow_user.c.followed_profile_id == id),
+        secondaryjoin=(follow_user.c.user_id == id)
     )
 
     def is_followed_by_profile(self, profile):
@@ -454,19 +466,34 @@ class User(db.Model):
         """Is this user following 'profile'? Returns bool"""
 
         found_users = [user for user in self.followed_profiles if user == profile]
+        
         return len(found_users) == 1
 
     def is_following_modlist(self, modlist):
         """Is this user following 'modlist'? Returns bool"""
 
         found_modlists = [mlist for mlist in self.followed_modlists if mlist == modlist]
+        
         return len(found_modlists) == 1
 
-    def get_games(self):
+    def get_users_games(self):
         """Get list of games the user has made 
         lists for (probably owns the game)"""
 
         found_games = [mlist.game for mlist in self.modlists if mlist.game not in found_games]
+
+        return found_games
+
+    def get_notes_for(self, mod):
+        """Returns 'notes' str from User_Mod_Notes obj associated 
+        with both this mod and author(user)"""
+
+        if self.user_mod_notes:
+            notes = [(UMNotes.notes for UMNotes in self.user_mod_notes if UMNotes.mod == mod)]
+
+            return notes[0]
+        
+        return None
 
     def __repr__(self):
         return f"<User #{self.id}: {self.username}, {self.email}>"
