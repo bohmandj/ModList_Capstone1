@@ -12,8 +12,8 @@ db = SQLAlchemy(model_class=Base)
 ###########################################################
 # Association Tables:
 
+#Connection of a user to the user profiles they follow.
 follow_user = db.Table(
-    """Connection of a user to the user profiles they follow."""
     
     'follow_user',
 
@@ -31,8 +31,8 @@ follow_user = db.Table(
 )
 
 
+#Connection of a user to the modlists they follow.
 follow_modlist = db.Table(
-    """Connection of a user to the modlists they follow."""
     
     'follow_modlist',
 
@@ -50,21 +50,21 @@ follow_modlist = db.Table(
 )
 
 
-conflicting_mod = db.Table(
-    """Connection of a mod to the mods it conflicts 
-    with and should not be installed together."""
+#Connection of a mod to the mods it conflicts 
+#with and should not be installed together.
+mod_conflicts = db.Table(
     
-    'conflicting_mod',
+    'mod_conflicts',
 
     db.Column( 
-        'left_mod_id', 
+        'conflicted_mod_id', 
         db.Integer,
         db.ForeignKey('mods.id'), 
         primary_key=True
     ),
         
     db.Column( 
-        'right_mod_id', 
+        'conflicting_mod_id', 
         db.Integer,
         db.ForeignKey('mods.id'), 
         primary_key=True
@@ -72,11 +72,11 @@ conflicting_mod = db.Table(
 )
 
 
-required_mod = db.Table(
-    """Connection of a mod to the mods required 
-    for it to function."""
+#Connection of a mod to the mods required 
+#for it to function.
+mod_requirements = db.Table(
     
-    'required_mod',
+    'mod_requirements',
 
     db.Column(
         'mod_id', 
@@ -92,9 +92,9 @@ required_mod = db.Table(
 )
 
 
+#Connection of a user to the mods they want to put in the 'Keep Tracked' 
+#section of their 'Tracked on Nexus' modlist.
 keep_tracked = db.Table(
-    """Connection of a user to the mods they want to put in the 'Keep Tracked' 
-    section of their 'Tracked on Nexus' modlist."""
     
     'keep_tracked',
 
@@ -112,8 +112,8 @@ keep_tracked = db.Table(
 )
 
 
+#Connection of a modlist to the mods in it.
 modlist_mod = db.Table(
-    """Connection of a modlist to the mods in it."""
     
     'modlist_mod',
         
@@ -131,8 +131,8 @@ modlist_mod = db.Table(
 )
 
 
+#Connection of a game to the mod that is made for it.
 game_mod = db.Table(
-    """Connection of a game to the mod that is made for it."""
     
     'game_mod',
         
@@ -153,13 +153,13 @@ game_mod = db.Table(
 # Association Object:
 
 class User_Mod_Notes(db.Model):
-    """Connection of a modlist to the mods it contains.
-    Also retains user's notes for this mod in this list.
-    
-    !!!! Do not attempt to read AND write in same transaction. 
-    Changes on one will not show up in another until the 
-    Session is expired, which normally occurs automatically 
-    after Session.commit(). !!!!"""
+# Connection of a modlist to the mods it contains.
+# Also retains user's notes for this mod in this list.
+
+# !!!! Do not attempt to read AND write in same transaction. 
+# Changes on one will not show up in another until the 
+# Session is expired, which normally occurs automatically 
+# after Session.commit(). !!!!
 
     __tablename__ = 'user_mod_connection'
 
@@ -186,7 +186,7 @@ class User_Mod_Notes(db.Model):
 # Model Classes:
 
 class Modlist(db.Model):
-    """A list of game mods made by a user."""
+# A list of game mods made by a user.
 
     __tablename__ = 'modlists'
 
@@ -226,8 +226,8 @@ class Modlist(db.Model):
 
 
 class Mod(db.Model):
-    """A package of files used to modify games 
-    hosted on Nexus Mods website."""
+# A package of files used to modify games 
+# hosted on Nexus Mods website.
 
     __tablename__ = 'mods'
 
@@ -271,34 +271,34 @@ class Mod(db.Model):
     
     required_mods: Mapped[List['Mod']] = db.relationship(
         'Mod',
-        secondary="required_mod",
-        primaryjoin=id == required_mod.c.mod_id,
-        secondaryjoin=id == required_mod.c.required_mod_id, 
+        secondary="mod_requirements",
+        primaryjoin='Mod.id==mod_requirements.c.mod_id', 
+        secondaryjoin='Mod.id==mod_requirements.c.required_mod_id', 
         back_populates='mods_that_require_this'
     )
     
     mods_that_require_this: Mapped[List['Mod']] = db.relationship(
         'Mod',
-        secondary="required_mod",
-        primaryjoin=id == required_mod.c.required_mod_id,
-        secondaryjoin=id == required_mod.c.mod_id, 
+        secondary="mod_requirements",
+        primaryjoin='Mod.id==mod_requirements.c.required_mod_id', 
+        secondaryjoin='Mod.id==mod_requirements.c.mod_id', 
         back_populates='required_mods'
     )
     
-    right_conflicting_mods: Mapped[List['Mod']] = db.relationship(
+    conflicting_mods: Mapped[List['Mod']] = db.relationship(
         'Mod',
-        secondary="conflicting_mod",
-        primaryjoin=id == conflicting_mod.c.left_mod_id,
-        secondaryjoin=id == conflicting_mod.c.right_mod_id,
-        back_populates="left_conflicting_mods"
+        secondary="mod_conflicts",
+        primaryjoin='Mod.id==mod_conflicts.c.conflicted_mod_id', 
+        secondaryjoin='Mod.id==mod_conflicts.c.conflicting_mod_id', 
+        back_populates="conflicted_mods"
     )
 
-    left_conflicting_mods: Mapped[List['Mod']] = db.relationship(
+    conflicted_mods: Mapped[List['Mod']] = db.relationship(
         'Mod',
-        secondary="conflicting_mod",
-        primaryjoin=id == conflicting_mod.right_mod_id,
-        secondaryjoin=id == conflicting_mod.left_mod_id,
-        back_populates="right_conflicting_mods"
+        secondary="mod_conflicts",
+        primaryjoin='Mod.id==mod_conflicts.conflicting_mod_id', 
+        secondaryjoin='Mod.id==mod_conflicts.conflicted_mod_id', 
+        back_populates="conflicting_mods"
     )
 
     def check_conflicts(self, mlist_dot_mods):
@@ -308,10 +308,10 @@ class Mod(db.Model):
         """
         con_mods = []
 
-        if self.left_conflicting_mods:
-            con_mods = [mod for mod in self.left_conflicting_mods if mod in mlist_dot_mods]
-        if self.right_conflicting_mods:
-            con_mods.extend([mod for mod in self.right_conflicting_mods if mod in mlist_dot_mods and mod not in con_mods])
+        if self.conflicted_mods:
+            con_mods = [mod for mod in self.conflicted_mods if mod in mlist_dot_mods]
+        if self.conflicting_mods:
+            con_mods.extend([mod for mod in self.conflicting_mods if mod in mlist_dot_mods and mod not in con_mods])
 
         if len(con_mods) >= 1:
             return con_mods
@@ -348,7 +348,7 @@ class Mod(db.Model):
 
 
 class Game(db.Model):
-    """A game for which Nexus hosts mods."""
+# A game for which Nexus hosts mods.
 
     __tablename__ = 'games'
 
@@ -375,7 +375,7 @@ class Game(db.Model):
 
 
 class User(db.Model):
-    """User in the system."""
+# User in the system.
 
     __tablename__ = 'users'
 
