@@ -1,12 +1,14 @@
 """SWLAlchemy models for Capstone"""
 
+from flask_bcrypt import Bcrypt
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from typing import List, Optional
 
 class Base(DeclarativeBase):
     pass
-    
+
+bcrypt = Bcrypt()
 db = SQLAlchemy(model_class=Base)
 
 ###########################################################
@@ -57,14 +59,14 @@ mod_conflicts = db.Table(
     'mod_conflicts',
 
     db.Column( 
-        'conflicted_mod_id', 
+        'conflicting_mod_id', 
         db.Integer,
         db.ForeignKey('mods.id'), 
         primary_key=True
     ),
         
     db.Column( 
-        'conflicting_mod_id', 
+        'conflicted_mod_id', 
         db.Integer,
         db.ForeignKey('mods.id'), 
         primary_key=True
@@ -152,7 +154,6 @@ game_mod = db.Table(
 ###########################################################
 # Association Object:
 
-class User_Mod_Notes(db.Model):
 # Connection of a modlist to the mods it contains.
 # Also retains user's notes for this mod in this list.
 
@@ -160,6 +161,7 @@ class User_Mod_Notes(db.Model):
 # Changes on one will not show up in another until the 
 # Session is expired, which normally occurs automatically 
 # after Session.commit(). !!!!
+class User_Mod_Notes(db.Model):
 
     __tablename__ = 'user_mod_connection'
 
@@ -185,8 +187,8 @@ class User_Mod_Notes(db.Model):
 ###########################################################
 # Model Classes:
 
-class Modlist(db.Model):
 # A list of game mods made by a user.
+class Modlist(db.Model):
 
     __tablename__ = 'modlists'
 
@@ -225,9 +227,9 @@ class Modlist(db.Model):
         return f'<ModList #{self.id}: "{self.name}", by {self.user.username}>'
 
 
-class Mod(db.Model):
 # A package of files used to modify games 
 # hosted on Nexus Mods website.
+class Mod(db.Model):
 
     __tablename__ = 'mods'
 
@@ -271,34 +273,34 @@ class Mod(db.Model):
     
     required_mods: Mapped[List['Mod']] = db.relationship(
         'Mod',
-        secondary="mod_requirements",
+        secondary='mod_requirements',
         primaryjoin='Mod.id==mod_requirements.c.mod_id', 
         secondaryjoin='Mod.id==mod_requirements.c.required_mod_id', 
-        back_populates='mods_that_require_this'
+        back_populates='mods_that_require_this',
     )
     
     mods_that_require_this: Mapped[List['Mod']] = db.relationship(
         'Mod',
-        secondary="mod_requirements",
+        secondary='mod_requirements',
         primaryjoin='Mod.id==mod_requirements.c.required_mod_id', 
         secondaryjoin='Mod.id==mod_requirements.c.mod_id', 
-        back_populates='required_mods'
+        back_populates='required_mods',
     )
     
     conflicting_mods: Mapped[List['Mod']] = db.relationship(
         'Mod',
-        secondary="mod_conflicts",
+        secondary='mod_conflicts',
         primaryjoin='Mod.id==mod_conflicts.c.conflicted_mod_id', 
         secondaryjoin='Mod.id==mod_conflicts.c.conflicting_mod_id', 
-        back_populates="conflicted_mods"
+        back_populates='conflicted_mods',
     )
 
     conflicted_mods: Mapped[List['Mod']] = db.relationship(
         'Mod',
-        secondary="mod_conflicts",
-        primaryjoin='Mod.id==mod_conflicts.conflicting_mod_id', 
-        secondaryjoin='Mod.id==mod_conflicts.conflicted_mod_id', 
-        back_populates="conflicting_mods"
+        secondary='mod_conflicts',
+        primaryjoin='Mod.id==mod_conflicts.c.conflicting_mod_id', 
+        secondaryjoin='Mod.id==mod_conflicts.c.conflicted_mod_id', 
+        back_populates='conflicting_mods',
     )
 
     def check_conflicts(self, mlist_dot_mods):
@@ -347,8 +349,8 @@ class Mod(db.Model):
         return f'<Nexus Mod #{self.id}: "{self.name}" for "{self.for_game.name}"\nDescription: {self.summary}>'
 
 
-class Game(db.Model):
 # A game for which Nexus hosts mods.
+class Game(db.Model):
 
     __tablename__ = 'games'
 
@@ -374,8 +376,8 @@ class Game(db.Model):
         return f'<Game #{self.id}: "{self.name}">'
 
 
-class User(db.Model):
 # User in the system.
+class User(db.Model):
 
     __tablename__ = 'users'
 
@@ -388,7 +390,7 @@ class User(db.Model):
 
     email: Mapped[str] = mapped_column(db.String(30))
 
-    password: Mapped[str] = mapped_column(db.String(40))
+    password: Mapped[str] = mapped_column(db.Text)
 
     is_admin: Mapped[bool] = mapped_column(
         db.Boolean, 
@@ -443,7 +445,8 @@ class User(db.Model):
         'User',
         secondary='follow_user',
         primaryjoin=(follow_user.c.user_id == id),
-        secondaryjoin=(follow_user.c.followed_profile_id == id)
+        secondaryjoin=(follow_user.c.followed_profile_id == id), 
+        back_populates='followers',
     )
 
     # profiles that follow this user
@@ -451,7 +454,8 @@ class User(db.Model):
         'User',
         secondary='follow_user',
         primaryjoin=(follow_user.c.followed_profile_id == id),
-        secondaryjoin=(follow_user.c.user_id == id)
+        secondaryjoin=(follow_user.c.user_id == id), 
+        back_populates='followed_profiles',
     )
 
     def is_followed_by_profile(self, profile):
@@ -492,6 +496,24 @@ class User(db.Model):
             return notes[0]
         
         return None
+
+    @classmethod
+    def signup(cls, username, email, password):
+        """Sign up user.
+
+        Hashes password and adds user to system.
+        """
+
+        hashed_pwd = bcrypt.generate_password_hash(password).decode('UTF-8')
+
+        user = User(
+            username=username,
+            email=email,
+            password=hashed_pwd
+        )
+
+        db.session.add(user)
+        return user
 
     def __repr__(self):
         return f"<User #{self.id}: {self.username}, {self.email}>"

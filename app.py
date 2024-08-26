@@ -6,14 +6,13 @@ from sqlalchemy.exc import IntegrityError
 
 from forms import UserAddForm, LoginForm, UserEditForm
 from models import db, connect_db, User, Modlist, Mod, Game
-from secretkeys import nexus_api_key
 
 CURR_USER_KEY = "curr_user"
 
 app = Flask(__name__)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = (
-    os.environ.get('DATABASE_URL', 'postgresql:///modlist'))
+    os.environ.get('DATABASE_URL', 'postgresql:///modlist_db'))
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ECHO'] = False
@@ -22,6 +21,8 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', "it's a secret")
 toolbar = DebugToolbarExtension(app)
 
 connect_db(app)
+with app.app_context():
+    db.create_all()
 
 
 ##############################################################################
@@ -36,6 +37,47 @@ def add_user_to_g():
 
     else:
         g.user = None
+
+
+def do_login(user):
+    """Log in user."""
+
+    session[CURR_USER_KEY] = user.id
+
+
+@app.route('/signup', methods=["GET", "POST"])
+def signup():
+    """Handle user signup.
+
+    Create new user and add to DB. Redirect to home page.
+
+    If form not valid, re-present form.
+
+    If the there already is a user with that username: flash message
+    and re-present form.
+    """
+
+    form = UserAddForm()
+
+    if form.validate_on_submit():
+        try:
+            user = User.signup(
+                username=form.username.data,
+                email=form.email.data,
+                password=form.password.data
+            )
+            db.session.commit()
+
+        except IntegrityError:
+            flash("Username already taken", 'danger')
+            return render_template('users/signup.html', form=form)
+
+        do_login(user)
+
+        return redirect("/")
+
+    else:
+        return render_template('users/signup.html', form=form)
 
 
 ##############################################################################
@@ -59,11 +101,10 @@ def homepage():
     separated by letter
     """ 
     # maybe also lists of 10 newest mods and 10 latest 
-    # mod updates for games the user has built lists for
+    # mod updates for games the user has built lists for? tbd
 
     if g.user:
-
-        return render_template('home.html', messages=messages)
+        return render_template('home.html')
 
     else:
         return render_template('home-anon.html')
@@ -71,8 +112,7 @@ def homepage():
 
 ##############################################################################
 # Turn off all caching in Flask
-#   (useful for dev; in production, this kind of stuff is typically
-#   handled elsewhere)
+#   (useful for dev; in production, typically handled elsewhere)
 @app.after_request
 def add_header(req):
     """Add non-caching headers on every request."""
