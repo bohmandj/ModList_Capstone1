@@ -4,6 +4,7 @@ from flask_bcrypt import Bcrypt
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from typing import List, Optional
+from datetime import datetime, timezone
 
 class Base(DeclarativeBase):
     pass
@@ -154,13 +155,13 @@ game_mod = db.Table(
 ###########################################################
 # Association Object:
 
-# Connection of a modlist to the mods it contains.
-# Also retains user's notes for this mod in this list.
-
 # !!!! Do not attempt to read AND write in same transaction. 
 # Changes on one will not show up in another until the 
 # Session is expired, which normally occurs automatically 
 # after Session.commit(). !!!!
+
+# Connection of a modlist to the mods it contains.
+# Also retains user's notes for this mod in this list.
 class User_Mod_Notes(db.Model):
 
     __tablename__ = 'user_mod_connection'
@@ -206,6 +207,11 @@ class Modlist(db.Model):
         default=False
     )
 
+    last_updated: Mapped[datetime] = mapped_column(
+        index=True, 
+        default=lambda: datetime.now(timezone.utc)
+    )
+
     mods: Mapped[List['Mod']] = db.relationship(
         secondary=modlist_mod, 
         back_populates='in_modlists'
@@ -222,6 +228,10 @@ class Modlist(db.Model):
         secondary=follow_modlist, 
         back_populates='followed_modlists'
     )
+
+    def update_timestamp(self):
+        self.last_updated  = datetime.now(timezone.utc)
+        db.session.add(self)
 
     def __repr__(self):
         return f'<ModList #{self.id}: "{self.name}", by {self.user.username}>'
@@ -366,7 +376,7 @@ class Game(db.Model):
     # full name of game on Nexus (w/ caps & spaces)
     name: Mapped[str]
 
-    downloads: Mapped[str]
+    downloads: Mapped[int]
 
     subject_of_modlists: Mapped[List["Modlist"]] = db.relationship(back_populates='for_game')
 
@@ -375,7 +385,7 @@ class Game(db.Model):
         back_populates='for_games')
 
     def __repr__(self):
-        return f'<Game #{self.id}: "{self.name}">'
+        return f'<Game #{self.id}: "{self.name}", #downloads:{self.downloads}>'
 
 
 # User in the system.
