@@ -376,7 +376,7 @@ class Game(db.Model):
     # full name of game on Nexus (w/ caps & spaces)
     name: Mapped[str]
 
-    downloads: Mapped[int]
+    downloads: Mapped[int] = mapped_column(db.BigInteger)
 
     subject_of_modlists: Mapped[List["Modlist"]] = db.relationship(back_populates='for_game')
 
