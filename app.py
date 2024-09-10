@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask, render_template, request, flash, redirect, session, g
+from flask import Flask, render_template, request, flash, redirect, session, g, url_for
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
@@ -40,7 +40,10 @@ def add_user_to_g():
 
 
 def do_login(user):
-    """Log in user."""
+    """Log in user.
+    
+    Returns Exception if error occurs during Nexus API call
+    or db update."""
 
     session[CURR_USER_KEY] = user.id
 
@@ -80,21 +83,40 @@ def signup():
         return render_template('users/signup.html', form=form)
 
 
+@app.route('/login', methods=["GET", "POST"])
+def login():
+    """Handle user login."""
+
+    form = LoginForm()
+
+    if form.validate_on_submit():
+        user = User.authenticate(form.username.data,
+                                 form.password.data)
+
+        if user:
+            do_login(user)
+            flash(f"Hello, {user.username}!", "success")
+
+            return redirect("/")
+
+        flash("Invalid credentials.", 'danger')
+
+    return render_template('users/login.html', form=form)
+
+
 ##############################################################################
-# General user routes:
+# User routes:
 
 
 ##############################################################################
 # Homepage and error pages
-
 
 @app.route('/')
 def homepage():
     """Show homepage:
 
     - anon users: sign up pitch page 
-      (can't show content: must be signed in to 
-      Modlist & Nexus SSO for API to function)
+      (must also be signed in to Nexus SSO for API to function)
 
     - logged in: show list of popular games Nexus hosts mods for 
     and alphabetical list of all games Nexus hosts mods for 
@@ -106,13 +128,12 @@ def homepage():
     if g.user:
         return render_template('home.html')
 
-    else:
-        return render_template('home-anon.html')
+    return render_template('home-anon.html')
 
 
 ##############################################################################
 # Turn off all caching in Flask
-#   (useful for dev; in production, typically handled elsewhere)
+#   (useful for dev; in production handled elsewhere)
 @app.after_request
 def add_header(req):
     """Add non-caching headers on every request."""

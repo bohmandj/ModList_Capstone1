@@ -535,7 +535,24 @@ class User(db.Model):
     def __repr__(self):
         return f"<User #{self.id}: {self.username}, {self.email}>"
 
+    @classmethod
+    def authenticate(cls, username, password):
+        """Find user with `username` and `password`.
 
+        It searches for a user whose username and password hash matches this 
+        password and, if it finds such a user, returns that user object.
+
+        If can't find matching user (or if password is wrong), returns False.
+        """
+        
+        user = db.session.scalars(db.select(User).filter_by(username=username).limit(1)).first()
+        
+        if user:
+            is_auth = bcrypt.check_password_hash(user.password, password)
+            if is_auth:
+                return user
+
+        return False
 
 
 
