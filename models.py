@@ -256,6 +256,11 @@ class Mod(db.Model):
         default=''
     )
 
+    is_nsfw: Mapped[bool] = mapped_column(
+        db.Boolean, 
+        default=False
+    )
+
     in_modlists: Mapped[List['Modlist']] = db.relationship(
         secondary=modlist_mod, 
         back_populates='mods'
