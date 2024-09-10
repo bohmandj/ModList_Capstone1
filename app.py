@@ -7,6 +7,8 @@ from sqlalchemy.exc import IntegrityError
 from forms import UserAddForm, LoginForm, UserEditForm
 from models import db, connect_db, User, Modlist, Mod, Game
 
+from utilities import get_all_games_db
+
 CURR_USER_KEY = "curr_user"
 
 app = Flask(__name__)
@@ -120,7 +122,7 @@ def logout():
 
     if not g.user:
         flash("You must sign in before you can sign out.", "danger")
-        
+
         return redirect("/login")
 
     do_logout()
@@ -144,14 +146,20 @@ def homepage():
       (must also be signed in to Nexus SSO for API to function)
 
     - logged in: show list of popular games Nexus hosts mods for 
-    and alphabetical list of all games Nexus hosts mods for 
-    separated by letter
     """ 
-    # maybe also lists of 10 newest mods and 10 latest 
-    # mod updates for games the user has built lists for? tbd
+    # maybe also links to common locations?
+    # stretch: alphabetical list of all games Nexus hosts mods for searchable by letter
 
-    if g.user:
-        return render_template('home.html')
+    if g.user:       
+        try:
+            games_list = get_all_games_db()
+        except Exception as e:
+            print("Error getting games from db: ", e)
+            flash("Problem occurred fetching games list, log out and back in to reattempt.")
+        else:
+            return render_template('home.html', games_list=games_list)
+
+        return render_template('home.html', games_list=[{'name':"Error"}])
 
     return render_template('home-anon.html')
 
