@@ -48,6 +48,16 @@ def do_login(user):
     session[CURR_USER_KEY] = user.id
 
 
+def do_logout():
+    """Logout user."""
+
+    if CURR_USER_KEY in session:
+        del session[CURR_USER_KEY]
+    
+    if 'csrf_token' in session:
+        del session['csrf_token']
+
+
 @app.route('/signup', methods=["GET", "POST"])
 def signup():
     """Handle user signup.
@@ -102,6 +112,21 @@ def login():
         flash("Invalid credentials.", 'danger')
 
     return render_template('users/login.html', form=form)
+
+
+@app.route('/logout')
+def logout():
+    """Handle logout of user."""
+
+    if not g.user:
+        flash("You must sign in before you can sign out.", "danger")
+        
+        return redirect("/login")
+
+    do_logout()
+    flash(f"Logout successful!", "success")
+
+    return redirect("/login")
 
 
 ##############################################################################
