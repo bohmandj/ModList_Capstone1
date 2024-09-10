@@ -31,11 +31,8 @@
         <li><a href="/login">Log in</a></li>
         {% else %}
         <li>
-          <a href="/users/{{ g.user.id }}">
-            <img src="{{ g.user.image_url }}" alt="{{ g.user.username }}">
-          </a>
+          <a href="/users/{{ g.user.id }}">{{ g.user.username }}</a>
         </li>
-        <li><a href="/messages/new">New Message</a></li>
         <li><a href="/logout">Log out</a></li>
         {% endif %}
       </ul>
@@ -43,7 +40,10 @@
   </nav>
   <div class="container"> <!-- main body content populated by jinja -->
     {% for category, message in get_flashed_messages(with_categories=True) %}
-    <div class="alert alert-{{ category }}">{{ message }}</div>
+    <div class="alert alert-{{ category }} alert-dismissible">
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
     {% endfor %}
 
     {% block content %}
