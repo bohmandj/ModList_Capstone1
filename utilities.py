@@ -4,6 +4,7 @@ Covers logic functions and interactions
 with PostgreSQL database"""
 
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.dialects.postgresql import insert
 from app import db
 from models import User, Modlist, Mod, Game
 
@@ -21,3 +22,55 @@ def get_all_games_db():
         return e
 
     return ordered_games
+    
+
+def filter_nxs_data(data_list, list_type, game_obj=None):
+    """Takes list of data from Nexus API call and 
+    filters out unneeded data for db entry.
+
+    Valid list types = 'game', 'mod'
+
+    Returns db input ready data list."""
+
+    db_ready_data = []
+    print("================ starting filter_nxs_data() ================")
+    if list_type == 'game':
+        for game in data_list:
+            db_ready_game = {
+                'id':game['id'], 
+                'domain_name':game['domain_name'],
+                'name':game['name'],
+                'downloads':game['downloads']
+            }
+            db_ready_data.append(db_ready_game)
+    
+    return db_ready_data
+
+
+def update_all_games_db(db_ready_games):
+    """Takes updated list of Nexus game data and 
+    updates the stored db values.
+    
+    Returns True if successful, or Exception details."""
+
+    try:
+        stmt = insert(Game).values(db_ready_games)
+        stmt = stmt.on_conflict_do_update(
+            constraint="games_pkey",
+            set_={
+                'id': stmt.excluded.id,
+                'domain_name': stmt.excluded.domain_name,
+                'name': stmt.excluded.name,
+                'downloads': stmt.excluded.downloads
+            }
+        )
+        db.session.execute(stmt)
+
+        db.session.commit()
+
+    except Exception as e:
+        db.session.rollback()
+        print("Error updating db: ", e)
+        return e
+        
+    return True

@@ -1,8 +1,9 @@
 /* ====================== General */
 
 body {
-    /* background-color: #e6ecf0; */
-    background-color: #252526;
+    background-color: #151515;
+    width: 100%;
+    overflow-x: hidden;
 }
 
 body.error-404 {
@@ -24,8 +25,7 @@ body.error-404 {
 /* ======================= Nav */
 
 .navbar {
-    /* background-color: #fff; */
-    background-color: #313233;
+    background-color: #151515;
     height: 50px;
     border-bottom: 1px solid rgba(0, 0, 0, 0.25);
     margin-bottom: 1rem;
@@ -80,9 +80,191 @@ ul.nav.navbar-nav li {
     display: flex;
 }
 
+nav form.navbar-form {
+    display: flex;
+    position: relative;
+}
+
+.onboarding .navbar-header {
+    margin: 0 auto;
+}
+
+.onboarding .navbar-brand {
+    margin: 0;
+}
+
+.onboarding>.navbar-brand>a {
+    color: #5170AF;
+}
+
+.onboarding .nav.navbar-nav.navbar-right {
+    position: absolute;
+    right: 16px;
+}
+
+.onboarding>.navbar form.navbar-form {
+    display: none;
+}
+
+.onboarding {
+    background-color: #252526;
+    color: #fff;
+}
+
+@media (max-width: 468px) {
+    nav form.navbar-form {
+        display: none;
+    }
+}
+
+nav+.container {
+    margin-bottom: 1rem;
+}
+
+.join-message {
+    margin-top: 100px;
+    margin-bottom: 20px;
+    color: #fff;
+}
+
+/* ===================== User profile */
+
+/* ===================== Nexus Related */
+
+.nexus-btn-container {
+    position: relative;
+    top: -35px;
+    right: 0px;
+}
+
+.nexus-btn-link {
+    display: block;
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+    right: 3px;
+}
+
+.nexus-btn-link img {
+    width: 100%;
+    aspect-ratio: 1/1;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    overflow: hidden;
+    margin: 0px;
+}
+
+/* ===================== Games */
+
+.home .game-section {
+    width: 80vw;
+    height: auto;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin: 0px;
+    padding: 0px;
+}
+
+.game-section .game-card {
+    display: inline-block;
+    overflow: hidden;
+    height: auto;
+    width: 180px;
+    border-radius: 10px;
+    margin: 10px;
+}
+
+.game-card .game-img,
+.game-card img {
+    width: 100%;
+    aspect-ratio: 1/1;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    overflow: hidden;
+    margin: 0px;
+}
+
+.game-card .game-title {
+    color: white;
+    background: rgb(32, 32, 32);
+    width: 100%;
+    height: 80px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.game-card .game-title span {
+    width: 80%;
+}
+
+.game-abc {
+    width: 80%;
+    margin: 50px 0px;
+}
+
+.game-abc span {
+    text-decoration: underline;
+    margin: 5px;
+}
+
+.game-abc a {
+    text-decoration: none;
+    color: #ffffff;
+}
+
+.game-abc span:hover,
+.game-abc a:hover {
+    cursor: pointer;
+    color: #5170AF;
+}
+
+.game-abc a:visited {
+    color: #aaaaaa;
+}
+
+.game-abc ul {
+    list-style-type: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    column-gap: 5%;
+    row-gap: 10%;
+    margin-left: 0px;
+    margin-top: 20px;
+    padding: 0px;
+}
+
+.game-abc ul li {
+    list-style-type: none;
+    text-align: left;
+    width: 100%;
+}
+
+/* ============================== Signed in Home */
+
+.home {
+    /* height: 100vh; */
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    position: absolute;
+    width: 100vw;
+    left: 0;
+    z-index: -1;
+    color: #fff;
+    text-align: center;
+    padding: 1rem;
+    cursor: default;
+}
+
 /* ============================ Signed out home */
 
-.home-hero {
+.home-unauth {
     height: 100vh;
     display: flex;
     justify-content: center;
@@ -96,34 +278,63 @@ ul.nav.navbar-nav li {
     color: #fff;
     text-align: center;
     padding: 1rem;
-    text-shadow: 0 0 8px #66757f;
     cursor: default;
+    text-shadow: 0 0 8px #66757f;
 }
 
-.home-hero .btn {
-    text-shadow: none;
+.home-unauth .btn {
     position: relative;
     z-index: 1;
     width: 150px;
     box-shadow: 0 0 8px #66757f;
     cursor: pointer;
+    text-shadow: none;
 }
 
-.home-hero h1 {
+.home-unauth h1 {
     margin-bottom: 2rem;
 }
 
-.home-hero h4 {
+.home-unauth h4 {
     margin-bottom: 4rem;
 }
 
-.home-hero ul {
+.home-unauth ul {
     margin-bottom: 1.5rem;
     text-align: justify;
     max-width: 550px;
 }
 
-.home-hero ul>a {
+.home-unauth ul>a {
     color: #5170AF;
     cursor: pointer;
+}
+
+/* ========================== Signup/Login */
+
+#user_form input.form-control,
+#user_form textarea.form-control {
+    font-size: 18px;
+    font-weight: bold;
+    padding: 12px;
+}
+
+/* ================================ 404 page */
+
+.message-404 {
+    color: white;
+    margin-top: 2em;
+    text-align: center;
+}
+
+.message-404 a {
+    color: white;
+}
+
+.message-404>h4.display-4 {
+    font-size: 2.5em;
+}
+
+.message-404 .form-inline input {
+    flex: 1;
 }

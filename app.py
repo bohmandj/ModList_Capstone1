@@ -7,7 +7,8 @@ from sqlalchemy.exc import IntegrityError
 from forms import UserAddForm, LoginForm, UserEditForm
 from models import db, connect_db, User, Modlist, Mod, Game
 
-from utilities import get_all_games_db
+from nexus_api import get_all_games_nxs
+from utilities import get_all_games_db, filter_nxs_data, update_all_games_db
 
 CURR_USER_KEY = "curr_user"
 
@@ -109,6 +110,17 @@ def login():
             do_login(user)
             flash(f"Hello, {user.username}!", "success")
 
+            # use updated list of games on Nexus from API to update db
+            try:
+                nexus_games = get_all_games_nxs()
+                print(nexus_games[0])
+                db_ready_games = filter_nxs_data(nexus_games, 'game')
+                print(db_ready_games)
+                tf = update_all_games_db(db_ready_games)
+                print(tf)
+            except:
+                flash("Problem occurred refreshing games list from Nexus.\nDisplayed games list may be out of date or incomplete.\nLog out and back in to reattempt.", "danger")
+
             return redirect("/")
 
         flash("Invalid credentials.", 'danger')
@@ -133,6 +145,20 @@ def logout():
 
 ##############################################################################
 # User routes:
+
+
+##############################################################################
+# Game routes (& Mod routes):
+
+@app.route('/games/<game_domain_name>')
+def show_game_mods_page(game_domain_name):
+    """Show game page with mods hosted by Nexus.
+    
+    -Mod categories on page: Trending, Latest Added, Latest Updated.
+    -Button linking to game page on Nexus for further searching.
+    """
+
+    return render_template('games/game.html')
 
 
 ##############################################################################
