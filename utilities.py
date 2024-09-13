@@ -24,6 +24,24 @@ def get_all_games_db():
     return ordered_games
 
 
+def get_game_db(game_domain_name):
+    """Uses game_domain_name to retrieve game data from db.
+    
+    Returns Game object from db if successful, or Exception details."""
+
+    try:
+        result = db.session.execute(db.select(Game).where(Game.domain_name == f'{game_domain_name}')).scalars()
+
+    except Exception as e:
+        print("Error querying db: ", e)
+        return e
+
+    else:
+        game = result.first()
+
+    return game
+    
+
 def filter_nxs_data(data_list, list_type, game_obj=None):
     """Takes list of data from Nexus API call and 
     filters out unneeded data for db entry.
