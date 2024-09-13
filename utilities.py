@@ -22,7 +22,7 @@ def get_all_games_db():
         return e
 
     return ordered_games
-    
+
 
 def filter_nxs_data(data_list, list_type, game_obj=None):
     """Takes list of data from Nexus API call and 
@@ -43,7 +43,21 @@ def filter_nxs_data(data_list, list_type, game_obj=None):
                 'downloads':game['downloads']
             }
             db_ready_data.append(db_ready_game)
-    
+
+    if list_type == 'mod':
+        for mod in data_list:
+            if mod['status'] == 'published':
+                db_ready_mod = {
+                    'id': mod['mod_id'], 
+                    'name': mod['name'], 
+                    'summary': mod['summary'],
+                    'picture_url': mod['picture_url']
+                }
+                if type(game_obj) == Exception or None:
+                    raise AttributeError
+                db_ready_mod['for_games'] = game_obj
+                db_ready_data.append(db_ready_mod)
+
     return db_ready_data
 
 
