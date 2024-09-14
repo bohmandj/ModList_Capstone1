@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ game.name }}{% endblock %}
+
+{% block content %}
+
+<div class="home">
+  <h1>{{ game.name }}</h1>
+
+  {% for cat in mod_categories %}
+  <ul class="mod-section">
+    <div style="width: 100%; display: flex; justify-content: space-between;">
+      <h3 class="section-title">{{ cat.section_title }}</h3>
+      <form class="section-nexus-btn" action="https://www.nexusmods.com/{{ game.domain_name }}/mods/{{ cat.mod_cat }}"
+        target="_blank">
+        <button type="button" class="btn btn-primary">Open Nexus to See All {{ cat.section_title }}</button>
+      </form>
+    </div>
+
+    {% if cat.error %}
+    <li class="game-card" style="width: 40%; background-color: #404040;">
+      <div class="game-img" style="width: 100%; height: 100px; padding: 10px;">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/3/34/ErrorMessage.png" alt="{{ game.name }} error"
+          style="height: 80px; width: auto;">
+      </div>
+      <div class="game-title" style="width: 100%;">
+        <span>
+          <h5>Error occurred retrieving {{ cat.section_title }}.<br>Please refresh to reattempt.</h5>
+        </span>
+      </div>
+    </li>
+
+    {% else %}
+    {% for mod in cat.data %}
+    <li class="mod-card">
+      <div class="mod-img" style="background-image: url('{{ mod.picture_url }}');" alt="{{ mod.name }} cover image">
+      </div>
+      <form class="nexus-btn-container" action="https://www.nexusmods.com/{{ game.domain_name }}/mods/{{ mod.id }}"
+        target="_blank">
+        <button class="nexus-btn" type="submit" title="Open {{ mod.name }} on Nexus to search all mods.">
+          <img
+            src="https://raw.githubusercontent.com/github/explore/781dbc058383a2ee8259ebbab057292f16172d5e/topics/nexus-mods/nexus-mods.png">
+        </button>
+      </form>
+      <a class="mod-title" href="url_for(show_mod_page, mod_id=mod.id)"><span>{{ mod.name }}</span></a>
+    </li>
+    {% endfor %}
+    {% endif %}
+
+  </ul>
+  {% endfor %}
+
+</div>
+
+{% endblock %}

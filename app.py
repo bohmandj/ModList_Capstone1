@@ -7,8 +7,8 @@ from sqlalchemy.exc import IntegrityError
 from forms import UserAddForm, LoginForm, UserEditForm
 from models import db, connect_db, User, Modlist, Mod, Game
 
-from nexus_api import get_all_games_nxs
-from utilities import get_all_games_db, filter_nxs_data, update_all_games_db
+from nexus_api import get_all_games_nxs, get_mods_of_type_nxs
+from utilities import get_all_games_db, filter_nxs_data, update_all_games_db, get_game_db
 
 CURR_USER_KEY = "curr_user"
 
@@ -151,14 +151,57 @@ def logout():
 # Game routes (& Mod routes):
 
 @app.route('/games/<game_domain_name>')
-def show_game_mods_page(game_domain_name):
+def show_game_page(game_domain_name):
     """Show game page with mods hosted by Nexus.
     
-    -Mod categories on page: Trending, Latest Added, Latest Updated.
-    -Button linking to game page on Nexus for further searching.
+    - Nexus API is called to populate Mod categories on page.
+    -- Mod Categories: Trending, Latest Added, Latest Updated.
+    - Buttons linking to game page on Nexus for further browsing.
     """
 
-    return render_template('games/game.html')
+    try:
+        game = get_game_db(game_domain_name)
+        print(f'############### s_g_p route, game return: {game} ###############')
+    except:
+        flash("Issue was encountered retrieving game information.")
+        return redirect(url_for('homepage'))
+
+    mod_categories = [
+        {'mod_cat': 'trending', 'section_title':'Trending Mods'}, 
+        {'mod_cat': 'latest_added', 'section_title':'Latest Added Mods'}, 
+        {'mod_cat': 'latest_updated', 'section_title':'Latest Updated Mods'}
+    ]
+
+    for cat in mod_categories:
+        try:
+            print("GAME // ", game, " //")
+            nxs_category = get_mods_of_type_nxs(game, cat['mod_cat'])
+        except Exception as e:
+            cat['error'] = True
+            print(f'CAT ERROR: {e}')
+            raise
+        else:
+            db_ready_data = filter_nxs_data(nxs_category, 'mod', game_obj=game)
+            cat['data'] = db_ready_data
+
+    return render_template('games/game.html', game=game, mod_categories=mod_categories)
+
+
+@app.route('/games/<game_domain_name>/mods/<mod_id>')
+def show_mod_page(game_domain_name, mod_id):
+    """Show mod page of info about a mod hosted on Nexus.
+    
+    - Nexus API is called to populate details about the mod.
+    - Details include: title, image, author, last update date, 
+    summary, full description.
+    - Buttons to: track/untrack and endorse/un-endorse on Nexus.
+    - Lists of known conflicts, known required mods, 
+    and ability to update those lists.
+    - Button to add mod to one of your ModLists.
+    - Link to official mod page on Nexus.
+    """
+
+    return render_template('games/mod.html', game=game)
 
 
 ##############################################################################
