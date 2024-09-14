@@ -18,7 +18,7 @@ def get_all_games_db():
         ordered_games = db.session.scalars(db.select(Game).order_by(Game.downloads.desc())).all()
 
     except Exception as e:
-        print("Error querying db: ", e)
+        print("Error querying db get_all_games(): ", e)
         return e
 
     return ordered_games
@@ -30,19 +30,19 @@ def get_game_db(game_domain_name):
     Returns Game object from db if successful, or Exception details."""
 
     try:
-        result = db.session.execute(db.select(Game).where(Game.domain_name == f'{game_domain_name}')).scalars()
+        result = db.session.scalars(db.select(Game).where(Game.domain_name==game_domain_name)).first()
 
     except Exception as e:
-        print("Error querying db: ", e)
+        print("Error querying db get_game_db(): ", e)
         return e
 
     else:
-        game = result.first()
+        game = result
 
     return game
     
 
-def filter_nxs_data(data_list, list_type, game_obj=None):
+def filter_nxs_data(data_list, list_type, game_obj):
     """Takes list of data from Nexus API call and 
     filters out unneeded data for db entry.
 
@@ -51,7 +51,6 @@ def filter_nxs_data(data_list, list_type, game_obj=None):
     Returns db input ready data list."""
 
     db_ready_data = []
-    print("================ starting filter_nxs_data() ================")
     if list_type == 'game':
         for game in data_list:
             db_ready_game = {
@@ -73,6 +72,8 @@ def filter_nxs_data(data_list, list_type, game_obj=None):
                 }
                 if type(game_obj) == Exception or None:
                     raise AttributeError
+                if db_ready_mod['picture_url'] == 'null':
+                    db_ready_mod['picture_url'] = 'https://upload.wikimedia.org/wikipedia/commons/b/b1/Missing-image-232x150.png'
                 db_ready_mod['for_games'] = game_obj
                 db_ready_data.append(db_ready_mod)
 
