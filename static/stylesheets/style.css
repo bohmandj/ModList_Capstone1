@@ -254,15 +254,16 @@ nav+.container {
     width: 100%;
 }
 
-/* ===================== Mods */
+/* ===================== Mod Cards (Game Page) */
 
 .home .mod-section {
     width: 80vw;
     height: min-content;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    margin: 0px 0px 40px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    column-gap: 2vw;
+    row-gap: 2vw;
+    margin: 15px 0px 40px;
     padding: 0px;
 }
 
@@ -280,12 +281,11 @@ nav+.container {
 }
 
 .mod-section .mod-card {
-    display: inline-block;
+    display: grid;
+    grid-template-rows: auto 0px 1fr;
     overflow: hidden;
-    height: auto;
-    width: 250px;
+    height: 100%;
     border-radius: 10px;
-    margin: 20px 15px;
 }
 
 .mod-card .mod-img {
@@ -306,17 +306,65 @@ nav+.container {
     color: white;
     background: rgb(32, 32, 32);
     width: 100%;
-    height: calc(100% - 140px);
+    /* height: max-content; */
     min-height: 65px;
     display: flex;
     justify-content: center;
     align-items: center;
+    overflow: auto;
 }
 
 .mod-card .mod-title span {
     width: 80%;
     padding-top: 8px;
     padding-bottom: 12px;
+}
+
+/* ============================== Mod Page */
+
+.home .modpage {
+    width: 80vw;
+    height: fit-content;
+    display: grid;
+    grid-template-columns: 4fr 6fr;
+    gap: 20px;
+    text-align: left;
+    padding: 20px;
+    background-color: rgb(32, 32, 32);
+    border-radius: 25px;
+}
+
+.modpage img {
+    width: 100%;
+    height: auto;
+    vertical-align: top;
+    border-radius: 10px;
+}
+
+.modpage .mod-detail {
+    width: 100%;
+    height: auto;
+    display: inline-block;
+}
+
+.mod-detail ul {
+    /* display: grid;
+    grid-template-columns: 4fr 6fr;
+    gap: 20px; */
+    padding: 0px;
+    margin-bottom: 20px;
+}
+
+.mod-detail li {
+    display: block;
+    width: fit-content;
+    margin: 5px;
+}
+
+.mod-detail button {
+    margin-bottom: 5px;
+    min-width: max-content;
+    width: 100%;
 }
 
 /* ============================== Signed in Home */
@@ -412,4 +460,39 @@ nav+.container {
 
 .message-404 .form-inline input {
     flex: 1;
+}
+
+/* TESTING */
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+    /* Adjust as needed */
+}
+
+.grid-item {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    /* Fixed height row for top and flexible row for bottom */
+    border: 1px solid #ccc;
+    /* For visualization */
+    background: #f9f9f9;
+    /* For visualization */
+    height: 100%;
+    /* Ensures grid items scale with container */
+}
+
+.top-element {
+    background: #ff6060;
+    /* For visualization */
+    aspect-ratio: 16 / 9;
+    /* Maintains aspect ratio */
+    width: 100%;
+}
+
+.bottom-element {
+    background: #ff7700;
+    /* For visualization */
+    overflow: auto;
+    /* Handle overflow if necessary */
 }

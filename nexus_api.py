@@ -38,7 +38,7 @@ def get_all_games_nxs(include_unapproved=False):
     nexus_games = res.json()
 
     return nexus_games
-            
+
 
 def get_mods_of_type_nxs(game, request_type):
     """Nexus API call.
@@ -76,3 +76,40 @@ def get_mods_of_type_nxs(game, request_type):
     nexus_mods = res.json()
 
     return nexus_mods
+
+
+def get_mod_nxs(game, mod_id):
+    """Nexus API call.
+    
+    Returns object of details for provided mod 
+    on Nexus if successful, or Exception details.
+
+    Example returned mod data: 
+        { "name": str, "summary": str, "description": str of html, 
+        "picture_url": str url, "mod_downloads": int, 
+        "mod_unique_downloads": int, "uid": int, "mod_id": int, 
+        "game_id": int, "allow_rating": bool, "domain_name": str, 
+        "category_id": int, "version": str of int, "endorsement_count": int, 
+        "created_timestamp": int, "created_time": str of datetime, 
+        "updated_timestamp": int, "updated_time": str of datetime, 
+        "author": str, "uploaded_by": str, "uploaded_users_profile_url": str url, 
+        "contains_adult_content": bool, "status": str, "available": bool, 
+        "user": { "member_id": int, "member_group_id": int, "name": str	}, 
+        "endorsement": { "endorse_status": str, "timestamp": str of datetime, 
+        "version": str of int } }
+    """
+
+    url = f'{base_url}v1/games/{game.domain_name}/mods/{mod_id}.json'
+
+    try:
+        res = requests.get(url, headers=headers)
+        print(f'NEXUS API RESPONSE get_mod_nxs: ', res)
+
+    except requests.exceptions.RequestException as e:
+        print("get_mods_of_type_nxs() Failed to retrieve API data: ", res.status_code)
+        print("Error: ", e)
+        raise
+
+    nexus_mod = res.json()
+
+    return nexus_mod

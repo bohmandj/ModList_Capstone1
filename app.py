@@ -7,8 +7,8 @@ from sqlalchemy.exc import IntegrityError
 from forms import UserAddForm, LoginForm, UserEditForm
 from models import db, connect_db, User, Modlist, Mod, Game
 
-from nexus_api import get_all_games_nxs, get_mods_of_type_nxs
-from utilities import get_all_games_db, filter_nxs_data, update_all_games_db, get_game_db
+from nexus_api import get_all_games_nxs, get_mods_of_type_nxs, get_mod_nxs
+from utilities import get_all_games_db, get_game_db, get_mod_db, filter_nxs_data, filter_nxs_mod, update_all_games_db
 
 CURR_USER_KEY = "curr_user"
 
@@ -114,7 +114,7 @@ def login():
             try:
                 nexus_games = get_all_games_nxs()
                 print(nexus_games[0])
-                db_ready_games = filter_nxs_data(nexus_games, 'game')
+                db_ready_games = filter_nxs_data(nexus_games, 'games')
                 print(db_ready_games)
                 tf = update_all_games_db(db_ready_games)
                 print(tf)
@@ -164,7 +164,8 @@ def show_game_page(game_domain_name):
         print(f'############### s_g_p route, game return: {game} ###############')
     except:
         flash("Issue was encountered retrieving game information.")
-        return redirect(url_for('homepage'))
+        # return redirect(url_for('homepage'))
+        raise
 
     mod_categories = [
         {'mod_cat': 'trending', 'section_title':'Trending Mods'}, 
@@ -173,6 +174,7 @@ def show_game_page(game_domain_name):
     ]
 
     for cat in mod_categories:
+        print(f""":::::::::::::::::::PRE-NEXUS API CALL:::::::::::::::::::: {cat['section_title']}""")
         try:
             print("GAME // ", game, " //")
             nxs_category = get_mods_of_type_nxs(game, cat['mod_cat'])
@@ -181,7 +183,7 @@ def show_game_page(game_domain_name):
             print(f'CAT ERROR: {e}')
             raise
         else:
-            db_ready_data = filter_nxs_data(nxs_category, 'mod', game_obj=game)
+            db_ready_data = filter_nxs_data(nxs_category, 'mods', game_obj=game)
             cat['data'] = db_ready_data
 
     return render_template('games/game.html', game=game, mod_categories=mod_categories)
@@ -200,8 +202,23 @@ def show_mod_page(game_domain_name, mod_id):
     - Button to add mod to one of your ModLists.
     - Link to official mod page on Nexus.
     """
+   
+    try:
+        game = get_game_db(game_domain_name)
+        print(f'############### s_m_p route, get_game_db() return: {game} ###############')
+    except:
+        flash("Issue was encountered retrieving game information.")
+        # return redirect(url_for('homepage'))
+        raise
 
-    return render_template('games/mod.html', game=game)
+    ### Pull relevant data out of API response object to populate page, render_template for mod page ###
+    nexus_mod = get_mod_nxs(game, mod_id)
+
+    db_ready_mod_list = filter_nxs_data([nexus_mod], 'mods', game)
+
+    page_ready_mod = filter_nxs_mod(nexus_mod, game)
+
+    return render_template('games/mod.html', game=game, mod=page_ready_mod)
 
 
 ##############################################################################

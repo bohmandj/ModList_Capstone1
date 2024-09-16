@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ mod.name }}{% endblock %}
+
+{% block content %}
+
+<div class="home">
+    <div class="modpage">
+        <div class="mod-detail">
+            <h3 style="margin-bottom: 20px;">{{ mod.name }}</h3>
+            <h5 style="margin-bottom: 10px;">{{ mod.summary }}</h5>
+            <ul>
+                <li>Version: {{ mod.version }}</li>
+                <li>Last Updated: {{ mod.last_updated }}</li>
+                <li>Endorsements: {{ mod.endorsement_count }}</li>
+                <li>Author: {{ mod.author_name }}</li>
+                <li>Nexus Profile: <a href="{{ mod.author_url }}">{{ mod.author_handle }}</a></li>
+            </ul>
+
+            <div>
+                <form class="to-nxs-mod" action="https://www.nexusmods.com/{{ game.domain_name }}/mods/{{ mod.id }}"
+                    target="_blank">
+                    <button class="btn btn-primary">Open Mod on Nexus</button>
+                </form>
+
+                {% if mod.user_endorsed == "Endorsed" %}
+                <button class="un-endorse btn btn-outline-danger">Un-Endorse</button>
+                {% else %}
+                <button class="do-endorse btn btn-outline-success">Endorse</button>
+                {% endif %}
+            </div>
+        </div>
+        <img src="{{ mod.picture_url }}" alt="{{ mod.name }} title image">
+    </div>
+
+
+
+
+</div>
+
+{% endblock %}

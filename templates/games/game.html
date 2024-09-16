@@ -8,15 +8,15 @@
   <h1>{{ game.name }}</h1>
 
   {% for cat in mod_categories %}
-  <ul class="mod-section">
-    <div style="width: 100%; display: flex; justify-content: space-between;">
-      <h3 class="section-title">{{ cat.section_title }}</h3>
-      <form class="section-nexus-btn" action="https://www.nexusmods.com/{{ game.domain_name }}/mods/{{ cat.mod_cat }}"
-        target="_blank">
-        <button type="button" class="btn btn-primary">Open Nexus to See All {{ cat.section_title }}</button>
-      </form>
-    </div>
+  <div style="width: 80vw; display: flex; justify-content: space-between;">
+    <h3 class="section-title">{{ cat.section_title }}</h3>
+    <form class="section-nexus-btn" action="https://www.nexusmods.com/{{ game.domain_name }}/mods/{{ cat.mod_cat }}"
+      target="_blank">
+      <button type="button" class="btn btn-primary">Open Nexus to See All {{ cat.section_title }}</button>
+    </form>
+  </div>
 
+  <ul class="mod-section">
     {% if cat.error %}
     <li class="game-card" style="width: 40%; background-color: #404040;">
       <div class="game-img" style="width: 100%; height: 100px; padding: 10px;">
@@ -42,7 +42,9 @@
             src="https://raw.githubusercontent.com/github/explore/781dbc058383a2ee8259ebbab057292f16172d5e/topics/nexus-mods/nexus-mods.png">
         </button>
       </form>
-      <a class="mod-title" href="url_for(show_mod_page, mod_id=mod.id)"><span>{{ mod.name }}</span></a>
+      <a class="mod-title"
+        href="{{ url_for('show_mod_page', game_domain_name=game.domain_name, mod_id=mod.id) }}"><span>{{
+          mod.name }}</span></a>
     </li>
     {% endfor %}
     {% endif %}
@@ -51,5 +53,16 @@
   {% endfor %}
 
 </div>
+<!-- <div class="grid-container">
+  <div class="grid-item">
+    <div class="top-element">Top Content</div>
+    <div class="bottom-element">Dynamic Content 1</div>
+  </div>
+  <div class="grid-item">
+    <div class="top-element">Top Content</div>
+    <div class="bottom-element">Dynamic Content 2 with different height</div>
+  </div>
+
+</div> -->
 
 {% endblock %}
