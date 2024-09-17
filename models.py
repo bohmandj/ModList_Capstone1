@@ -261,6 +261,11 @@ class Mod(db.Model):
         default=False
     )
 
+    picture_url: Mapped[str] = mapped_column(
+        db.String, 
+        default='https://upload.wikimedia.org/wikipedia/commons/b/b1/Missing-image-232x150.png'
+    )
+
     in_modlists: Mapped[List['Modlist']] = db.relationship(
         secondary=modlist_mod, 
         back_populates='mods'
@@ -502,6 +507,13 @@ class User(db.Model):
         found_games = [mlist.game for mlist in self.modlists if mlist.game not in found_games]
 
         return found_games
+
+    def get_recent_modlists(self):
+        """Get list of user's modlists ordered by last_updated"""
+
+        recent_modlists = self.modlists.sort(key=last_updated, reverse=True)
+
+        return recent_modlists
 
     def get_notes_for(self, mod):
         """Returns 'notes' str from User_Mod_Notes obj associated 
