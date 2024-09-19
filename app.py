@@ -8,7 +8,7 @@ from forms import UserAddForm, LoginForm, UserEditForm
 from models import db, connect_db, User, Modlist, Mod, Game
 
 from nexus_api import get_all_games_nxs, get_mods_of_type_nxs, get_mod_nxs
-from utilities import get_all_games_db, get_game_db, get_mod_db, filter_nxs_data, filter_nxs_mod, update_all_games_db
+from utilities import get_all_games_db, get_game_db, get_mod_db, filter_nxs_data, filter_nxs_mod_page, update_all_games_db, update_list_mods_db, link_mods_to_game
 
 CURR_USER_KEY = "curr_user"
 
@@ -113,9 +113,9 @@ def login():
             # use updated list of games on Nexus from API to update db
             try:
                 nexus_games = get_all_games_nxs()
-                print(nexus_games[0])
+
                 db_ready_games = filter_nxs_data(nexus_games, 'games')
-                print(db_ready_games)
+
                 tf = update_all_games_db(db_ready_games)
                 print(tf)
             except:
@@ -144,7 +144,7 @@ def logout():
 
 
 ##############################################################################
-# User routes:
+# User routes (& ModList routes):
 
 
 ##############################################################################
@@ -214,9 +214,13 @@ def show_mod_page(game_domain_name, mod_id):
     ### Pull relevant data out of API response object to populate page, render_template for mod page ###
     nexus_mod = get_mod_nxs(game, mod_id)
 
-    db_ready_mod_list = filter_nxs_data([nexus_mod], 'mods', game)
+    db_ready_mods = filter_nxs_data([nexus_mod], 'mods', game_obj=game)
+    update_list_mods_db(db_ready_mods, game)
+    link_mods_to_game(db_ready_mods, game)
 
-    page_ready_mod = filter_nxs_mod(nexus_mod, game)
+    print("Subject of Mods::::::: ", game.subject_of_mods)
+
+    page_ready_mod = filter_nxs_mod_page(nexus_mod, game)
 
     return render_template('games/mod.html', game=game, mod=page_ready_mod)
 

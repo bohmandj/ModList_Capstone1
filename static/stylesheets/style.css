@@ -134,6 +134,14 @@ nav+.container {
 .nexus-btn-container {
     position: relative;
     top: -35px;
+    z-index: 3;
+}
+
+.nexus-btn-container span {
+    position: absolute;
+    left: 8px;
+    top: 10px;
+    font-size: 0.8rem;
 }
 
 .nexus-btn {
@@ -163,18 +171,25 @@ nav+.container {
 .home .game-section {
     width: 80vw;
     height: auto;
-    display: flex;
+    /* display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
-    margin: 0px;
+    margin: 0px; */
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    column-gap: 2vw;
+    row-gap: 2vw;
+    margin: 15px 0px 40px;
     padding: 0px;
 }
 
 .game-section .game-card {
-    display: inline-block;
+    /* display: inline-block;
+    overflow: hidden; */
+    display: grid;
+    grid-template-rows: auto 1fr;
     overflow: hidden;
     height: auto;
-    width: 180px;
     /* background-color: rgb(32, 32, 32); */
     border-radius: 10px;
     margin: 10px;
@@ -263,7 +278,7 @@ nav+.container {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     column-gap: 2vw;
     row-gap: 2vw;
-    margin: 15px 0px 40px;
+    margin: 20px 0px 60px;
     padding: 0px;
 }
 
@@ -288,17 +303,21 @@ nav+.container {
     border-radius: 10px;
 }
 
-.mod-card .mod-img {
-    width: 100%;
-    aspect-ratio: 1011/569;
-    background-repeat: no-repeat;
-    background-size: cover;
-    background-position: center;
-    overflow: hidden;
-    margin: 0px;
+.mod-section .mod-card:hover {
+    -webkit-filter: drop-shadow(0px 0px 10px rgba(255, 255, 255, 0.2));
+    filter: drop-shadow(0px 0px 10px rgba(255, 255, 255, 0.2));
 }
 
-.mod-card .nsfw {
+.mod-card .mod-img img {
+    width: 100%;
+    aspect-ratio: 16/9;
+    overflow: hidden;
+    margin: 0px;
+    z-index: 1;
+    object-fit: cover;
+}
+
+.mod-card .nsfw img {
     filter: blur(8px);
 }
 
@@ -312,6 +331,7 @@ nav+.container {
     justify-content: center;
     align-items: center;
     overflow: auto;
+    z-index: 2;
 }
 
 .mod-card .mod-title span {
@@ -339,6 +359,23 @@ nav+.container {
     height: auto;
     vertical-align: top;
     border-radius: 10px;
+}
+
+.modpage .nsfw {
+    width: fit-content;
+    height: fit-content;
+    overflow: hidden;
+    border-radius: 10px;
+}
+
+.nsfw img {
+    filter: blur(15px);
+}
+
+.nsfw span {
+    position: relative;
+    bottom: 15px;
+    left: 15px;
 }
 
 .modpage .mod-detail {

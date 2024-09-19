@@ -198,7 +198,7 @@ class Modlist(db.Model):
         autoincrement=True
     )
 
-    name: Mapped[str] = mapped_column(db.String(60))
+    name: Mapped[str] = mapped_column(db.Text)
 
     description: Mapped[Optional[str]]
 
@@ -221,7 +221,7 @@ class Modlist(db.Model):
     user: Mapped['User'] = db.relationship(back_populates='modlists') # user that made/owns the modlist
 
     game_id: Mapped[int] = mapped_column(db.ForeignKey('games.id', ondelete='SET NULL'))
-    for_game: Mapped['Game'] = db.relationship(back_populates='subject_of_modlists') # game the modlist is built for
+    for_games: Mapped['Game'] = db.relationship(back_populates='subject_of_modlists') # game the modlist is built for
 
     # users that follow this modlist
     followers: Mapped[List['User']] = db.relationship(
@@ -249,7 +249,7 @@ class Mod(db.Model):
         autoincrement=False
     )
 
-    name: Mapped[str] = mapped_column(db.String(60))
+    name: Mapped[str] = mapped_column(db.Text)
 
     summary: Mapped[str] = mapped_column(
         db.Text, 
@@ -366,7 +366,11 @@ class Mod(db.Model):
         return None
 
     def __repr__(self):
-        return f'<Nexus Mod #{self.id}: "{self.name}" for "{self.for_game.name}"\nDescription: {self.summary}>'
+        if len(self.for_games) > 0:
+            for_game = f' for "{self.for_games[0].name}"'
+        else: 
+            for_game = ""
+        return f'<Nexus Mod #{self.id}: "{self.name}"{for_game}>'
 
 
 # A game for which Nexus hosts mods.
@@ -388,7 +392,7 @@ class Game(db.Model):
 
     downloads: Mapped[int] = mapped_column(db.BigInteger)
 
-    subject_of_modlists: Mapped[List["Modlist"]] = db.relationship(back_populates='for_game')
+    subject_of_modlists: Mapped[List["Modlist"]] = db.relationship(back_populates='for_games')
 
     subject_of_mods: Mapped[List['Mod']] = db.relationship(
         secondary=game_mod, 

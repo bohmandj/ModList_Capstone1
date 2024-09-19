@@ -10,10 +10,10 @@
   {% for cat in mod_categories %}
   <div style="width: 80vw; display: flex; justify-content: space-between;">
     <h3 class="section-title">{{ cat.section_title }}</h3>
-    <form class="section-nexus-btn" action="https://www.nexusmods.com/{{ game.domain_name }}/mods/{{ cat.mod_cat }}"
+    <a class="section-nexus-btn" href="https://www.nexusmods.com/{{ game.domain_name }}/mods/{{ cat.mod_cat }}"
       target="_blank">
       <button type="button" class="btn btn-primary">Open Nexus to See All {{ cat.section_title }}</button>
-    </form>
+    </a>
   </div>
 
   <ul class="mod-section">
@@ -33,18 +33,37 @@
     {% else %}
     {% for mod in cat.data %}
     <li class="mod-card">
-      <div class="mod-img" style="background-image: url('{{ mod.picture_url }}');" alt="{{ mod.name }} cover image">
+
+      {% if mod.is_nsfw %}
+      <a class="mod-img nsfw" href="{{ url_for('show_mod_page', game_domain_name=game.domain_name, mod_id=mod.id) }}">
+        <img src="{{ mod.picture_url }}" alt="{{ mod.name }} cover image">
+      </a>
+      <div class="nexus-btn-container">
+        <span>NSFW</span>
+        <a href="https://www.nexusmods.com/{{ game.domain_name }}/mods/{{ mod.id }}" target="_blank">
+          <button class="nexus-btn" title="Open {{ mod.name }} on Nexus to search all mods.">
+            <img
+              src="https://raw.githubusercontent.com/github/explore/781dbc058383a2ee8259ebbab057292f16172d5e/topics/nexus-mods/nexus-mods.png">
+          </button>
+        </a>
       </div>
-      <form class="nexus-btn-container" action="https://www.nexusmods.com/{{ game.domain_name }}/mods/{{ mod.id }}"
-        target="_blank">
-        <button class="nexus-btn" type="submit" title="Open {{ mod.name }} on Nexus to search all mods.">
-          <img
-            src="https://raw.githubusercontent.com/github/explore/781dbc058383a2ee8259ebbab057292f16172d5e/topics/nexus-mods/nexus-mods.png">
-        </button>
-      </form>
-      <a class="mod-title"
-        href="{{ url_for('show_mod_page', game_domain_name=game.domain_name, mod_id=mod.id) }}"><span>{{
-          mod.name }}</span></a>
+      {% else %}
+      <a class="mod-img" href="{{ url_for('show_mod_page', game_domain_name=game.domain_name, mod_id=mod.id) }}">
+        <img src="{{ mod.picture_url }}" alt="{{ mod.name }} cover image">
+      </a>
+      <div class="nexus-btn-container">
+        <a href="https://www.nexusmods.com/{{ game.domain_name }}/mods/{{ mod.id }}" target="_blank">
+          <button class="nexus-btn" title="Open {{ mod.name }} on Nexus to search all mods.">
+            <img
+              src="https://raw.githubusercontent.com/github/explore/781dbc058383a2ee8259ebbab057292f16172d5e/topics/nexus-mods/nexus-mods.png">
+          </button>
+        </a>
+      </div>
+      {% endif %}
+
+      <a class="mod-title" href="{{ url_for('show_mod_page', game_domain_name=game.domain_name, mod_id=mod.id) }}">
+        <span>{{ mod.name }}</span>
+      </a>
     </li>
     {% endfor %}
     {% endif %}

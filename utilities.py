@@ -6,7 +6,7 @@ with PostgreSQL database"""
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.postgresql import insert
 from app import db
-from models import User, Modlist, Mod, Game
+from models import User, Modlist, Mod, Game, game_mod
 
 
 def get_all_games_db():
@@ -29,22 +29,7 @@ def get_game_db(game_domain_name):
     
     Returns Game object from db if successful, or Exception details."""
 
-    try:
-        result = db.session.scalars(db.select(Game).where(Game.domain_name==game_domain_name)).first()
-        print(f'''
-        
-        [[[[[[[[[[[[[[[[[[[[[[get_game_db() returns]]]]]]]]]]]]]]]]]]]]]]
-        result.first(): {result}
-        result.first().name: {result.name}
-        
-        ''')
-
-    except Exception as e:
-        print("Error querying db get_game_db(): ", e)
-        return e
-
-    else:
-        game = result
+    game = db.session.scalars(db.select(Game).where(Game.domain_name==game_domain_name)).first()
 
     return game
 
@@ -54,24 +39,12 @@ def get_mod_db(mod_id):
     
     Returns Mod object from db if successful, or None."""
 
-    try:
-        mod = db.session.get(Mod, mod_id)
-        print(f'''
-        
-        [[[[[[[[[[[[[[[[[[[[[[get_mod_db() returns]]]]]]]]]]]]]]]]]]]]]]
-        mod: {result}
-        mod.name: {result.name}
-        
-        ''')
-
-    except Exception as e:
-        print("Error querying db get_mod_db(): ", e)
-        return None
+    mod = db.session.get(Mod, mod_id)
 
     return mod
 
 
-def filter_nxs_data(data_list, list_type, game_obj):
+def filter_nxs_data(data_list, list_type):
     """Takes list of data from Nexus API call and 
     filters out unneeded data for db entry.
 
@@ -80,7 +53,7 @@ def filter_nxs_data(data_list, list_type, game_obj):
     Returns db input ready data list."""
 
     db_ready_data = []
-    print(f"================ starting filter_nxs_data() ================  GAME OBJ: {game_obj.name} // {type(game_obj)}")
+
     if list_type == 'games':
         for game in data_list:
             db_ready_game = {
@@ -98,27 +71,17 @@ def filter_nxs_data(data_list, list_type, game_obj):
                     'id': mod['mod_id'], 
                     'name': mod['name'], 
                     'summary': mod['summary'],
+                    'is_nsfw': mod['contains_adult_content'],
                     'picture_url': mod['picture_url']
                 }
-                if type(game_obj) == Exception or None:
-                    raise AttributeError
                 if db_ready_mod['picture_url'] == 'null':
-                    print(f'''
-                    
-                    
-                    filter_nxs_data() PICTURE URL:
-                    {db_ready_mod['picture_url']}
-                    
-                    
-                        ''')
                     db_ready_mod['picture_url'] = 'https://upload.wikimedia.org/wikipedia/commons/b/b1/Missing-image-232x150.png'
-                db_ready_mod['for_games'] = game_obj
                 db_ready_data.append(db_ready_mod)
 
     return db_ready_data
 
 
-def filter_nxs_mod(nexus_mod, game_obj):
+def filter_nxs_mod_page(nexus_mod, game_obj):
     """Takes mod data object from Nexus API call and 
     filters out unneeded data to display on mod page.
 
@@ -146,7 +109,7 @@ def filter_nxs_mod(nexus_mod, game_obj):
         'author_name': nexus_mod['author'],
         'author_handle': nexus_mod['uploaded_by'],
         'author_url': nexus_mod['uploaded_users_profile_url'],
-        'nsfw': nexus_mod['contains_adult_content'],
+        'is_nsfw': nexus_mod['contains_adult_content'],
         'user_endorsed': nexus_mod['endorsement']['endorse_status']
     }
 
@@ -201,16 +164,41 @@ def update_all_games_db(db_ready_games):
     return True
 
 
-def update_mod_db():
-    """"""
+def update_list_mods_db(db_ready_mods, game):
+    """Takes list of mod data that has been filtered 
+    to only contain: 'id', 'name', 'summary', 'is_nsfw', 'picture_url'
+    
+    Returns True if successful, or Exception details."""
 
-    db_mod = get_mod_db()
+    stmt = insert(Mod).values(db_ready_mods)
+    stmt = stmt.on_conflict_do_update(
+        constraint="mods_pkey",
+        set_={
+            'id': stmt.excluded.id,
+            'name': stmt.excluded.name,
+            'summary': stmt.excluded.summary,
+            'is_nsfw': stmt.excluded.is_nsfw,
+            'picture_url': stmt.excluded.picture_url
+        }
+    )
 
-    if db_mod:
-        print("is db_mod, yay!")
-        # update mod in db
-    else:
-        print("is NOT db_mod, boo!")
-        # insert mod to db
+    db.session.execute(stmt)
 
-    return db_mod
+    db.session.commit()
+            
+    return True
+
+
+def link_mods_to_game(db_ready_mods, game):
+    """Connects a mod to the game for which it was made.
+    Access mod from game obj: 'subject_of_mods'
+    Access game from mod obj: 'for_games'
+    """
+
+    for m in db_ready_mods:
+        mod = get_mod_db(m['id'])
+        
+        if mod not in game.subject_of_mods:
+            game.subject_of_mods.append(mod)
+
+    db.session.commit()
