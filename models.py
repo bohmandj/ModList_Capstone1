@@ -152,6 +152,25 @@ game_mod = db.Table(
     ),
 )
 
+
+#Connection of a game to the modlist that is made for it.
+game_modlist = db.Table(
+    
+    'game_modlist',
+        
+    db.Column(
+        'game_id', 
+        db.ForeignKey('games.id'), 
+        primary_key=True
+    ),
+
+    db.Column(
+        'modlist_id', 
+        db.ForeignKey('modlists.id'), 
+        primary_key=True
+    ),
+)
+
 ###########################################################
 # Association Object:
 
@@ -220,8 +239,11 @@ class Modlist(db.Model):
     user_id: Mapped[int] = mapped_column(db.ForeignKey('users.id', ondelete='CASCADE'))
     user: Mapped['User'] = db.relationship(back_populates='modlists') # user that made/owns the modlist
 
-    game_id: Mapped[int] = mapped_column(db.ForeignKey('games.id', ondelete='SET NULL'))
-    for_games: Mapped['Game'] = db.relationship(back_populates='subject_of_modlists') # game the modlist is built for
+    # game the modlist is built for
+    for_games: Mapped[List['Game']] = db.relationship(
+        secondary=game_modlist, 
+        back_populates='subject_of_modlists'
+    )
 
     # users that follow this modlist
     followers: Mapped[List['User']] = db.relationship(
@@ -229,9 +251,21 @@ class Modlist(db.Model):
         back_populates='followed_modlists'
     )
 
-    def update_timestamp(self):
+    def update_mlist_tstamp(self):
         self.last_updated  = datetime.now(timezone.utc)
         db.session.add(self)
+
+    def add_mod(self, mod):
+        self.mods.append(mod)
+
+    @classmethod
+    def new_modlist(cls, name, description, user):
+        modlist = Modlist(
+                name=name,
+                description=description,
+                user=user
+            )
+        db.session.add(modlist)
 
     def __repr__(self):
         return f'<ModList #{self.id}: "{self.name}", by {self.user.username}>'
@@ -392,7 +426,10 @@ class Game(db.Model):
 
     downloads: Mapped[int] = mapped_column(db.BigInteger)
 
-    subject_of_modlists: Mapped[List["Modlist"]] = db.relationship(back_populates='for_games')
+    subject_of_modlists: Mapped[List["Modlist"]] = db.relationship(
+        secondary=game_modlist, 
+        back_populates='for_games'
+    )
 
     subject_of_mods: Mapped[List['Mod']] = db.relationship(
         secondary=game_mod, 
@@ -487,11 +524,16 @@ class User(db.Model):
     def is_followed_by_profile(self, profile):
         """Is this user followed by `profile`? Returns bool"""
 
+        found_users = []
+
         found_users = [user for user in self.followers if user == profile]
+
         return len(found_users) == 1
 
     def is_following_profile(self, profile):
         """Is this user following 'profile'? Returns bool"""
+
+        found_users = []
 
         found_users = [user for user in self.followed_profiles if user == profile]
         
@@ -499,6 +541,8 @@ class User(db.Model):
 
     def is_following_modlist(self, modlist):
         """Is this user following 'modlist'? Returns bool"""
+
+        found_modlists = []
 
         found_modlists = [mlist for mlist in self.followed_modlists if mlist == modlist]
         
@@ -508,14 +552,16 @@ class User(db.Model):
         """Get list of games the user has made 
         lists for (probably owns the game)"""
 
-        found_games = [mlist.game for mlist in self.modlists if mlist.game not in found_games]
+        found_games = []
+
+        found_games = [mlist.for_games for mlist in self.modlists if mlist.for_games not in found_games]
 
         return found_games
 
-    def get_recent_modlists(self):
+    def get_recent_modlists(self, modlists):
         """Get list of user's modlists ordered by last_updated"""
 
-        recent_modlists = self.modlists.sort(key=last_updated, reverse=True)
+        recent_modlists = modlists.sort(key=last_updated, reverse=True)
 
         return recent_modlists
 
