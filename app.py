@@ -177,6 +177,52 @@ def show_user_page(user_id):
     return render_template('users/profile.html', user=user, games=games, modlists=modlists)
 
 
+@app.route('/users/edit', methods=["GET", "POST"])
+def edit_profile():
+    """Update profile info for current user."""
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    form = UserEditForm()
+
+    if form.validate_on_submit():
+        user = User.authenticate(g.user.username, form.current_password.data)
+        if user == False:
+            flash("Username and/or password did not match our records. Please try again.", 'danger')
+            return render_template('users/edit.html', form=form)
+
+        try:
+            g.user.username = form.username.data
+            db.session.commit()
+        except:
+            db.session.rollback()
+            flash("Username already taken", 'danger')
+            return render_template('users/edit.html', form=form)
+        
+        try:
+            g.user.email = form.email.data
+            db.session.commit()
+        except:
+            db.session.rollback()
+            flash("Email already taken. Every email can only be associated with a single account.", 'danger')
+            return render_template('users/edit.html', form=form)
+
+        g.user.hide_nsfw = form.hide_nsfw.data
+
+        db.session.commit()
+
+        return redirect(f'/users/{g.user.id}')
+
+    # pre-fill forms w/ user data
+    form.username.data = g.user.username
+    form.email.data = g.user.email
+    form.hide_nsfw.data = g.user.hide_nsfw
+
+    return render_template('users/edit.html', form=form)
+
+
 @app.route('/users/<user_id>/modlists/new', methods=["GET", "POST"])
 def new_modlist(user_id):
     """Handle new ModList generation.
@@ -196,10 +242,10 @@ def new_modlist(user_id):
             modlist = Modlist.new_modlist(
                 name=form.name.data,
                 description=form.description.data,
+                private=form.private.data,
                 user=g.user
             )
             db.session.commit()
-            print("FINISHED TRYING TO MAKE MODLIST")
 
         except Exception as e:
             print("Error creating Modlist: ", e)

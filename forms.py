@@ -38,14 +38,9 @@ class UserEditForm(FlaskForm):
     email = StringField('Email Address', [
         validators.Length(min=6, max=35)
     ])
-    hide_nsfw = BooleanField('Hide NSFW')
-    new_password = PasswordField('New Password', [
-        validators.Optional(),
-        validators.EqualTo('confirm', message='Passwords must match')
-    ])
-    new_confirm = PasswordField('Repeat New Password')
+    hide_nsfw = BooleanField('Hide NSFW mod content?')
     current_password = PasswordField('New Password', [
-        validators.InputRequired('Must provide current password to make changes')
+        validators.Length(min=6)
     ])
 
 
@@ -57,7 +52,6 @@ class ModlistAddForm(FlaskForm):
     ])
     private = BooleanField(
         'Mark as Private - hide ModList from public profile', 
-        default=False, 
         false_values=('False', 'false', '')
     )
     description = TextAreaField('Description', [
