@@ -47,3 +47,19 @@ class UserEditForm(FlaskForm):
     current_password = PasswordField('New Password', [
         validators.InputRequired('Must provide current password to make changes')
     ])
+
+
+class ModlistAddForm(FlaskForm):
+    """Form for adding ModLists"""
+
+    name = StringField('Name', [
+        validators.Length(min=1, max=60)
+    ])
+    private = BooleanField(
+        'Mark as Private - hide ModList from public profile', 
+        default=False, 
+        false_values=('False', 'false', '')
+    )
+    description = TextAreaField('Description', [
+        validators.optional()
+    ])

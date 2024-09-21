@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ user.username }}{% endblock %}
+
+{% block content %}
+
+<div class="home">
+  <div class="profile">
+    <h1>{{ user.username }}</h1>
+    <!-- <h3>{{ user.username }}'s Games with ModLists:</h3> -->
+
+    {% if games[0] == 'Empty' %}
+    <div class="empty-games">
+      {% if modlists[0] == 'Empty' %}
+      <h4 style="margin-bottom: 30px;">No modlists made for any games yet.</h4>
+
+      {% else %}
+      {% for modlist in modlists %}
+      <div class="modlist-background" style="background-color: rgb(32, 32, 32);">
+        <a href="{{ url_for('show_modlist_page', user_id=user.id, modlist_id=modlist.id) }}">
+          <h6>{{ modlist.name }}</h6>
+        </a>
+        <div class="modlist-mods">
+
+          {% for mod in modlist.mods[:3] %}
+          <img class="game-background" src="{{ mod.picture_url }}" alt="{{ mod.name }}">
+          {% endfor %}
+
+        </div>
+      </div>
+      {% endfor %}
+      {% endif %}
+    </div>
+    <a href="{{ url_for('new_modlist', user_id=user.id) }}">
+      <button class="btn btn-primary">Make a new ModList!</button>
+    </a>
+    {% else %}
+    <div class="game-modlists">
+
+      {% for game in games %}
+      <a href="{{ url_for('show_game_page', game_domain_name=game.domain_name) }}">
+        <h4>{{ game.game.name }}</h4>
+      </a>
+
+      {% for modlist in game.modlists[:3] %}
+      <div class="modlist-background"
+        style="background-image: url(https://staticdelivery.nexusmods.com/Images/games/4_3/tile_{{game.id}}.jpg);">
+        <a href="{{ url_for('show_mod_page', game_domain_name=game.domain_name, mod_id=mod.id) }}">
+          <h6>{{ modlist.name }}</h6>
+        </a>
+        <div class="modlist-mods">
+
+          {% for mod in modlist.mods[:3] %}
+          <img class="game-background" src="{{ mod.picture_url }}" alt="{{ mod.name }}">
+          {% endfor %}
+
+        </div>
+      </div>
+      {% endfor %}
+      <a href="{{ url_for('new_modlist', user_id=user.id) }}">
+        <button class="btn btn-primary">Make a new ModList!</button>
+      </a>
+      {% endfor %}
+
+    </div>
+
+    {% endif %}
+  </div>
+</div>
+
+
+
+
+</div>
+
+{% endblock %}

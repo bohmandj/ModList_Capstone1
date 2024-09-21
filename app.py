@@ -4,7 +4,7 @@ from flask import Flask, render_template, request, flash, redirect, session, g, 
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
-from forms import UserAddForm, LoginForm, UserEditForm
+from forms import UserAddForm, LoginForm, UserEditForm, ModlistAddForm
 from models import db, connect_db, User, Modlist, Mod, Game
 
 from nexus_api import get_all_games_nxs, get_mods_of_type_nxs, get_mod_nxs
@@ -90,6 +90,12 @@ def signup():
 
         do_login(user)
 
+        Modlist.new_modlist(
+            name='Nexus Tracked Mods', 
+            description="This ModList automatically populates with all the mods in your Nexus account's Tracking centre. Use the Tracking feature on Nexus to easily bring mods over to ModList while browsing on Nexus. Mark mods 'keep tracked' in this ModList to make sure you don't accidentally un-track something you actually want tracked on Nexus for update notifications. From here you can you can also add mods to your other ModLists, or un-track mods you don't want to keep tracked on Nexus.", 
+            user=user
+        )
+
         return redirect("/")
 
     else:
@@ -116,8 +122,7 @@ def login():
 
                 db_ready_games = filter_nxs_data(nexus_games, 'games')
 
-                tf = update_all_games_db(db_ready_games)
-                print(tf)
+                update_all_games_db(db_ready_games)
             except:
                 flash("Problem occurred refreshing games list from Nexus.\nDisplayed games list may be out of date or incomplete.\nLog out and back in to reattempt.", "danger")
 
@@ -145,6 +150,75 @@ def logout():
 
 ##############################################################################
 # User routes (& ModList routes):
+
+@app.route('/users/<user_id>')
+def show_user_page(user_id):
+    """Show user profile page.
+    
+    - Display games for which user has lists with small
+      selection of their lists.
+    - Buttons to: go to list, go to game, make new list.
+    """
+
+    user = User.query.get_or_404(user_id)
+    modlists = user.modlists
+    # print("MODLISTS:::::::::: ", modlists[0])
+    # games = user.get_users_games()
+    # print("games:::::::::: ", games)
+
+    games = []
+    # for game in user.get_users_games():
+    #     modlists = user.get_recent_modlists(modlists)
+    #     games.append({'game':game, 'modlists':modlists})
+    if len(games) == 0:
+        games = ['Empty']
+    if len(modlists) == 0:
+        modlists = ['Empty']
+    return render_template('users/profile.html', user=user, games=games, modlists=modlists)
+
+
+@app.route('/users/<user_id>/modlists/new', methods=["GET", "POST"])
+def new_modlist(user_id):
+    """Handle new ModList generation.
+
+    Create new ModList and add to DB. Redirect to new ModList page.
+
+    If form not valid, re-present form.
+
+    If the there already is a ModList with that name owned by the 
+    same user: flash message and re-present form.
+    """
+
+    form = ModlistAddForm()
+
+    if form.validate_on_submit():
+        try:
+            modlist = Modlist.new_modlist(
+                name=form.name.data,
+                description=form.description.data,
+                user=g.user
+            )
+            db.session.commit()
+            print("FINISHED TRYING TO MAKE MODLIST")
+
+        except Exception as e:
+            print("Error creating Modlist: ", e)
+            flash("Error creating ModList, please try again.", 'danger')
+            return render_template('users/modlist-new.html', form=form)
+
+        return redirect(url_for("show_user_page", user_id=g.user.id))
+
+    else:
+        return render_template('users/modlist-new.html', form=form)
+
+
+@app.route('/users/<user_id>/modlists/<modlist_id>')
+def show_modlist_page(user_id, modlist_id):
+    """Show modlist page.
+
+    - db is searched for contents of the ModList.
+    - Buttons: link to each mod page, remove mod from list, 
+    """
 
 
 ##############################################################################
@@ -183,8 +257,10 @@ def show_game_page(game_domain_name):
             print(f'CAT ERROR: {e}')
             raise
         else:
-            db_ready_data = filter_nxs_data(nxs_category, 'mods', game_obj=game)
+            db_ready_data = filter_nxs_data(nxs_category, 'mods')
             cat['data'] = db_ready_data
+            update_list_mods_db(db_ready_data, game)
+            link_mods_to_game(db_ready_data, game)
 
     return render_template('games/game.html', game=game, mod_categories=mod_categories)
 
@@ -214,7 +290,7 @@ def show_mod_page(game_domain_name, mod_id):
     ### Pull relevant data out of API response object to populate page, render_template for mod page ###
     nexus_mod = get_mod_nxs(game, mod_id)
 
-    db_ready_mods = filter_nxs_data([nexus_mod], 'mods', game_obj=game)
+    db_ready_mods = filter_nxs_data([nexus_mod], 'mods')
     update_list_mods_db(db_ready_mods, game)
     link_mods_to_game(db_ready_mods, game)
 
