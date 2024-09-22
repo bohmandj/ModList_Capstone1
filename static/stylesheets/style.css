@@ -16,6 +16,12 @@ body {
     margin: 0 auto;
 }
 
+.split-container {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+}
+
 .card-page {
     display: block;
     width: 80vw;
@@ -184,7 +190,8 @@ form .form-switch {
     border-top-right-radius: 10px;
     border-bottom-right-radius: 10px;
     /* color: #ffffff; */
-    color: #626466;
+    color: #21252A;
+    font-weight: bold;
     padding: 0.6rem 1rem;
 }
 
@@ -196,6 +203,12 @@ form .form-switch .form-check-input {
     margin: 0;
     display: flex;
     align-items: center;
+}
+
+form .password-direction {
+    color: #ffffff;
+    margin-top: 60px;
+    margin-bottom: 10px;
 }
 
 /* ===================== User profile */
@@ -243,22 +256,17 @@ form .form-switch .form-check-input {
     width: 100%;
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    column-gap: 2%;
-    row-gap: 2%;
-    margin: 15px 0px 40px;
+    column-gap: 25px;
+    row-gap: 25px;
     padding: 0px;
 }
 
 .game-section .game-card {
-    /* display: inline-block;
-    overflow: hidden; */
     display: grid;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: auto 0px 1fr;
     overflow: hidden;
     height: auto;
-    /* background-color: #202020; */
     border-radius: 10px;
-    margin: 10px;
 }
 
 .game-section .game-card:hover {
@@ -280,17 +288,17 @@ form .form-switch .form-check-input {
     color: white;
     background: #202020;
     width: 100%;
-    height: calc(100% - 180px);
+    height: 100%;
     min-height: 65px;
     display: flex;
     justify-content: center;
     align-items: center;
+    padding-top: 8px;
+    padding-bottom: 12px;
 }
 
 .game-card .game-title span {
     width: 80%;
-    padding-top: 8px;
-    padding-bottom: 10px;
 }
 
 .game-abc {
@@ -342,8 +350,8 @@ form .form-switch .form-check-input {
     height: min-content;
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    column-gap: 2%;
-    row-gap: 2%;
+    column-gap: 1.5vw;
+    row-gap: 1.5vw;
     margin: 20px 0px 60px;
     padding: 0px;
 }
@@ -374,8 +382,8 @@ form .form-switch .form-check-input {
     display: grid;
     grid-template-rows: auto 0px 1fr;
     overflow: hidden;
-    height: 100%;
     border-radius: 10px;
+    height: 100%;
 }
 
 .mod-cat-section .mod-card:hover {
@@ -386,8 +394,6 @@ form .form-switch .form-check-input {
 .mod-card .mod-img img {
     width: 100%;
     aspect-ratio: 16/9;
-    overflow: hidden;
-    margin: 0px;
     z-index: 2;
     object-fit: cover;
 }
@@ -400,12 +406,12 @@ form .form-switch .form-check-input {
     color: white;
     background: #202020;
     width: 100%;
-    /* height: max-content; */
+    height: 100%;
     min-height: 65px;
     display: flex;
     justify-content: center;
     align-items: center;
-    overflow: auto;
+    overflow: hidden;
     z-index: 3;
 }
 
@@ -460,9 +466,6 @@ form .form-switch .form-check-input {
 }
 
 .mod-detail ul {
-    /* display: grid;
-    grid-template-columns: 4fr 6fr;
-    gap: 20px; */
     padding: 0px;
     margin-bottom: 20px;
 }
@@ -563,39 +566,4 @@ form .form-switch .form-check-input {
 
 .message-404 .form-inline input {
     flex: 1;
-}
-
-/* TESTING */
-.grid-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 10px;
-    /* Adjust as needed */
-}
-
-.grid-item {
-    display: grid;
-    grid-template-rows: auto 1fr;
-    /* Fixed height row for top and flexible row for bottom */
-    border: 1px solid #ccc;
-    /* For visualization */
-    background: #f9f9f9;
-    /* For visualization */
-    height: 100%;
-    /* Ensures grid items scale with container */
-}
-
-.top-element {
-    background: #ff6060;
-    /* For visualization */
-    aspect-ratio: 16 / 9;
-    /* Maintains aspect ratio */
-    width: 100%;
-}
-
-.bottom-element {
-    background: #ff7700;
-    /* For visualization */
-    overflow: auto;
-    /* Handle overflow if necessary */
 }
