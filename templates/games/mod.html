@@ -4,23 +4,25 @@
 
 {% block content %}
 
-<div class="home">
+<div class="card-page">
     <div class="modpage">
         <div class="mod-detail">
             <h3 style="margin-bottom: 20px;">{{ mod.name }}</h3>
             <h5 style="margin-bottom: 10px;">{{ mod.summary }}</h5>
             <ul>
                 <li>Version: {{ mod.version }}</li>
+                {% if mod.last_updated %}
                 <li>Last Updated: {{ mod.last_updated }}</li>
+                {% endif %}
                 <li>Endorsements: {{ mod.endorsement_count }}</li>
-                <li>Author: {{ mod.author_name }}</li>
-                <li>Nexus Profile: <a href="{{ mod.author_url }}">{{ mod.author_handle }}</a></li>
+                <li>Mod Author: {{ mod.author_name }}</li>
+                <li>Author's Nexus Profile: <a href="{{ mod.author_url }}">{{ mod.author_handle }}</a></li>
             </ul>
 
             <div>
                 <form class="to-nxs-mod" action="https://www.nexusmods.com/{{ game.domain_name }}/mods/{{ mod.id }}"
                     target="_blank">
-                    <button class="btn btn-primary">Open Mod on Nexus</button>
+                    <button class="btn btn-primary">Open {{ mod.name }} page on Nexus</button>
                 </form>
 
                 {% if mod.user_endorsed == "Endorsed" %}
@@ -30,9 +32,10 @@
                 {% endif %}
             </div>
         </div>
-        {% if mod.is_nsfw %}
+        {% if mod.is_nsfw and hide_nsfw == True %}
         <div class="nsfw">
-            <img src="{{ mod.picture_url }}" alt="{{ mod.name }} title image" title="{{ mod.name }} title image">
+            <img src="{{ mod.picture_url }}" alt="{{ mod.name }} title image"
+                title="NSFW visibility can be changed in user settings">
             <span>NSFW Mod</span>
         </div>
         {% else %}

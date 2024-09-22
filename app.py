@@ -308,7 +308,12 @@ def show_game_page(game_domain_name):
             update_list_mods_db(db_ready_data, game)
             link_mods_to_game(db_ready_data, game)
 
-    return render_template('games/game.html', game=game, mod_categories=mod_categories)
+    if not g.user:
+        hide_nsfw = True
+    else:
+        hide_nsfw = g.user.hide_nsfw
+
+    return render_template('games/game.html', game=game, mod_categories=mod_categories, hide_nsfw=hide_nsfw)
 
 
 @app.route('/games/<game_domain_name>/mods/<mod_id>')
@@ -344,7 +349,12 @@ def show_mod_page(game_domain_name, mod_id):
 
     page_ready_mod = filter_nxs_mod_page(nexus_mod, game)
 
-    return render_template('games/mod.html', game=game, mod=page_ready_mod)
+    if not g.user:
+        hide_nsfw = True
+    else:
+        hide_nsfw = g.user.hide_nsfw
+
+    return render_template('games/mod.html', game=game, mod=page_ready_mod, hide_nsfw=hide_nsfw)
 
 
 ##############################################################################

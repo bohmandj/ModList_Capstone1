@@ -4,11 +4,11 @@
 
 {% block content %}
 
-<div class="home">
+<div class="card-page">
   <h1>{{ game.name }}</h1>
 
   {% for cat in mod_categories %}
-  <div style="width: 80vw; display: flex; justify-content: space-between;">
+  <div class="mod-cat-heading">
     <h3 class="section-title">{{ cat.section_title }}</h3>
     <a class="section-nexus-btn" href="https://www.nexusmods.com/{{ game.domain_name }}/mods/{{ cat.mod_cat }}"
       target="_blank">
@@ -16,7 +16,7 @@
     </a>
   </div>
 
-  <ul class="mod-section">
+  <ul class="mod-cat-section">
     {% if cat.error %}
     <li class="game-card" style="width: 40%; background-color: #404040;">
       <div class="game-img" style="width: 100%; height: 100px; padding: 10px;">
@@ -34,12 +34,12 @@
     {% for mod in cat.data %}
     <li class="mod-card">
 
-      {% if mod.is_nsfw %}
+      {% if mod.is_nsfw and hide_nsfw == True %}
       <a class="mod-img nsfw" href="{{ url_for('show_mod_page', game_domain_name=game.domain_name, mod_id=mod.id) }}">
         <img src="{{ mod.picture_url }}" alt="{{ mod.name }} cover image">
       </a>
       <div class="nexus-btn-container">
-        <span>NSFW</span>
+        <span title="NSFW visibility can be changed in user settings">NSFW</span>
         <a href="https://www.nexusmods.com/{{ game.domain_name }}/mods/{{ mod.id }}" target="_blank">
           <button class="nexus-btn" title="Open {{ mod.name }} on Nexus to search all mods.">
             <img
