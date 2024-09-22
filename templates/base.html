@@ -19,13 +19,13 @@
 
   <nav class="navbar navbar-expand">
     <div class="container-fluid">
-      <div class="navbar-header"> <!-- nav left side logo & site name -->
+      <div class="navbar-header">
         <a href="/" class="navbar-brand">
           <img src="/static/images/modlist-icon.png" alt="logo">
           <span>ModList</span>
         </a>
       </div>
-      <ul class="nav navbar-nav navbar-right"> <!-- nav right side links -->
+      <ul class="nav navbar-nav navbar-right">
         {% if not g.user %}
         <li><a href="/signup">Sign up</a></li>
         <li><a href="/login">Log in</a></li>
@@ -38,7 +38,8 @@
       </ul>
     </div>
   </nav>
-  <div class="container"> <!-- main body content populated by jinja -->
+
+  <div class="content-container"> <!-- main body content populated by jinja -->
     {% for category, message in get_flashed_messages(with_categories=True) %}
     <div class="alert alert-{{ category }} alert-dismissible">
       {{ message }}
