@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Profile{% endblock %}
+
+{% block content %}
+
+<div class="form-page">
+  <h2 class="form-header">Edit {{ user.username }}'s Profile:</h2>
+  <form method="POST" id="user_form">
+    {{ form.hidden_tag() }}
+
+    {% for field in form if field.widget.input_type != 'hidden' and field.name != 'current_password' %}
+
+    {% for error in field.errors %}
+    <span class="text-danger">{{ error }}</span>
+    {% endfor %}
+
+    {% if field.widget.input_type == 'checkbox' %}
+    <div class="form-check form-switch">
+      <div class="form-check-container">{{ field(checked=False, class="form-check-input", type="checkbox",
+        role="switch", id="flexSwitchCheck")
+        }}</div>
+      <label class="form-check-label" for="flexSwitchCheck">
+        <span>{{ field.label.text }}</span><br>
+        <span style="font-size: 0.8rem;">{{ field.description }}</span>
+      </label>
+    </div>
+    {% else %}
+    <h6>{{ field.label.text }}</h6>
+    {{ field(placeholder=field.label.text, class="form-control") }}
+    {% endif %}
+
+    {% endfor %}
+
+    <br>
+    <h6>{{ form.current_password.label.text }}</h6>
+    {% if form.current_password.errors %}
+    {% for error in form.current_password.errors %}
+    <span class="text-danger">{{ error }}</span>
+    {% endfor %}
+    {% endif %}
+    {{ form.current_password(placeholder=form.current_password.description, class="form-control") }}
+
+    <div class="split-container">
+      <div>
+        <button type="submit" class="btn btn-success">Save Changes</button>
+        <a href="{{ url_for('show_user_page', user_id=user.id) }}" class="btn btn-outline-secondary">Cancel</a>
+      </div>
+      <a href="{{ url_for('edit_password') }}" class="btn btn-danger" style="position: relative; right: 0px;">Edit
+        Password</a>
+    </div>
+  </form>
+</div>
+
+{% endblock %}

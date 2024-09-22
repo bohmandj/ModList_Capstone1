@@ -583,6 +583,19 @@ class User(db.Model):
         
         return None
 
+    def hash_new_password(cls, password):
+        """Save a new password to the user's data in db.
+
+        Hashes password and adds edited user to system.
+        """
+
+        try:
+            hashed_pwd = bcrypt.generate_password_hash(password).decode('UTF-8')
+        except:
+            hashed_pwd = None
+
+        return hashed_pwd
+
     @classmethod
     def signup(cls, username, email, password):
         """Sign up user.

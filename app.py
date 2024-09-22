@@ -4,7 +4,7 @@ from flask import Flask, render_template, request, flash, redirect, session, g, 
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
-from forms import UserAddForm, LoginForm, UserEditForm, ModlistAddForm
+from forms import UserAddForm, LoginForm, UserEditForm, UserPasswordForm, ModlistAddForm
 from models import db, connect_db, User, Modlist, Mod, Game
 
 from nexus_api import get_all_games_nxs, get_mods_of_type_nxs, get_mod_nxs
@@ -95,6 +95,7 @@ def signup():
             description="This ModList automatically populates with all the mods in your Nexus account's Tracking centre. Use the Tracking feature on Nexus to easily bring mods over to ModList while browsing on Nexus. Mark mods 'keep tracked' in this ModList to make sure you don't accidentally un-track something you actually want tracked on Nexus for update notifications. From here you can you can also add mods to your other ModLists, or un-track mods you don't want to keep tracked on Nexus.", 
             user=user
         )
+        db.session.commit()
 
         return redirect("/")
 
@@ -188,10 +189,11 @@ def edit_profile():
     form = UserEditForm()
 
     if form.validate_on_submit():
+
         user = User.authenticate(g.user.username, form.current_password.data)
         if user == False:
             flash("Username and/or password did not match our records. Please try again.", 'danger')
-            return render_template('users/edit.html', form=form)
+            return render_template('users/edit.html', form=form, user=g.user)
 
         try:
             g.user.username = form.username.data
@@ -199,15 +201,15 @@ def edit_profile():
         except:
             db.session.rollback()
             flash("Username already taken", 'danger')
-            return render_template('users/edit.html', form=form)
+            return render_template('users/edit.html', form=form, user=g.user)
         
         try:
             g.user.email = form.email.data
             db.session.commit()
         except:
             db.session.rollback()
-            flash("Email already taken. Every email can only be associated with a single account.", 'danger')
-            return render_template('users/edit.html', form=form)
+            flash("Password did not match our records for the currently signed-in user account. Please try again.", 'danger')
+            return render_template('users/edit.html', form=form, user=g.user)
 
         g.user.hide_nsfw = form.hide_nsfw.data
 
@@ -220,7 +222,46 @@ def edit_profile():
     form.email.data = g.user.email
     form.hide_nsfw.data = g.user.hide_nsfw
 
-    return render_template('users/edit.html', form=form)
+    return render_template('users/edit.html', form=form, user=g.user)
+
+
+@app.route('/users/password', methods=["GET", "POST"])
+def edit_password():
+    """Update password for current user."""
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    form = UserPasswordForm()
+
+    if form.validate_on_submit():
+        print("Start NEW PASSWORD validation")
+        user = User.authenticate(g.user.username, form.current_password.data)
+
+        if user == False:
+            flash("Password did not match our records for the currently signed-in user account. Please try again.", 'danger')
+            return render_template('users/password.html', form=form, user=g.user)
+        print("User: ", user)
+        if form.new_password.data != form.new_confirm.data:
+            flash("New password and confirmation password did not match. Please try again.", 'danger')
+            return render_template('users/password.html', form=form, user=g.user)
+        print("New passwords match")
+        try:
+            hashed_password = user.hash_new_password(form.new_password.data)
+            user.password = hashed_password
+            print("Hashed New password: ", user.password)
+            db.session.commit()
+        except Exception as e:
+            print("Error making/saving new password to db: ", e)
+            flash("Error saving new password. Please try again.", 'danger')
+            return render_template('users/password.html', form=form, user=g.user)
+
+        flash("Success! New password saved.", 'success')
+
+        return redirect(f'/users/{g.user.id}')
+
+    return render_template('users/password.html', form=form, user=g.user)
 
 
 @app.route('/users/<user_id>/modlists/new', methods=["GET", "POST"])
