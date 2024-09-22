@@ -31,9 +31,25 @@
         <li><a href="/login">Log in</a></li>
         {% else %}
         <li>
-          <a href="/users/{{ g.user.id }}">{{ g.user.username }}</a>
+          <div class="dropdown">
+            <button class="dropbtn">{{ g.user.username }} &ensp;
+              <svg xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 448 512"><!--!Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.-->
+                <path
+                  d="M201.4 374.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 306.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z" />
+              </svg>
+            </button>
+            <div class="dropdown-content">
+              <a href="{{ url_for('show_user_page', user_id=g.user.id) }}">{{
+                g.user.username }}</a>
+              <a href="#######">See ModLists</a>
+              <hr style="margin: 0;">
+              <a href="{{ url_for('edit_profile') }}">User Settings</a>
+              <hr style="margin: 0;">
+              <a href="{{ url_for('logout') }}">Log out</a>
+            </div>
+          </div>
         </li>
-        <li><a href="/logout">Log out</a></li>
         {% endif %}
       </ul>
     </div>

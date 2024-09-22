@@ -135,6 +135,83 @@ nav form.navbar-form {
     }
 }
 
+/* ===================== Dropdown */
+
+/* Style The Dropdown Button */
+.dropbtn {
+    font-weight: bold;
+    background-color: #151515;
+    color: #66757F;
+    padding: 6px 15px;
+    border: solid 1px;
+    min-width: 150px;
+    border-color: #303030;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+/* The container <div> - needed to position the dropdown content */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown svg {
+    height: 1.3rem;
+    width: 1.3rem;
+    fill: #66757F;
+    position: relative;
+    bottom: 2px;
+}
+
+/* Dropdown Content (Hidden by Default) */
+.dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0px;
+    background-color: #f9f9f9;
+    min-width: min-content;
+    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+/* Links inside the dropdown */
+.dropdown-content a {
+    padding: 10px 16px;
+    text-decoration: none;
+    display: block;
+    font-size: 1rem;
+    text-align: right;
+}
+
+/* Change color of dropdown links on hover */
+.dropdown-content a:hover {
+    background-color: #f1f1f1;
+    color: #5170AF;
+}
+
+/* Show the dropdown menu on hover */
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+/* Change the background color of the dropdown button when the dropdown content is shown */
+.dropdown:hover .dropbtn {
+    background-color: #5170AF;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 0px;
+    color: #ffffff;
+}
+
+.dropdown:hover svg {
+    fill: #ffffff;
+
+}
+
 /* ===================== Forms */
 
 .form-page {
@@ -195,6 +272,10 @@ form .form-switch {
     padding: 0.6rem 1rem;
 }
 
+form h6 {
+    color: #ffffff;
+}
+
 form .form-switch .form-check-input {
     /* the actual on/off switch element */
     height: 1.3rem;
@@ -203,12 +284,6 @@ form .form-switch .form-check-input {
     margin: 0;
     display: flex;
     align-items: center;
-}
-
-form .password-direction {
-    color: #ffffff;
-    margin-top: 60px;
-    margin-bottom: 10px;
 }
 
 /* ===================== User profile */
