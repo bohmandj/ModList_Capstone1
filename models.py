@@ -221,6 +221,10 @@ class Modlist(db.Model):
 
     description: Mapped[Optional[str]]
 
+    private: Mapped[bool] = mapped_column(
+        db.Boolean, 
+        default=False
+    )
     has_nsfw: Mapped[bool] = mapped_column(
         db.Boolean, 
         default=False
@@ -259,10 +263,11 @@ class Modlist(db.Model):
         self.mods.append(mod)
 
     @classmethod
-    def new_modlist(cls, name, description, user):
+    def new_modlist(cls, name, description, private, user):
         modlist = Modlist(
                 name=name,
                 description=description,
+                private=private,
                 user=user
             )
         db.session.add(modlist)
@@ -443,6 +448,8 @@ class Game(db.Model):
 class User(db.Model):
 
     __tablename__ = 'users'
+
+    __table_args__ = (db.UniqueConstraint("email"),)
 
     id: Mapped[int] = mapped_column(
         primary_key=True,
