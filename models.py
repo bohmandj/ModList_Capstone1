@@ -561,16 +561,11 @@ class User(db.Model):
 
         found_games = []
 
-        found_games = [mlist.for_games for mlist in self.modlists if mlist.for_games not in found_games]
+        found_games = [modlist.for_games[0] for modlist in self.modlists if modlist.for_games not in found_games and modlist.for_games != []]
+
+        found_games = list(set(found_games))
 
         return found_games
-
-    def get_recent_modlists(self, modlists):
-        """Get list of user's modlists ordered by last_updated"""
-
-        recent_modlists = modlists.sort(key=last_updated, reverse=True)
-
-        return recent_modlists
 
     def get_notes_for(self, mod):
         """Returns 'notes' str from User_Mod_Notes obj associated 
