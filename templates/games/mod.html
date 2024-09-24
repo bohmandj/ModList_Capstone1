@@ -18,20 +18,8 @@
                 <li>Mod Author: {{ mod.author_name }}</li>
                 <li>Author's Nexus Profile: <a href="{{ mod.author_url }}">{{ mod.author_handle }}</a></li>
             </ul>
-
-            <div>
-                <form class="to-nxs-mod" action="https://www.nexusmods.com/{{ game.domain_name }}/mods/{{ mod.id }}"
-                    target="_blank">
-                    <button class="btn btn-primary">Open {{ mod.name }} page on Nexus</button>
-                </form>
-
-                {% if mod.user_endorsed == "Endorsed" %}
-                <button class="un-endorse btn btn-outline-danger">Un-Endorse</button>
-                {% else %}
-                <button class="do-endorse btn btn-outline-success">Endorse</button>
-                {% endif %}
-            </div>
         </div>
+
         {% if mod.is_nsfw and hide_nsfw == True %}
         <div class="nsfw">
             <img src="{{ mod.picture_url }}" alt="{{ mod.name }} title image"
@@ -41,6 +29,26 @@
         {% else %}
         <img src="{{ mod.picture_url }}" alt="{{ mod.name }} title image" title="{{ mod.name }} title image">
         {% endif %}
+
+        <div class="modpage-buttons">
+            <a id="to-nxs-mod" href="{{ url_for('modlist_add_mod', user_id=g.user.id, mod_id=mod.id) }}">
+                <button class="btn btn-primary">Add {{ mod.name }} to ModList</button>
+            </a>
+
+        </div>
+
+        <div class="modpage-buttons">
+            <a id="to-nxs-mod" href="https://www.nexusmods.com/{{ game.domain_name }}/mods/{{ mod.id }}"
+                target="_blank">
+                <button class="btn btn-outline-nexus">Open {{ mod.name }} page on Nexus</button>
+            </a>
+
+            {% if mod.user_endorsed == "Endorsed" %}
+            <button class="un-endorse btn btn-outline-danger">Un-Endorse {{ mod.name }} on Nexus</button>
+            {% else %}
+            <button class="do-endorse btn btn-outline-success">Endorse {{ mod.name }} on Nexus</button>
+            {% endif %}
+        </div>
     </div>
 
 

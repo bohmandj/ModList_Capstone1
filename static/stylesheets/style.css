@@ -28,6 +28,21 @@ body {
     height: 100%;
 }
 
+.card-page a {
+    text-decoration: none;
+    color: #ffffff;
+}
+
+.card-page a:hover,
+.card-page a:visited:hover {
+    cursor: pointer;
+    color: #5170AF;
+}
+
+.card-page a:visited {
+    color: #aaaaaa;
+}
+
 h1 {
     margin-bottom: 25px;
 }
@@ -323,6 +338,98 @@ form .form-switch .form-check-input {
 .nexus-btn>img:hover {
     -webkit-filter: drop-shadow(0px 0px 2px rgba(255, 255, 255, 0.5));
     filter: drop-shadow(0px 0px 2px rgba(255, 255, 255, 0.5));
+}
+
+.btn-nexus {
+    color: #FFFFFF;
+    background-color: #D98F40;
+    border-color: #B4762C;
+}
+
+.btn-nexus:hover,
+.btn-nexus:focus,
+.btn-nexus:active,
+.btn-nexus.active,
+.open .dropdown-toggle.btn-nexus {
+    color: #FFFFFF;
+    background-color: #B4762C;
+    border-color: #B4762C;
+}
+
+.btn-nexus:active,
+.btn-nexus.active,
+.open .dropdown-toggle.btn-nexus {
+    background-image: none;
+}
+
+.btn-nexus.disabled,
+.btn-nexus[disabled],
+fieldset[disabled] .btn-nexus,
+.btn-nexus.disabled:hover,
+.btn-nexus[disabled]:hover,
+fieldset[disabled] .btn-nexus:hover,
+.btn-nexus.disabled:focus,
+.btn-nexus[disabled]:focus,
+fieldset[disabled] .btn-nexus:focus,
+.btn-nexus.disabled:active,
+.btn-nexus[disabled]:active,
+fieldset[disabled] .btn-nexus:active,
+.btn-nexus.disabled.active,
+.btn-nexus[disabled].active,
+fieldset[disabled] .btn-nexus.active {
+    background-color: #D98F40;
+    border-color: #B4762C;
+}
+
+.btn-nexus .badge {
+    color: #D98F40;
+    background-color: #FFFFFF;
+}
+
+.btn-outline-nexus {
+    color: #D98F40;
+    background-color: transparent;
+    border-color: #D98F40;
+}
+
+.btn-outline-nexus:hover,
+.btn-outline-nexus:focus,
+.btn-outline-nexus:active,
+.btn-outline-nexus.active,
+.open .dropdown-toggle.btn-outline-nexus {
+    color: #ffffff;
+    background-color: #D98F40;
+    border-color: #B4762C;
+}
+
+.btn-outline-nexus:active,
+.btn-outline-nexus.active,
+.open .dropdown-toggle.btn-outline-nexus {
+    background-image: none;
+}
+
+.btn-outline-nexus.disabled,
+.btn-outline-nexus[disabled],
+fieldset[disabled] .btn-outline-nexus,
+.btn-outline-nexus.disabled:hover,
+.btn-outline-nexus[disabled]:hover,
+fieldset[disabled] .btn-outline-nexus:hover,
+.btn-outline-nexus.disabled:focus,
+.btn-outline-nexus[disabled]:focus,
+fieldset[disabled] .btn-outline-nexus:focus,
+.btn-outline-nexus.disabled:active,
+.btn-outline-nexus[disabled]:active,
+fieldset[disabled] .btn-outline-nexus:active,
+.btn-outline-nexus.disabled.active,
+.btn-outline-nexus[disabled].active,
+fieldset[disabled] .btn-outline-nexus.active {
+    background-color: #fff;
+    border-color: #B4762C;
+}
+
+.btn-outline-nexus .badge {
+    color: #fff;
+    background-color: #D98F40;
 }
 
 /* ===================== Games */
