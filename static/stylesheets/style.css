@@ -22,6 +22,27 @@ body {
     justify-content: space-between;
 }
 
+.section-heading-split {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 40px 0px 10px;
+}
+
+.section-heading-split .section-title {
+    margin-bottom: 0px;
+    display: inline-block;
+    min-width: fit-content;
+}
+
+.section-heading-split .section-buttons {
+    margin-left: 15px;
+    display: inline-block;
+    width: auto;
+    max-width: 40%;
+}
+
 .card-page {
     display: block;
     width: 80vw;
@@ -45,6 +66,12 @@ body {
 
 h1 {
     margin-bottom: 25px;
+}
+
+.page-heading {
+    color: #ffffff;
+    width: fit-content;
+    margin: 0 auto 25px;
 }
 
 .btn {
@@ -302,6 +329,47 @@ form .form-switch .form-check-input {
 }
 
 /* ===================== User profile */
+
+.card-page .games-modlists {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    column-gap: 25px;
+    row-gap: 25px;
+    padding: 0px;
+}
+
+.games-modlists .modlist-card {
+    display: flex;
+    background-size: 100% auto;
+    background-position: center;
+    background-repeat: cover;
+    width: 100%;
+    aspect-ratio: 5/4;
+    border-radius: 10px;
+    overflow: hidden;
+    z-index: 0;
+}
+
+.modlist-card .modlist-details {
+    display: block;
+    align-self: flex-end;
+    width: 100%;
+    min-height: 38%;
+    padding: 0px 20px 20px;
+    bottom: 0px;
+    list-style-type: none;
+    z-index: 1;
+}
+
+.modlist-details .modlist-title a {
+    text-shadow: 1px 1px 2px black, 0 0 0.5em #202020, 0 0 1em #202020;
+}
+
+.modlist-details ul {
+    list-style-type: none;
+    padding-left: 0px;
+}
 
 /* ===================== Nexus Related */
 
@@ -603,6 +671,39 @@ fieldset[disabled] .btn-outline-nexus.active {
     padding-bottom: 12px;
 }
 
+/* ============================== Add Mod Page */
+
+.add-page {
+    width: 100%;
+    height: fit-content;
+    text-align: left;
+    padding: 20px;
+    background-color: #202020;
+    color: #ffffff;
+    border-radius: 25px;
+}
+
+.add-page .modpage {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.add-page .form-check-container {
+    display: inline-block;
+    height: 100%;
+    border-right: solid 10px #202020;
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+    background-color: #151515;
+    padding: 0 1rem;
+    align-content: center;
+}
+
+.add-page form h4 {
+    margin-bottom: 15px;
+}
+
 /* ============================== Mod Page */
 
 .card-page .modpage {
@@ -615,6 +716,11 @@ fieldset[disabled] .btn-outline-nexus.active {
     padding: 20px;
     background-color: #202020;
     border-radius: 25px;
+}
+
+.modpage .modpage-buttons button {
+    width: 100%;
+    margin-bottom: 10px;
 }
 
 .modpage img {

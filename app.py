@@ -310,6 +310,66 @@ def show_modlist_page(user_id, modlist_id):
     """
 
 
+@app.route('/users/<user_id>/modlists/add/<mod_id>', methods=["GET", "POST"])
+def modlist_add_mod(user_id, mod_id):
+    """Add mod to modlist.
+
+    - Database is searched for mod and user's modlists.
+    - If mod not in list of mods contained in selected modlists, 
+      add mod to modlist.
+    """
+    
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    form = ModlistAddModForm()
+
+    if form.validate_on_submit():
+
+        modlist_ids = form.users_modlists.data
+        mod = db.get_or_404(Mod, mod_id)
+        # mod = db.session.scalars(db.select(Mod).options(db.subqueryload(Mod.for_games)).filter_by(id=mod_id)).first()
+
+        for id in modlist_ids:
+
+            modlist = db.get_or_404(Modlist, id)
+            game = db.get_or_404(Game, mod.for_games[0].id)
+            
+            if modlist.user_id != g.user.id:
+                flash("Mod can only be added to ModLists owned by the currently signed in user.", "danger")
+                return redirect(url_for('show_mod_page', game_domain_name=mod.for_games[0].domain_name, mod_id=mod_id))
+
+            if mod in modlist.mods:
+                flash(f"Can't add mod to ModList. {mod.name} already in {modlist.name}.", 'danger')
+                return redirect(url_for('show_mod_page', game_domain_name=mod.for_games[0].domain_name, mod_id=mod_id))
+
+            try:
+                modlist.mods.append(mod)
+                modlist.update_mlist_tstamp()
+                assign_modlist_for_games(modlist, game)
+
+                db.session.commit()
+
+            except Exception as e:
+                db.session.rollback()
+                print("Error adding mod to modlist in db - modlist_add_mod(): ", e)
+                flash(f"Error saving {mod.name} to {modlist.name}, please try again.", 'danger')
+
+            flash(f"{mod.name} successfully added to {modlist.name}!", "success")
+
+        return redirect(url_for('show_mod_page', game_domain_name=mod.for_games[0].domain_name, mod_id=mod_id))
+
+    
+    # pre-fill form w/ available data
+    mod = db.get_or_404(Mod, mod_id)
+    users_modlist_choices = add_mod_modlist_choices(g.user.id, mod)
+    form_choices = [(modlist.id, modlist.name) for modlist in users_modlist_choices]
+    form.users_modlists.choices = form_choices
+
+    return render_template('users/modlist-add.html', form=form, user=g.user, mod=mod)
+
+    
 ##############################################################################
 # Game routes (& Mod routes):
 

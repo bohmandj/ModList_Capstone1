@@ -4,73 +4,120 @@
 
 {% block content %}
 
-<div class="card-page">
-  <div class="profile">
-    <h1>{{ user.username }}</h1>
-    <!-- <h3>{{ user.username }}'s Games with ModLists:</h3> -->
+<div class="profile">
+  <h1 class="page-heading">{{ user.username }}</h1>
+  <div class="card-page">
 
-    {% if games[0] == 'Empty' %}
-    <div class="empty-games">
-      {% if modlists[0] == 'Empty' %}
-      <h4 style="margin-bottom: 30px;">No modlists made for any games yet.</h4>
-
+    <div class="empty-modlists fade-card">
+      {% if empty_modlists == [] %}
+      <div class="section-heading-split">
+        <h3></h3>
+        <div class="section-buttons">
+          <a href="{{ url_for('new_modlist', user_id=g.user.id) }}">
+            <button class="btn btn-outline-primary">Add New Modlist</button>
+          </a>
+        </div>
+      </div>
       {% else %}
-      {% for modlist in modlists %}
-      <div class="modlist-background" style="background-color: rgb(32, 32, 32);">
-        <a href="{{ url_for('show_modlist_page', user_id=user.id, modlist_id=modlist.id) }}">
-          <h6>{{ modlist.name }}</h6>
-        </a>
-        <div class="modlist-mods">
-
-          {% for mod in modlist.mods[:3] %}
-          <img class="game-background" src="{{ mod.picture_url }}" alt="{{ mod.name }}">
-          {% endfor %}
-
+      <div class="section-heading-split">
+        <h3 class="section-title">Empty Modlists</h3>
+        <div class="section-buttons">
+          <a href="{{ url_for('new_modlist', user_id=g.user.id) }}">
+            <button class="btn btn-outline-primary">Add New Modlist</button>
+          </a>
         </div>
       </div>
-      {% endfor %}
+
+      <div class="games-modlists">
+        {% for modlist in empty_modlists %}
+        <div class="modlist-card"
+          style="background-image: linear-gradient(to bottom, transparent 0%, rgba(32, 32, 32, 0.9) 60%), url(/static/images/GamesOnNexus_300_3x4.png); aspect-ratio: 2/1;">
+          <div class="modlist-details">
+            <h5 class="modlist-title">
+              <a href="{{ url_for('show_modlist_page', user_id=user.id, modlist_id=modlist.id) }}"
+                title="Go to {{modlist.name}} ModList page">
+                {{ modlist.name}}
+              </a>
+            </h5>
+            <ul style="margin-bottom: 0px;">
+              <li class="mod-title">No Mods Added</li>
+            </ul>
+          </div>
+        </div>
+        {% endfor %}
+        <!-- ends modlist in game.modlists -->
+      </div>
       {% endif %}
-    </div>
-    <a href="{{ url_for('new_modlist', user_id=user.id) }}">
-      <button class="btn btn-primary">Make a new ModList!</button>
-    </a>
-    {% else %}
-    <div class="game-modlists">
-
-      {% for game in games %}
-      <a href="{{ url_for('show_game_page', game_domain_name=game.domain_name) }}">
-        <h4>{{ game.game.name }}</h4>
-      </a>
-
-      {% for modlist in game.modlists[:3] %}
-      <div class="modlist-background"
-        style="background-image: url(https://staticdelivery.nexusmods.com/Images/games/4_3/tile_{{game.id}}.jpg);">
-        <a href="{{ url_for('show_mod_page', game_domain_name=game.domain_name, mod_id=mod.id) }}">
-          <h6>{{ modlist.name }}</h6>
-        </a>
-        <div class="modlist-mods">
-
-          {% for mod in modlist.mods[:3] %}
-          <img class="game-background" src="{{ mod.picture_url }}" alt="{{ mod.name }}">
-          {% endfor %}
-
+      <div style="width: 100%;height: 20px;position: relative;display: block;clip-path: content-box;">
+        <div
+          style="background-color: #000000;height: 10px;position: relative;top: -8px;box-shadow: 1px 0px 20px #000000;">
+          <hr style="position: relative; bottom: -8px;">
         </div>
       </div>
-      {% endfor %}
-      <a href="{{ url_for('new_modlist', user_id=user.id) }}">
-        <button class="btn btn-primary">Make a new ModList!</button>
-      </a>
-      {% endfor %}
-
     </div>
 
-    {% endif %}
+    <!-- ================================================= -->
+
+    {% for index in modlists_by_game %}
+    <div class="game-modlists fade-card">
+      <div class="section-heading-split">
+        <a href="{{ url_for('show_game_page', game_domain_name=index.game.domain_name) }}"
+          title="Go to {{index.game.name}} game page on Modlist">
+          <h3 class="game-section-title">{{ index.game.name }}</h3>
+        </a>
+        <div class="section-buttons">
+          <a href="https://www.nexusmods.com/{{ index.game.domain_name }}" target="_blank"
+            title="Go to Nexus to view and search all mods for {{index.game.name}}">
+            <button class="btn btn-outline-nexus">{{ index.game.name}} on Nexus</button>
+          </a>
+        </div>
+      </div>
+
+      <div class="games-modlists">
+        {% if index.game.name != "No Game" %}
+        {% for modlist in index.modlists %}
+        <div class="modlist-card"
+          style="background-image: linear-gradient(to bottom, transparent 0%, rgba(32, 32, 32, 0.9) 60%), url(https://staticdelivery.nexusmods.com/Images/games/4_3/tile_{{index.game.id}}.jpg);">
+          <div class="modlist-details">
+            <h5 class="modlist-title">
+              <a href="{{ url_for('show_modlist_page', user_id=user.id, modlist_id=modlist.id) }}"
+                title="Go to {{modlist.name}} ModList page">
+                {{ modlist.name}}
+              </a>
+            </h5>
+            <ul>
+              {% for mod in modlist.mods[:3] %}
+              <li class="mod-title">
+                <a href="{{ url_for('show_mod_page', game_domain_name=index.game.domain_name, mod_id=mod.id) }}">
+                  {{ mod.name }}
+                </a>
+              </li>
+              {% endfor %}
+              <!-- ends mod in modlist.mods[:3] -->
+            </ul>
+            <a href="{{ url_for('show_modlist_page', user_id=user.id, modlist_id=modlist.id) }}"><button
+                class="btn btn-sm btn-outline-success">See full ModList page</button></a>
+          </div>
+        </div>
+        {% endfor %}
+        <!-- ends modlist in game.modlists -->
+        {% endif %}
+        <!-- ends game.game.name == "No Game" -->
+
+      </div>
+      <div style="width: 100%;height: 20px;position: relative;display: block;clip-path: content-box;">
+        <div
+          style="background-color: #000000;height: 10px;position: relative;top: -8px;box-shadow: 1px 0px 20px #000000;">
+          <hr style="position: relative; bottom: -8px;">
+        </div>
+      </div>
+    </div>
+
+    {% endfor %}
+    <!-- ends game in modlists_by_game -->
   </div>
 </div>
-
-
-
-
 </div>
+
 
 {% endblock %}
