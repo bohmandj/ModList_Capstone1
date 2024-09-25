@@ -256,7 +256,7 @@ class Modlist(db.Model):
     )
 
     def update_mlist_tstamp(self):
-        self.last_updated  = datetime.now(timezone.utc)
+        self.last_updated = datetime.now(timezone.utc)
         db.session.add(self)
 
     def add_mod(self, mod):
@@ -554,18 +554,6 @@ class User(db.Model):
         found_modlists = [mlist for mlist in self.followed_modlists if mlist == modlist]
         
         return len(found_modlists) == 1
-
-    def get_users_games(self):
-        """Get list of games the user has made 
-        lists for (probably owns the game)"""
-
-        found_games = []
-
-        found_games = [modlist.for_games[0] for modlist in self.modlists if modlist.for_games not in found_games and modlist.for_games != []]
-
-        found_games = list(set(found_games))
-
-        return found_games
 
     def get_notes_for(self, mod):
         """Returns 'notes' str from User_Mod_Notes obj associated 

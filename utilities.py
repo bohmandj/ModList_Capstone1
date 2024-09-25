@@ -44,6 +44,16 @@ def get_mod_db(mod_id):
     return mod
 
 
+def get_user_modlists_db(user_id):
+    """Uses user_id to retrieve modlist data from db.
+    
+    Returns Mod object from db if successful, or None."""
+
+    modlists = db.session.scalars(db.select(Modlist).where(Modlist.user_id==user_id).order_by(Modlist.name)).all()
+
+    return modlists
+
+
 def filter_nxs_data(data_list, list_type):
     """Takes list of data from Nexus API call and 
     filters out unneeded data for db entry.
@@ -74,7 +84,7 @@ def filter_nxs_data(data_list, list_type):
                     'is_nsfw': mod['contains_adult_content'],
                     'picture_url': mod['picture_url']
                 }
-                if db_ready_mod['picture_url'] == 'null':
+                if db_ready_mod['picture_url'] == None:
                     db_ready_mod['picture_url'] = 'https://upload.wikimedia.org/wikipedia/commons/b/b1/Missing-image-232x150.png'
                 db_ready_data.append(db_ready_mod)
 
@@ -202,3 +212,85 @@ def link_mods_to_game(db_ready_mods, game):
             game.subject_of_mods.append(mod)
 
     db.session.commit()
+
+
+def add_mod_modlist_choices(user_id, mod):
+    """Gets a user's modlists and filters out all modlists 
+    that are not for the same game as the mod, or are 
+    unassigned to a game.
+    
+    Returns list of game-matched or game-unassigned modlists."""
+
+    modlists = get_user_modlists_db(user_id)
+
+    users_modlist_choices = []
+
+    for modlist in modlists:
+        if len(modlist.for_games) == 0 or mod.for_games[0] == modlist.for_games[0]:
+            users_modlist_choices.append(modlist)
+
+    return users_modlist_choices
+
+
+def get_recent_modlists_by_game(user_id):
+    """Get list of user's modlists ordered by last_updated
+    and grouped by game.
+    
+    Return list of games and mods:
+    [{'game':game, 'modlists':[modlist, modlist]}]"""
+
+    user = db.session.scalars(db.select(User).where(User.id==user_id)).first()
+
+    recent_modlists = db.session.scalars(db.select(Modlist).options(db.selectinload(Modlist.user)).order_by(Modlist.last_updated.desc())).all()
+
+    return_list = []
+
+    recent_games = []
+    for modlist in recent_modlists:
+         if modlist.for_games != [] and modlist.for_games[0].id not in [game.id for game in recent_games]:
+            recent_games.append(modlist.for_games[0])
+
+    for game in recent_games:
+        print("game in users_games: ", game)
+        game_modlists = {'game':game, 'modlists':[]}
+        for modlist in recent_modlists:
+            if len(modlist.for_games) != 0 and modlist.for_games[0].id == game.id:
+                game_modlists['modlists'].append(modlist)
+        return_list.append(game_modlists)
+
+    return return_list
+
+
+def get_empty_modlists(user_id):
+    """Get list of user's modlists that are not 
+    assigned to a game and contain no mods.
+    
+    Return list of empty modlists:
+    [modlist, modlist]"""
+
+    user = db.session.scalars(db.select(User).where(User.id==user_id)).first()
+
+    recent_modlists = db.session.scalars(db.select(Modlist).options(db.selectinload(Modlist.user)).order_by(Modlist.last_updated.desc())).all()
+
+    return_list = []
+
+    for modlist in recent_modlists:
+        if len(modlist.for_games) == 0:
+            return_list.append(modlist)
+
+    return return_list
+
+
+def assign_modlist_for_games(modlist, game):
+    """Assigns a Game to a modlist's 'for_games' attribute when first mod is added to it.
+
+    Returns False if Modlist already assigned a game.
+    Returns True if game newly assigned to modlist.
+    """
+    if len(modlist.for_games) != 0:
+        return False
+        
+    
+    if game not in modlist.for_games:
+        modlist.for_games.append(game)
+        return True

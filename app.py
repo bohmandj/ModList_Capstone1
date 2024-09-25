@@ -4,11 +4,11 @@ from flask import Flask, render_template, request, flash, redirect, session, g, 
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
-from forms import UserAddForm, LoginForm, UserEditForm, UserPasswordForm, ModlistAddForm
+from forms import UserAddForm, LoginForm, UserEditForm, UserPasswordForm, ModlistAddForm, ModlistAddModForm
 from models import db, connect_db, User, Modlist, Mod, Game
 
 from nexus_api import get_all_games_nxs, get_mods_of_type_nxs, get_mod_nxs
-from utilities import get_all_games_db, get_game_db, get_mod_db, filter_nxs_data, filter_nxs_mod_page, update_all_games_db, update_list_mods_db, link_mods_to_game
+from utilities import get_all_games_db, get_game_db, get_user_modlists_db, get_empty_modlists, get_recent_modlists_by_game, filter_nxs_data, filter_nxs_mod_page, update_all_games_db, update_list_mods_db, link_mods_to_game, add_mod_modlist_choices, assign_modlist_for_games
 
 CURR_USER_KEY = "curr_user"
 
@@ -161,21 +161,13 @@ def show_user_page(user_id):
     - Buttons to: go to list, go to game, make new list.
     """
 
-    user = User.query.get_or_404(user_id)
-    modlists = user.modlists
-    # print("MODLISTS:::::::::: ", modlists[0])
-    # games = user.get_users_games()
-    # print("games:::::::::: ", games)
+    user = db.session.scalars(db.select(User).where(User.id==user_id)).first()
 
-    games = []
-    # for game in user.get_users_games():
-    #     modlists = user.get_recent_modlists(modlists)
-    #     games.append({'game':game, 'modlists':modlists})
-    if len(games) == 0:
-        games = ['Empty']
-    if len(modlists) == 0:
-        modlists = ['Empty']
-    return render_template('users/profile.html', user=user, games=games, modlists=modlists)
+    empty_modlists = get_empty_modlists(user_id)
+
+    modlists_by_game = get_recent_modlists_by_game(user_id)
+    
+    return render_template('users/profile.html', user=user, empty_modlists=empty_modlists, modlists_by_game=modlists_by_game)
 
 
 @app.route('/users/edit', methods=["GET", "POST"])
@@ -236,17 +228,17 @@ def edit_password():
     form = UserPasswordForm()
 
     if form.validate_on_submit():
-        print("Start NEW PASSWORD validation")
+
         user = User.authenticate(g.user.username, form.current_password.data)
 
         if user == False:
             flash("Password did not match our records for the currently signed-in user account. Please try again.", 'danger')
             return render_template('users/password.html', form=form, user=g.user)
-        print("User: ", user)
+
         if form.new_password.data != form.new_confirm.data:
             flash("New password and confirmation password did not match. Please try again.", 'danger')
             return render_template('users/password.html', form=form, user=g.user)
-        print("New passwords match")
+
         try:
             hashed_password = user.hash_new_password(form.new_password.data)
             user.password = hashed_password
@@ -279,7 +271,14 @@ def new_modlist(user_id):
     form = ModlistAddForm()
 
     if form.validate_on_submit():
+        print("validating new modlist form")
+
         try:
+            current_modlists = get_user_modlists_db(user_id)
+
+            if form.name.data in [modlist.name for modlist in current_modlists]:
+                raise ValueError
+
             modlist = Modlist.new_modlist(
                 name=form.name.data,
                 description=form.description.data,
@@ -288,6 +287,10 @@ def new_modlist(user_id):
             )
             db.session.commit()
 
+        except ValueError:
+            flash(f"You already have a Modlist named '{form.name.data}', please choose another name.", 'danger')
+            return redirect(url_for('new_modlist', form=form))
+
         except Exception as e:
             print("Error creating Modlist: ", e)
             flash("Error creating ModList, please try again.", 'danger')
@@ -295,8 +298,7 @@ def new_modlist(user_id):
 
         return redirect(url_for("show_user_page", user_id=g.user.id))
 
-    else:
-        return render_template('users/modlist-new.html', form=form)
+    return render_template('users/modlist-new.html', form=form)
 
 
 @app.route('/users/<user_id>/modlists/<modlist_id>')
@@ -373,7 +375,6 @@ def show_mod_page(game_domain_name, mod_id):
    
     try:
         game = get_game_db(game_domain_name)
-        print(f'############### s_m_p route, get_game_db() return: {game} ###############')
     except:
         flash("Issue was encountered retrieving game information.")
         # return redirect(url_for('homepage'))
@@ -385,8 +386,6 @@ def show_mod_page(game_domain_name, mod_id):
     db_ready_mods = filter_nxs_data([nexus_mod], 'mods')
     update_list_mods_db(db_ready_mods, game)
     link_mods_to_game(db_ready_mods, game)
-
-    print("Subject of Mods::::::: ", game.subject_of_mods)
 
     page_ready_mod = filter_nxs_mod_page(nexus_mod, game)
 
