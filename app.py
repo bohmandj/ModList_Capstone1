@@ -3,12 +3,13 @@ import os
 from flask import Flask, render_template, request, flash, redirect, session, g, url_for
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
+from functools import wraps
 
 from forms import UserAddForm, LoginForm, UserEditForm, UserPasswordForm, ModlistAddForm, ModlistAddModForm
 from models import db, connect_db, User, Modlist, Mod, Game
 
 from nexus_api import get_all_games_nxs, get_mods_of_type_nxs, get_mod_nxs
-from utilities import get_all_games_db, get_game_db, get_user_modlists_db, get_empty_modlists, get_recent_modlists_by_game, filter_nxs_data, filter_nxs_mod_page, update_all_games_db, update_list_mods_db, link_mods_to_game, add_mod_modlist_choices, assign_modlist_for_games
+from utilities import get_all_games_db, get_game_db, get_user_modlists_db, get_empty_modlists, get_recent_modlists_by_game, filter_nxs_data, filter_nxs_mod_page, update_all_games_db, update_list_mods_db, link_mods_to_game, add_mod_modlist_choices
 
 CURR_USER_KEY = "curr_user"
 
@@ -26,6 +27,19 @@ toolbar = DebugToolbarExtension(app)
 connect_db(app)
 with app.app_context():
     db.create_all()
+
+
+##############################################################################
+# Custom decorators
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not g.user:
+            flash("Access unauthorized.", "danger")
+            return redirect(url_for('login', next=request.url))
+        return f(*args, **kwargs)
+    return decorated_function
 
 
 ##############################################################################
@@ -97,7 +111,7 @@ def signup():
         )
         db.session.commit()
 
-        return redirect("/")
+        return redirect(url_for('homepage'))
 
     else:
         return render_template('users/signup.html', form=form)
@@ -112,6 +126,7 @@ def login():
     if form.validate_on_submit():
         user = User.authenticate(form.username.data,
                                  form.password.data)
+        next = form.next.data
 
         if user:
             do_login(user)
@@ -127,7 +142,10 @@ def login():
             except:
                 flash("Problem occurred refreshing games list from Nexus.\nDisplayed games list may be out of date or incomplete.\nLog out and back in to reattempt.", "danger")
 
-            return redirect("/")
+            if next:
+                return redirect(next)
+
+            return redirect(url_for('homepage'))
 
         flash("Invalid credentials.", 'danger')
 
@@ -135,13 +153,10 @@ def login():
 
 
 @app.route('/logout')
+@login_required
 def logout():
     """Handle logout of user."""
 
-    if not g.user:
-        flash("You must sign in before you can sign out.", "danger")
-
-        return redirect("/login")
 
     do_logout()
     flash(f"Logout successful!", "success")
@@ -171,12 +186,9 @@ def show_user_page(user_id):
 
 
 @app.route('/users/edit', methods=["GET", "POST"])
+@login_required
 def edit_profile():
     """Update profile info for current user."""
-
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
 
     form = UserEditForm()
 
@@ -218,12 +230,9 @@ def edit_profile():
 
 
 @app.route('/users/password', methods=["GET", "POST"])
+@login_required
 def edit_password():
     """Update password for current user."""
-
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
 
     form = UserPasswordForm()
 
@@ -257,6 +266,7 @@ def edit_password():
 
 
 @app.route('/users/<user_id>/modlists/new', methods=["GET", "POST"])
+@login_required
 def new_modlist(user_id):
     """Handle new ModList generation.
 
@@ -311,6 +321,7 @@ def show_modlist_page(user_id, modlist_id):
 
 
 @app.route('/users/<user_id>/modlists/add/<mod_id>', methods=["GET", "POST"])
+@login_required
 def modlist_add_mod(user_id, mod_id):
     """Add mod to modlist.
 
@@ -318,10 +329,6 @@ def modlist_add_mod(user_id, mod_id):
     - If mod not in list of mods contained in selected modlists, 
       add mod to modlist.
     """
-    
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
 
     form = ModlistAddModForm()
 
@@ -346,8 +353,8 @@ def modlist_add_mod(user_id, mod_id):
 
             try:
                 modlist.mods.append(mod)
+                modlist.assign_modlist_for_games(game)
                 modlist.update_mlist_tstamp()
-                assign_modlist_for_games(modlist, game)
 
                 db.session.commit()
 
@@ -374,6 +381,7 @@ def modlist_add_mod(user_id, mod_id):
 # Game routes (& Mod routes):
 
 @app.route('/games/<game_domain_name>')
+@login_required
 def show_game_page(game_domain_name):
     """Show game page with mods hosted by Nexus.
     
@@ -411,15 +419,11 @@ def show_game_page(game_domain_name):
             update_list_mods_db(db_ready_data, game)
             link_mods_to_game(db_ready_data, game)
 
-    if not g.user:
-        hide_nsfw = True
-    else:
-        hide_nsfw = g.user.hide_nsfw
-
     return render_template('games/game.html', game=game, mod_categories=mod_categories, hide_nsfw=hide_nsfw)
 
 
 @app.route('/games/<game_domain_name>/mods/<mod_id>')
+@login_required
 def show_mod_page(game_domain_name, mod_id):
     """Show mod page of info about a mod hosted on Nexus.
     
@@ -449,11 +453,6 @@ def show_mod_page(game_domain_name, mod_id):
 
     page_ready_mod = filter_nxs_mod_page(nexus_mod, game)
 
-    if not g.user:
-        hide_nsfw = True
-    else:
-        hide_nsfw = g.user.hide_nsfw
-
     return render_template('games/mod.html', game=game, mod=page_ready_mod, hide_nsfw=hide_nsfw)
 
 
@@ -478,10 +477,10 @@ def homepage():
         except Exception as e:
             print("Error getting games from db: ", e)
             flash("Problem occurred fetching games list, log out and back in to reattempt.")
+            return render_template('home.html', games_list=[{'name':"Error"}])
+
         else:
             return render_template('home.html', games_list=games_list)
-
-        return render_template('home.html', games_list=[{'name':"Error"}])
 
     return render_template('home-anon.html')
 
