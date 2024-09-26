@@ -126,7 +126,7 @@ def filter_nxs_mod_page(nexus_mod, game_obj):
     if type(game_obj) == Exception or None:
         raise AttributeError
 
-    if page_ready_mod['picture_url'] == 'null':
+    if page_ready_mod['picture_url'].lower() == 'null':
         page_ready_mod['picture_url'] = 'https://upload.wikimedia.org/wikipedia/commons/b/b1/Missing-image-232x150.png'
 
     return page_ready_mod
@@ -234,28 +234,68 @@ def add_mod_modlist_choices(user_id, mod):
 
 def get_recent_modlists_by_game(user_id):
     """Get list of user's modlists ordered by last_updated
-    and grouped by game.
+    and grouped by game. Also indicates privacy status of all 
+    modlists for each game - if all modlists are marked as 
+    private, entire game will not be shown on public profile page.
+    
+    Return list of games and mods:
+    [{'game':game, 'all_private':bool, 'modlists':[modlist, modlist]}]"""
+
+    user = db.session.scalars(db.select(User).where(User.id==user_id)).first()
+
+    all_recent_modlists = db.session.scalars(db.select(Modlist).options(db.selectinload(Modlist.user)).order_by(Modlist.last_updated.desc())).all()
+
+    return_list = order_modlists_by_game(all_recent_modlists)
+
+    return return_list
+
+
+def get_public_modlists_by_game(user_id):
+    """Get list of user's modlists ordered by last_updated
+    and grouped by game, with all empty and private content 
+    removed.
     
     Return list of games and mods:
     [{'game':game, 'modlists':[modlist, modlist]}]"""
 
     user = db.session.scalars(db.select(User).where(User.id==user_id)).first()
 
-    recent_modlists = db.session.scalars(db.select(Modlist).options(db.selectinload(Modlist.user)).order_by(Modlist.last_updated.desc())).all()
+    recent_public_modlists = db.session.scalars(db.select(Modlist).options(db.selectinload(Modlist.user)).filter_by(private=False).order_by(Modlist.last_updated.desc())).all()
+
+    return_list = order_modlists_by_game(recent_public_modlists)
+
+    for game in return_list:
+        del game['all_private']
+
+    return return_list
+
+
+def order_modlists_by_game(modlist_list):
+    """Take a list of modlists and return them ordered by game.
+    Order from modlist_list will be respected - first modlist's 
+    game will be first game in list of games. Also indicates 
+    privacy status of all modlists for each game.
+    
+    Return list of games and mods:
+    [{'game':game, 'all_private':bool, 'modlists':[modlist, modlist]}]"""
 
     return_list = []
-
     recent_games = []
-    for modlist in recent_modlists:
+    all_private = True
+
+    for modlist in modlist_list:
          if modlist.for_games != [] and modlist.for_games[0].id not in [game.id for game in recent_games]:
             recent_games.append(modlist.for_games[0])
 
     for game in recent_games:
         print("game in users_games: ", game)
         game_modlists = {'game':game, 'modlists':[]}
-        for modlist in recent_modlists:
+        for modlist in modlist_list:
             if len(modlist.for_games) != 0 and modlist.for_games[0].id == game.id:
                 game_modlists['modlists'].append(modlist)
+                if modlist.private == False:
+                    all_private = False
+        game_modlists['all_private'] = all_private
         return_list.append(game_modlists)
 
     return return_list
@@ -279,18 +319,3 @@ def get_empty_modlists(user_id):
             return_list.append(modlist)
 
     return return_list
-
-
-def assign_modlist_for_games(modlist, game):
-    """Assigns a Game to a modlist's 'for_games' attribute when first mod is added to it.
-
-    Returns False if Modlist already assigned a game.
-    Returns True if game newly assigned to modlist.
-    """
-    if len(modlist.for_games) != 0:
-        return False
-        
-    
-    if game not in modlist.for_games:
-        modlist.for_games.append(game)
-        return True

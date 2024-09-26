@@ -82,6 +82,27 @@ h1 {
     cursor: pointer;
 }
 
+.shadowed_hr_outer {
+    display: block;
+    position: relative;
+    width: 100%;
+    height: 20px;
+    clip-path: content-box;
+}
+
+.shadowed_hr_inner {
+    background-color: #000000;
+    box-shadow: 1px 0px 20px #000000;
+    height: 10px;
+    position: relative;
+    top: -8px;
+}
+
+.shadowed_hr_outer .shadowed_hr_inner hr {
+    position: relative;
+    bottom: -8px;
+}
+
 /* ======================= Nav */
 
 .navbar {
@@ -593,6 +614,9 @@ fieldset[disabled] .btn-outline-nexus.active {
     width: 100%;
 }
 
+/* ===================== ModList Page */
+
+.card-page
 /* ===================== Mod Cards (Game Page) */
 
 .card-page .mod-cat-section {

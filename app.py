@@ -9,7 +9,7 @@ from forms import UserAddForm, LoginForm, UserEditForm, UserPasswordForm, Modlis
 from models import db, connect_db, User, Modlist, Mod, Game
 
 from nexus_api import get_all_games_nxs, get_mods_of_type_nxs, get_mod_nxs
-from utilities import get_all_games_db, get_game_db, get_user_modlists_db, get_empty_modlists, get_recent_modlists_by_game, filter_nxs_data, filter_nxs_mod_page, update_all_games_db, update_list_mods_db, link_mods_to_game, add_mod_modlist_choices
+from utilities import get_all_games_db, get_game_db, get_user_modlists_db, get_empty_modlists, get_recent_modlists_by_game, get_public_modlists_by_game, filter_nxs_data, filter_nxs_mod_page, update_all_games_db, update_list_mods_db, link_mods_to_game, add_mod_modlist_choices
 
 CURR_USER_KEY = "curr_user"
 
@@ -126,7 +126,6 @@ def login():
     if form.validate_on_submit():
         user = User.authenticate(form.username.data,
                                  form.password.data)
-        next = form.next.data
 
         if user:
             do_login(user)
@@ -178,11 +177,16 @@ def show_user_page(user_id):
 
     user = db.session.scalars(db.select(User).where(User.id==user_id)).first()
 
-    empty_modlists = get_empty_modlists(user_id)
+    if not g.user or g.user != user:
 
+        modlists_by_game = get_public_modlists_by_game(user_id)
+
+        return render_template('users/profile-public.html', user=user, modlists_by_game=modlists_by_game)
+        
+    empty_modlists = get_empty_modlists(user_id)
     modlists_by_game = get_recent_modlists_by_game(user_id)
-    
-    return render_template('users/profile.html', user=user, empty_modlists=empty_modlists, modlists_by_game=modlists_by_game)
+
+    return render_template('users/profile-user.html', user=user, empty_modlists=empty_modlists, modlists_by_game=modlists_by_game)
 
 
 @app.route('/users/edit', methods=["GET", "POST"])

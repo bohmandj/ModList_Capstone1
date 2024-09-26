@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ user.username }}{% endblock %}
+
+{% block content %}
+
+<div class="profile">
+  <h1 class="page-heading">{{ user.username }}</h1>
+  <div class="card-page">
+
+    {% for index in modlists_by_game %}
+    {% if not index.all_private %}
+    <div class="game-modlists">
+      <div class="section-heading-split">
+        <a href="{{ url_for('show_game_page', game_domain_name=index.game.domain_name) }}"
+          title="Go to {{index.game.name}} game page on Modlist">
+          <h3 class="game-section-title">{{ index.game.name }}</h3>
+        </a>
+        <div class="section-buttons"></div>
+      </div>
+
+      <div class="games-modlists">
+        {% if index.game.name != "No Game" %}
+        {% for modlist in index.modlists %}
+        {% if not modlist.private %}
+        <div class="modlist-card"
+          style="background-image: linear-gradient(to bottom, transparent 0%, rgba(32, 32, 32, 0.9) 60%), url(https://staticdelivery.nexusmods.com/Images/games/4_3/tile_{{index.game.id}}.jpg);">
+          <div class="modlist-details">
+            <h5 class="modlist-title">
+              <a href="{{ url_for('show_modlist_page', user_id=user.id, modlist_id=modlist.id) }}"
+                title="Go to {{modlist.name}} ModList page">
+                {{ modlist.name}}
+              </a>
+            </h5>
+            <ul>
+              {% for mod in modlist.mods[:3] %}
+              <li class="mod-title">
+                <a href="{{ url_for('show_mod_page', game_domain_name=index.game.domain_name, mod_id=mod.id) }}">
+                  {{ mod.name }}
+                </a>
+              </li>
+              {% endfor %}
+              <!-- ends mod in modlist.mods[:3] -->
+            </ul>
+            <a href="{{ url_for('show_modlist_page', user_id=user.id, modlist_id=modlist.id) }}"><button
+                class="btn btn-sm btn-outline-success">See full ModList page</button></a>
+          </div>
+        </div>
+        {% endif %}
+        <!-- not modlist.private -->
+        {% endfor %}
+        <!-- ends modlist in index.modlists -->
+        {% endif %}
+        <!-- ends index.game.name == "No Game" -->
+
+      </div>
+      <div class="shadowed_hr_outer">
+        <div class="shadowed_hr_inner">
+          <hr style="position: relative; bottom: -8px;">
+        </div>
+      </div>
+    </div>
+
+    {% endif %}
+    <!-- ends not index.all_private -->
+    {% endfor %}
+    <!-- ends game in modlists_by_game -->
+  </div>
+</div>
+</div>
+
+
+{% endblock %}
