@@ -257,10 +257,14 @@ class Modlist(db.Model):
 
     def update_mlist_tstamp(self):
         self.last_updated = datetime.now(timezone.utc)
-        db.session.add(self)
 
-    def add_mod(self, mod):
-        self.mods.append(mod)
+    def assign_modlist_for_games(self, game):
+        if game not in self.for_games:
+            self.for_games.append(game)
+
+    def mark_nsfw_if_nsfw(self, mod):
+        if mod.is_nsfw:
+            self.has_nsfw = True
 
     @classmethod
     def new_modlist(cls, name, description, private, user):
