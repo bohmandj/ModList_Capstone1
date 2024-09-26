@@ -20,7 +20,7 @@
             </ul>
         </div>
 
-        {% if mod.is_nsfw and hide_nsfw == True %}
+        {% if mod.is_nsfw and g.user.hide_nsfw == True %}
         <div class="nsfw">
             <img src="{{ mod.picture_url }}" alt="{{ mod.name }} title image"
                 title="NSFW visibility can be changed in user settings">

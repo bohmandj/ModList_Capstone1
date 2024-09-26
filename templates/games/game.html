@@ -34,7 +34,7 @@
     {% for mod in cat.data %}
     <li class="mod-card">
 
-      {% if mod.is_nsfw and hide_nsfw == True %}
+      {% if mod.is_nsfw and g.user.hide_nsfw == True %}
       <a class="mod-img nsfw" href="{{ url_for('show_mod_page', game_domain_name=game.domain_name, mod_id=mod.id) }}">
         <img src="{{ mod.picture_url }}" alt="{{ mod.name }} cover image">
       </a>
@@ -69,6 +69,11 @@
     {% endif %}
 
   </ul>
+  <div class="shadowed_hr_outer">
+    <div class="shadowed_hr_inner">
+      <hr style="position: relative; bottom: -8px;">
+    </div>
+  </div>
   {% endfor %}
 
 </div>
