@@ -126,7 +126,7 @@ def filter_nxs_mod_page(nexus_mod, game_obj):
     if type(game_obj) == Exception or None:
         raise AttributeError
 
-    if page_ready_mod['picture_url'].lower() == 'null':
+    if page_ready_mod['picture_url'] == None:
         page_ready_mod['picture_url'] = 'https://upload.wikimedia.org/wikipedia/commons/b/b1/Missing-image-232x150.png'
 
     return page_ready_mod
