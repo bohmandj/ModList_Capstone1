@@ -28,7 +28,7 @@ class UserAddForm(FlaskForm):
     )
     confirm = PasswordField(
         'Confirm Password',
-        [ validators.EqualTo('confirm', 
+        [ validators.EqualTo('password', 
             message='"New Password" and "Confirm Password" must match') ],
         description="Re-enter your password"
     )
@@ -91,7 +91,7 @@ class UserPasswordForm(FlaskForm):
     )
     new_confirm = PasswordField(
         'Confirm New Password',
-        [ validators.EqualTo('new_confirm', 
+        [ validators.EqualTo('new_password', 
             message='"New Password" and "Confirm New Password" must match') ],
         description="Re-enter your new password"
     )
