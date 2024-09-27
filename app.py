@@ -87,6 +87,9 @@ def signup():
     and re-present form.
     """
 
+    if g.user:
+        return redirect(url_for('homepage'))
+
     form = UserAddForm()
 
     if form.validate_on_submit():
@@ -125,6 +128,9 @@ def signup():
 def login():
     """Handle user login."""
 
+    if g.user:
+        return redirect(url_for('homepage'))
+
     form = LoginForm()
 
     if form.validate_on_submit():
@@ -145,12 +151,9 @@ def login():
             except:
                 flash("Problem occurred refreshing games list from Nexus.\nDisplayed games list may be out of date or incomplete.\nLog out and back in to reattempt.", "danger")
 
-            print("NEXT: ", next)
+            next_page = request.form.get('next')
 
-            if next and next != '<built-in function next>':
-                return redirect(next)
-
-            return redirect(url_for('homepage'))
+            return redirect(next_page or url_for('homepage'))
 
         flash("Invalid credentials.", 'danger')
 
@@ -162,11 +165,10 @@ def login():
 def logout():
     """Handle logout of user."""
 
-
     do_logout()
     flash(f"Logout successful!", "success")
 
-    return redirect("/login")
+    return redirect(url_for('login'))
 
 
 ##############################################################################
