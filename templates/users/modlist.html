@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ modlist.name }}{% endblock %}
+
+{% block content %}
+
+<div class="modlistpage">
+    <div class="card-page">
+        <div class="modlist-header">
+            <div class="modlist-detail-background">
+                <img src="https://staticdelivery.nexusmods.com/Images/games/4_3/tile_{{ modlist.for_games[0].id }}.jpg"
+                    alt="{{ modlist.name }} game image" title="{{ modlist.name }} game image">
+            </div>
+            <div class="modlist-detail">
+                <div class="modlist-detail-title">
+                    <h1>{{ modlist.name }}</h1>
+                    <div class="modlist-credits">
+                        <h6>For:
+                            {% if modlist.for_games[1] %}
+                            {% for game in modlist.for_games %}
+                            <a href="{{ url_for('show_game_page', game_domain_name=game.domain_name) }}">
+                                <br>{{ game.name }}
+                            </a>
+                            {% endfor %}
+                            {% else %}
+                            <a
+                                href="{{ url_for('show_game_page', game_domain_name=modlist.for_games[0].domain_name) }}">
+                                {{ modlist.for_games[0].name }}
+                            </a>
+                            {% endif %}
+                        </h6>
+                        <h6">Curated By: <a href="{{ url_for('show_user_page', user_id=user.id) }}">{{ user.username
+                                }}</a>
+                            </h6>
+                    </div>
+                </div>
+                <h5>{{ modlist.description }}</h5>
+            </div>
+        </div>
+
+        {% for mod in modlist.mods %}
+        <div class="modlist-card">
+            <div class="mod-img">
+                {% if mod.is_nsfw and hide_nsfw == True %}
+                <div class="nsfw">
+                    <img class="mod-img" src="{{ modlist.picture_url }}" alt="{{ modlist.name }} title image"
+                        title="NSFW visibility can be changed in user settings">
+                    <span>NSFW</span>
+                </div>
+                {% else %}
+                <img class="mod-img" src="{{ mod.picture_url }}" alt="{{ mod.name }} cover image"
+                    title="{{ mod.name }} cover image">
+                {% endif %}
+            </div>
+
+            <div class="mod-info">
+                <div>
+                    <a
+                        href="{{ url_for('show_mod_page', game_domain_name=modlist.for_games[0].domain_name, mod_id=mod.id) }}">
+                        <h4>{{ mod.name }}</h4>
+                    </a>
+                    <p>{{ mod.summary }}</p>
+                </div>
+                <div class="mod-buttons">
+                    <a href="{{ url_for('modlist_add_mod', user_id=g.user.id, mod_id=mod.id) }}"><button
+                            class="btn btn-outline-primary btn-sm">Add to a ModList</button></a>
+                    <a href=""><button class="btn btn-outline-danger btn-sm">Remove from ModList</button></a>
+                    <a href="https://www.nexusmods.com/{{modlist.for_games[0].domain_name}}/mods/{{mod.id}}"><button
+                            class="btn btn-outline-nexus btn-sm">See on Nexus</button></a>
+                    <a href="https://www.nexusmods.com/{{modlist.for_games[0].domain_name}}/mods/{{mod.id}}?tab=files"
+                        target="_blank"><button class="btn btn-outline-nexus btn-sm">Nexus Downloads Page</button></a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

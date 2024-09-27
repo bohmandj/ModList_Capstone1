@@ -323,6 +323,17 @@ def show_modlist_page(user_id, modlist_id):
     - Buttons: link to each mod page, remove mod from list, 
     """
 
+    user = db.session.scalars(db.select(User).where(User.id==user_id)).first()
+
+    modlist = db.session.scalars(db.select(Modlist).options(db.selectinload(Modlist.user)).where(Modlist.id==modlist_id)).first()
+
+    if not g.user:
+        hide_nsfw = True
+    else:
+        hide_nsfw = g.user.hide_nsfw
+    
+    return render_template('users/modlist.html', user=user, modlist=modlist, hide_nsfw=hide_nsfw)
+
 
 @app.route('/users/<user_id>/modlists/add/<mod_id>', methods=["GET", "POST"])
 @login_required
@@ -340,7 +351,6 @@ def modlist_add_mod(user_id, mod_id):
 
         modlist_ids = form.users_modlists.data
         mod = db.get_or_404(Mod, mod_id)
-        # mod = db.session.scalars(db.select(Mod).options(db.subqueryload(Mod.for_games)).filter_by(id=mod_id)).first()
 
         for id in modlist_ids:
 
