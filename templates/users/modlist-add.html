@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Mod to ModList{% endblock %}
+
+{% block content %}
+
+<div class="form-page">
+    <h2 class="form-header">Add Mod to ModLists:</h2>
+
+    <div class="add-page">
+        <div class="modpage" style="margin-bottom: 30px;">
+            {% if mod.is_nsfw and g.user.hide_nsfw == True %}
+            <div class="nsfw">
+                <img src="{{ mod.picture_url }}" alt="{{ mod.name }} title image"
+                    title="NSFW visibility can be changed in user settings">
+                <span>NSFW Mod</span>
+            </div>
+            {% else %}
+            <img src="{{ mod.picture_url }}" alt="{{ mod.name }} title image" title="{{ mod.name }} title image">
+            {% endif %}
+
+            <div class="mod-detail" style="margin: auto 0;">
+                <h3 style="margin-bottom: 20px;">{{ mod.name }}</h3>
+                <h5 style="margin-bottom: 20px;">{{ mod.summary }}</h5>
+                <h6">Each selected Modlist will have this mod added to it</h6>
+            </div>
+        </div>
+
+        <form method="POST" id="modlist_add_form" class="form-container">
+            {{ form.hidden_tag() }}
+
+            {% for field in form if field.widget.input_type != 'hidden' %}
+            <h4>
+                <label class="form-check-label" for="flexSwitchCheck">
+                    <span>{{ field.label.text }}:</span>
+                </label>
+            </h4>
+
+            {% for error in field.errors %}
+            <span class="text-danger">{{ error }}</span>
+            {% endfor %}
+
+            {% for option in field %}
+            <div class="form-check form-switch">
+                <div class="form-check-container">
+                    {{ option(checked=False, class="form-check-input", role="switch")}}
+                </div>
+                <label class="form-check-label" for="flexSwitchCheck">
+                    <span>{{ option.label }}</span>
+                </label>
+            </div>
+            {% endfor %}
+
+            {% endfor %}
+
+            <button class="btn btn-primary btn-lg btn-block">Add {{ mod.name }}!</button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
