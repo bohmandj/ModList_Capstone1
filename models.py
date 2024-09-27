@@ -453,16 +453,20 @@ class User(db.Model):
 
     __tablename__ = 'users'
 
-    __table_args__ = (db.UniqueConstraint("email"),)
-
     id: Mapped[int] = mapped_column(
         primary_key=True,
         autoincrement=True
     )
 
-    username: Mapped[str] = mapped_column(db.String(30))
+    username: Mapped[str] = mapped_column(
+        db.String(30),
+        unique=True
+    )
 
-    email: Mapped[str] = mapped_column(db.String(30))
+    email: Mapped[str] = mapped_column(
+        db.String(30),
+        unique=True
+    )
 
     password: Mapped[str] = mapped_column(db.Text)
 

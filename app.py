@@ -98,8 +98,11 @@ def signup():
             )
             db.session.commit()
 
-        except IntegrityError:
-            flash("Username already taken", 'danger')
+        except IntegrityError as e:
+            if e.__cause__.diag.constraint_name == "users_username_key":
+                flash("Username already taken", 'danger')
+            if e.__cause__.diag.constraint_name == "users_email_key":
+                flash("Email already used - each email can only be used on one account", 'danger')
             return render_template('users/signup.html', form=form)
 
         do_login(user)
@@ -107,6 +110,7 @@ def signup():
         Modlist.new_modlist(
             name='Nexus Tracked Mods', 
             description="This ModList automatically populates with all the mods in your Nexus account's Tracking centre. Use the Tracking feature on Nexus to easily bring mods over to ModList while browsing on Nexus. Mark mods 'keep tracked' in this ModList to make sure you don't accidentally un-track something you actually want tracked on Nexus for update notifications. From here you can you can also add mods to your other ModLists, or un-track mods you don't want to keep tracked on Nexus.", 
+            private=True,
             user=user
         )
         db.session.commit()
@@ -141,7 +145,9 @@ def login():
             except:
                 flash("Problem occurred refreshing games list from Nexus.\nDisplayed games list may be out of date or incomplete.\nLog out and back in to reattempt.", "danger")
 
-            if next:
+            print("NEXT: ", next)
+
+            if next and next != '<built-in function next>':
                 return redirect(next)
 
             return redirect(url_for('homepage'))
