@@ -112,7 +112,7 @@ def signup():
 
         Modlist.new_modlist(
             name='Nexus Tracked Mods', 
-            description="This ModList automatically populates with all the mods in your Nexus account's Tracking centre. Use the Tracking feature on Nexus to easily bring mods over to ModList while browsing on Nexus. Mark mods 'keep tracked' in this ModList to make sure you don't accidentally un-track something you actually want tracked on Nexus for update notifications. From here you can you can also add mods to your other ModLists, or un-track mods you don't want to keep tracked on Nexus.", 
+            description="This ModList automatically populates with all the mods in your Nexus account's Tracking centre.", 
             private=True,
             user=user
         )

@@ -7,6 +7,7 @@
 <div class="modlistpage">
     <div class="card-page">
         <div class="modlist-header">
+            {% if modlist.for_games[0] %}
             <div class="modlist-detail-background">
                 <img src="https://staticdelivery.nexusmods.com/Images/games/4_3/tile_{{ modlist.for_games[0].id }}.jpg"
                     alt="{{ modlist.name }} game image" title="{{ modlist.name }} game image">
@@ -29,15 +30,37 @@
                             </a>
                             {% endif %}
                         </h6>
-                        <h6">Curated By: <a href="{{ url_for('show_user_page', user_id=user.id) }}">{{ user.username
-                                }}</a>
-                            </h6>
+                        <h6>Curated By:
+                            <a href="{{ url_for('show_user_page', user_id=user.id) }}">
+                                {{ user.username }}
+                            </a>
+                        </h6>
                     </div>
                 </div>
                 <h5>{{ modlist.description }}</h5>
             </div>
+            {% else %}
+            <div class="modlist-detail-background">
+                <img src="/static/images/GamesOnNexus_300_3x4.png" alt="{{ modlist.name }} game image"
+                    title="{{ modlist.name }} game image">
+            </div>
+            <div class="modlist-detail">
+                <div class="modlist-detail-title">
+                    <h1>{{ modlist.name }}</h1>
+                    <div class="modlist-credits">
+                        <h6>Curated By:
+                            <a href="{{ url_for('show_user_page', user_id=user.id) }}">
+                                {{ user.username }}
+                            </a>
+                        </h6>
+                    </div>
+                </div>
+                <h5>{{ modlist.description }}</h5>
+            </div>
+            {% endif %}
         </div>
 
+        {% if modlist.mods %}
         {% for mod in modlist.mods %}
         <div class="modlist-card">
             <div class="mod-img">
@@ -59,20 +82,61 @@
                         href="{{ url_for('show_mod_page', game_domain_name=modlist.for_games[0].domain_name, mod_id=mod.id) }}">
                         <h4>{{ mod.name }}</h4>
                     </a>
-                    <p>{{ mod.summary }}</p>
+                    <p>{{ mod.summary | safe }}</p>
                 </div>
                 <div class="mod-buttons">
-                    <a href="{{ url_for('modlist_add_mod', user_id=g.user.id, mod_id=mod.id) }}"><button
-                            class="btn btn-outline-primary btn-sm">Add to a ModList</button></a>
-                    <a href=""><button class="btn btn-outline-danger btn-sm">Remove from ModList</button></a>
-                    <a href="https://www.nexusmods.com/{{modlist.for_games[0].domain_name}}/mods/{{mod.id}}"><button
-                            class="btn btn-outline-nexus btn-sm">See on Nexus</button></a>
+                    <a href="{{ url_for('modlist_add_mod', user_id=g.user.id, mod_id=mod.id) }}">
+                        <button class="btn btn-outline-primary btn-sm">
+                            Add to a ModList
+                        </button>
+                    </a>
+                    <a
+                        href="{{ url_for('modlist_delete_mod', user_id=g.user.id, modlist_id=modlist.id, mod_id=mod.id) }}">
+                        <button class="btn btn-outline-danger btn-sm">
+                            Remove from ModList
+                        </button>
+                    </a>
+                    <a href="https://www.nexusmods.com/{{modlist.for_games[0].domain_name}}/mods/{{mod.id}}">
+                        <button class="btn btn-outline-nexus btn-sm">
+                            See on Nexus
+                        </button>
+                    </a>
                     <a href="https://www.nexusmods.com/{{modlist.for_games[0].domain_name}}/mods/{{mod.id}}?tab=files"
-                        target="_blank"><button class="btn btn-outline-nexus btn-sm">Nexus Downloads Page</button></a>
+                        target="_blank">
+                        <button class="btn btn-outline-nexus btn-sm">
+                            Nexus Downloads Page
+                        </button>
+                    </a>
                 </div>
             </div>
         </div>
         {% endfor %}
+        {% else %}
+        <div class="modlist-card">
+            <div class="mod-img">
+                <img class="mod-img" src="/static/images/GamesOnNexus_300_3x4.png" alt="Empty ModList cover image"
+                    title="Empty ModList cover image">
+            </div>
+
+            <div class="mod-info">
+                <div>
+                    <h4>No Mods added to '{{ modlist.name }}' ModList yet...</h4>
+                    <p>The easiest way to find new mods is to search on
+                        <a href="https://www.nexusmods.com/" style="color: #D98F40">Nexus.com</a>
+                        . While browsing mods, use the 'Tracking' feature on
+                        Nexus to easily collect mods. Your 'Nexus Tracked Mods' list here on ModList will automatically
+                        import all Tracked mods from Nexus. Then add mods to your various ModLists from there.
+                    </p>
+                    <p>'Tracking' on Nexus is intended to help you keep track of installed mods for update
+                        notifications, so make sure to mark mods with 'keep tracked' in your 'Nexus Tracked Mods' list
+                        to make sure you don't accidentally un-track something you only tracked to import here. From
+                        here you can you can also add mods to your other ModLists, or un-track mods you don't want to
+                        keep tracked on Nexus.</p>
+                </div>
+                <div class="mod-buttons"></div>
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
 
