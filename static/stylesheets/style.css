@@ -82,6 +82,10 @@ h1 {
     cursor: pointer;
 }
 
+.h-glow-primary:hover {
+    box-shadow: 0 0 0px 2px #000000, 0 0px 2px 2px #ffffff, 0 4px 12px 6px #5170AF, 0 2px 6px 2px #5170AF;
+}
+
 .shadowed_hr_outer {
     display: block;
     position: relative;
@@ -555,8 +559,9 @@ fieldset[disabled] .btn-outline-nexus.active {
 }
 
 .game-section .game-card:hover {
-    -webkit-filter: drop-shadow(0px 0px 10px #5170AF);
-    filter: drop-shadow(0px 0px 10px #5170AF);
+    /* -webkit-filter: drop-shadow(0px 0px 10px #5170AF);
+    filter: drop-shadow(0px 0px 10px #5170AF); */
+    box-shadow: 0 0 0px 2px #000000, 0 0px 2px 2px #ffffff, 0 4px 12px 6px #5170AF, 0 2px 6px 2px #5170AF;
 }
 
 .game-card .game-img {
@@ -795,8 +800,9 @@ fieldset[disabled] .btn-outline-nexus.active {
 }
 
 .mod-cat-section .mod-card:hover {
-    -webkit-filter: drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4));
-    filter: drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4));
+    /* -webkit-filter: drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4));
+    filter: drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4)); */
+    box-shadow: 0 0 0px 2px #000000, 0 0px 2px 2px #ffffff, 0 4px 12px 6px #5170AF, 0 2px 6px 2px #5170AF;
 }
 
 .mod-card .mod-img img {
