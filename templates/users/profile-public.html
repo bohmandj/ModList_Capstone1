@@ -8,6 +8,19 @@
   <h1 class="page-heading">{{ user.username }}</h1>
   <div class="card-page">
 
+    {% if not modlists_by_game[0] %}
+    <div class="game-modlists">
+      <div class="section-heading-split">
+        <h3 class="game-section-title">{{ user.username }} has no public modlists</h3>
+      </div>
+      <div class="shadowed_hr_outer">
+        <div class="shadowed_hr_inner">
+          <hr style="position: relative; bottom: -8px;">
+        </div>
+      </div>
+    </div>
+    {% else %}
+
     {% for index in modlists_by_game %}
     {% if not index.all_private %}
     <div class="game-modlists">
@@ -20,7 +33,6 @@
       </div>
 
       <div class="games-modlists">
-        {% if index.game.name != "No Game" %}
         {% for modlist in index.modlists %}
         {% if not modlist.private %}
         <div class="modlist-card"
@@ -50,8 +62,6 @@
         <!-- not modlist.private -->
         {% endfor %}
         <!-- ends modlist in index.modlists -->
-        {% endif %}
-        <!-- ends index.game.name == "No Game" -->
 
       </div>
       <div class="shadowed_hr_outer">
@@ -64,7 +74,9 @@
     {% endif %}
     <!-- ends not index.all_private -->
     {% endfor %}
-    <!-- ends game in modlists_by_game -->
+    <!-- ends index in modlists_by_game -->
+    {% endif %}
+    <!-- ends if public modlists is empty -->
   </div>
 </div>
 </div>
