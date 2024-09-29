@@ -130,7 +130,7 @@ class ModlistEditForm(FlaskForm):
     name = StringField(
         'Name', 
         [ validators.Length(min=1, max=60) ], 
-        description="Re-name for this ModList"
+        description="Re-name this ModList"
     )
     description = TextAreaField(
         'Description', 
