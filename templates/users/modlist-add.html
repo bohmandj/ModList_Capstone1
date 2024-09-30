@@ -4,11 +4,11 @@
 
 {% block content %}
 
-<div class="form-page">
+<div class="form-page" style="width: 100%; max-width: unset;">
     <h2 class="form-header">Add Mod to ModLists:</h2>
 
     <div class="add-page">
-        <div class="modpage" style="margin-bottom: 30px;">
+        <div class="modpage">
             {% if mod.is_nsfw and g.user.hide_nsfw == True %}
             <div class="nsfw">
                 <img src="{{ mod.picture_url }}" alt="{{ mod.name }} title image"
@@ -19,14 +19,14 @@
             <img src="{{ mod.picture_url }}" alt="{{ mod.name }} title image" title="{{ mod.name }} title image">
             {% endif %}
 
-            <div class="mod-detail" style="margin: auto 0;">
-                <h3 style="margin-bottom: 20px;">{{ mod.name }}</h3>
-                <h5 style="margin-bottom: 20px;">{{ mod.summary }}</h5>
+            <div class="mod-detail">
+                <h4>{{ mod.name }}</h4>
+                <h5>{{ mod.summary }}</h5>
                 <h6">Each selected Modlist will have this mod added to it</h6>
             </div>
         </div>
 
-        <form method="POST" id="modlist_add_form" class="form-container">
+        <form method="POST" id="modlist_add_form" class="form-container" style="width: 50%; margin: 0 auto;">
             {{ form.hidden_tag() }}
 
             {% for field in form if field.widget.input_type != 'hidden' %}
@@ -53,7 +53,10 @@
 
             {% endfor %}
 
-            <button class="btn btn-primary btn-lg btn-block">Add {{ mod.name }}!</button>
+            <button class="btn btn-primary btn-lg btn-block" style="width: 100%; margin-bottom: 20px;">Add {{ mod.name
+                }}!</button>
+            <a href="{{ url_for('show_mod_page', game_domain_name=mod.for_games[0].domain_name, mod_id=mod.id) }}"
+                class="btn btn-outline-secondary btn-sm" style="width: 100%;">Cancel</a>
         </form>
     </div>
 </div>

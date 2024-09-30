@@ -7,6 +7,11 @@
 <div class="card-page">
     <div class="modpage">
         <div class="mod-detail">
+            <h5 style="margin-bottom: 20px;">
+                <a href="{{ url_for('show_game_page', game_domain_name=game.domain_name) }}">
+                    {{ game.name}}
+                </a>
+            </h5>
             <h3 style="margin-bottom: 20px;">{{ mod.name }}</h3>
             <h5 style="margin-bottom: 10px;">{{ mod.summary }}</h5>
             <ul>
