@@ -5,11 +5,11 @@ from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 from functools import wraps
 
-from forms import UserAddForm, LoginForm, UserEditForm, UserPasswordForm, ModlistAddForm, ModlistAddModForm
+from forms import UserAddForm, LoginForm, UserEditForm, UserPasswordForm, ModlistAddForm, ModlistEditForm, ModlistAddModForm
 from models import db, connect_db, User, Modlist, Mod, Game
 
 from nexus_api import get_all_games_nxs, get_mods_of_type_nxs, get_mod_nxs
-from utilities import get_all_games_db, get_game_db, get_user_modlists_db, get_empty_modlists, get_recent_modlists_by_game, get_public_modlists_by_game, filter_nxs_data, filter_nxs_mod_page, update_all_games_db, update_list_mods_db, link_mods_to_game, add_mod_modlist_choices
+from utilities import get_all_games_db, get_game_db, get_empty_modlists, get_recent_modlists_by_game, get_public_modlists_by_game, filter_nxs_data, filter_nxs_mod_page, update_all_games_db, update_list_mods_db, link_mods_to_game, add_mod_modlist_choices, is_uneditable_modlist
 
 CURR_USER_KEY = "curr_user"
 
@@ -50,7 +50,7 @@ def add_user_to_g():
     """If we're logged in, add curr user to Flask global."""
 
     if CURR_USER_KEY in session:
-        g.user = User.query.get(session[CURR_USER_KEY])
+        g.user = db.get_or_404(User, session[CURR_USER_KEY])
 
     else:
         g.user = None
@@ -112,7 +112,7 @@ def signup():
 
         Modlist.new_modlist(
             name='Nexus Tracked Mods', 
-            description="This ModList automatically populates with all the mods in your Nexus account's Tracking centre.", 
+            description="This modlist automatically populates with all the mods in your Nexus account's Tracking Centre.", 
             private=True,
             user=user
         )
@@ -172,7 +172,7 @@ def logout():
 
 
 ##############################################################################
-# User routes (& ModList routes):
+# User routes (& Modlist routes):
 
 @app.route('/users/<user_id>')
 def show_user_page(user_id):
@@ -183,9 +183,9 @@ def show_user_page(user_id):
     - Buttons to: go to list, go to game, make new list.
     """
 
-    user = db.session.scalars(db.select(User).where(User.id==user_id)).first()
+    user = db.get_or_404(User, user_id)
 
-    if not g.user or g.user != user:
+    if not g.user or g.user.id != int(user_id):
 
         modlists_by_game = get_public_modlists_by_game(user_id)
 
@@ -238,7 +238,7 @@ def edit_profile():
     form.email.data = g.user.email
     form.hide_nsfw.data = g.user.hide_nsfw
 
-    return render_template('users/edit.html', form=form, user=g.user)
+    return render_template('users/edit.html', form=form, form_title="Edit Profile", user=g.user)
 
 
 @app.route('/users/password', methods=["GET", "POST"])
@@ -258,17 +258,17 @@ def edit_password():
 
         if form.new_password.data != form.new_confirm.data:
             flash("New password and confirmation password did not match. Please try again.", 'danger')
-            return render_template('users/password.html', form=form, user=g.user)
+            return redirect(url_for('edit_password', form=form, user=g.user))
 
         try:
             hashed_password = user.hash_new_password(form.new_password.data)
             user.password = hashed_password
-            print("Hashed New password: ", user.password)
+
             db.session.commit()
         except Exception as e:
             print("Error making/saving new password to db: ", e)
             flash("Error saving new password. Please try again.", 'danger')
-            return render_template('users/password.html', form=form, user=g.user)
+            return redirect(url_for('edit_password', form=form, user=g.user))
 
         flash("Success! New password saved.", 'success')
 
@@ -280,14 +280,11 @@ def edit_password():
 @app.route('/users/<user_id>/modlists/new', methods=["GET", "POST"])
 @login_required
 def new_modlist(user_id):
-    """Handle new ModList generation.
+    """Handle new modlist generation.
 
-    Create new ModList and add to DB. Redirect to new ModList page.
+    Create new modlist and add to DB. Redirect to new modlist page.
 
     If form not valid, re-present form.
-
-    If the there already is a ModList with that name owned by the 
-    same user: flash message and re-present form.
     """
 
     form = ModlistAddForm()
@@ -296,7 +293,7 @@ def new_modlist(user_id):
         print("validating new modlist form")
 
         try:
-            current_modlists = get_user_modlists_db(user_id)
+            current_modlists = db.session.scalars(db.select(Modlist).where(Modlist.user_id==user_id).order_by(Modlist.name)).all()
 
             if form.name.data in [modlist.name for modlist in current_modlists]:
                 raise ValueError
@@ -310,12 +307,12 @@ def new_modlist(user_id):
             db.session.commit()
 
         except ValueError:
-            flash(f"You already have a Modlist named '{form.name.data}', please choose another name.", 'danger')
+            flash(f"You already have a modlist named '{form.name.data}', please choose another name.", 'danger')
             return redirect(url_for('new_modlist', form=form))
 
         except Exception as e:
-            print("Error creating Modlist: ", e)
-            flash("Error creating ModList, please try again.", 'danger')
+            print("Error creating modlist: ", e)
+            flash("Error creating modlist, please try again.", 'danger')
             return render_template('users/modlist-new.html', form=form)
 
         return redirect(url_for("show_user_page", user_id=g.user.id))
@@ -326,14 +323,11 @@ def new_modlist(user_id):
 @app.route('/users/<user_id>/modlists/<modlist_id>')
 def show_modlist_page(user_id, modlist_id):
     """Show modlist page.
-
-    - db is searched for contents of the ModList.
-    - Buttons: link to each mod page, remove mod from list, 
     """
 
-    user = db.session.scalars(db.select(User).where(User.id==user_id)).first()
+    user = db.get_or_404(User, user_id)
 
-    modlist = db.session.scalars(db.select(Modlist).options(db.selectinload(Modlist.user)).where(Modlist.id==modlist_id)).first()
+    modlist = db.session.scalars(db.select(Modlist).filter_by(id=modlist_id).join(Modlist.user.and_(User.id == user_id))).first()
 
     if not g.user:
         hide_nsfw = True
@@ -366,11 +360,11 @@ def modlist_add_mod(user_id, mod_id):
             game = db.get_or_404(Game, mod.for_games[0].id)
             
             if modlist.user_id != g.user.id:
-                flash("Mod can only be added to ModLists owned by the currently signed in user.", "danger")
+                flash("Mod can only be added to modlists owned by the currently signed in user.", "danger")
                 return redirect(url_for('show_mod_page', game_domain_name=mod.for_games[0].domain_name, mod_id=mod_id))
 
             if mod in modlist.mods:
-                flash(f"Can't add mod to ModList. {mod.name} already in {modlist.name}.", 'danger')
+                flash(f"Can't add mod to modlist. {mod.name} already in {modlist.name}.", 'danger')
                 return redirect(url_for('show_mod_page', game_domain_name=mod.for_games[0].domain_name, mod_id=mod_id))
 
             try:
@@ -456,7 +450,7 @@ def show_mod_page(game_domain_name, mod_id):
     - Buttons to: track/untrack and endorse/un-endorse on Nexus.
     - Lists of known conflicts, known required mods, 
     and ability to update those lists.
-    - Button to add mod to one of your ModLists.
+    - Button to add mod to one of your modlists.
     - Link to official mod page on Nexus.
     """
    

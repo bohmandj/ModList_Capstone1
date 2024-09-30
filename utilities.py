@@ -34,26 +34,6 @@ def get_game_db(game_domain_name):
     return game
 
 
-def get_mod_db(mod_id):
-    """Uses mod_id to retrieve mod data from db.
-    
-    Returns Mod object from db if successful, or None."""
-
-    mod = db.session.get(Mod, mod_id)
-
-    return mod
-
-
-def get_user_modlists_db(user_id):
-    """Uses user_id to retrieve modlist data from db.
-    
-    Returns Mod object from db if successful, or None."""
-
-    modlists = db.session.scalars(db.select(Modlist).where(Modlist.user_id==user_id).order_by(Modlist.name)).all()
-
-    return modlists
-
-
 def filter_nxs_data(data_list, list_type):
     """Takes list of data from Nexus API call and 
     filters out unneeded data for db entry.
@@ -180,21 +160,27 @@ def update_list_mods_db(db_ready_mods, game):
     
     Returns True if successful, or Exception details."""
 
-    stmt = insert(Mod).values(db_ready_mods)
-    stmt = stmt.on_conflict_do_update(
-        constraint="mods_pkey",
-        set_={
-            'id': stmt.excluded.id,
-            'name': stmt.excluded.name,
-            'summary': stmt.excluded.summary,
-            'is_nsfw': stmt.excluded.is_nsfw,
-            'picture_url': stmt.excluded.picture_url
-        }
-    )
+    try:
+        stmt = insert(Mod).values(db_ready_mods)
+        stmt = stmt.on_conflict_do_update(
+            constraint="mods_pkey",
+            set_={
+                'id': stmt.excluded.id,
+                'name': stmt.excluded.name,
+                'summary': stmt.excluded.summary,
+                'is_nsfw': stmt.excluded.is_nsfw,
+                'picture_url': stmt.excluded.picture_url
+            }
+        )
 
-    db.session.execute(stmt)
+        db.session.execute(stmt)
 
-    db.session.commit()
+        db.session.commit()
+
+    except Exception as e:
+        db.session.rollback()
+        print("Error updating db: ", e)
+        return e
             
     return True
 
@@ -205,13 +191,18 @@ def link_mods_to_game(db_ready_mods, game):
     Access game from mod obj: 'for_games'
     """
 
-    for m in db_ready_mods:
-        mod = get_mod_db(m['id'])
-        
-        if mod not in game.subject_of_mods:
-            game.subject_of_mods.append(mod)
+    try:
+        for m in db_ready_mods:
+            mod = db.get_or_404(Mod, m['id'])
+            
+            if mod not in game.subject_of_mods:
+                game.subject_of_mods.append(mod)
 
-    db.session.commit()
+        db.session.commit()
+
+    except Exception as e:
+        db.session.rollback()
+        print("Error updating db: ", e)
 
 
 def add_mod_modlist_choices(user_id, mod):
@@ -221,7 +212,7 @@ def add_mod_modlist_choices(user_id, mod):
     
     Returns list of game-matched or game-unassigned modlists."""
 
-    modlists = get_user_modlists_db(user_id)
+    modlists = db.session.scalars(db.select(Modlist).where(Modlist.user_id==user_id).order_by(Modlist.name)).all()
 
     users_modlist_choices = []
 
@@ -241,9 +232,7 @@ def get_recent_modlists_by_game(user_id):
     Return list of games and mods:
     [{'game':game, 'all_private':bool, 'modlists':[modlist, modlist]}]"""
 
-    user = db.session.scalars(db.select(User).where(User.id==user_id)).first()
-
-    all_recent_modlists = db.session.scalars(db.select(Modlist).options(db.selectinload(Modlist.user)).order_by(Modlist.last_updated.desc())).all()
+    all_recent_modlists = db.session.scalars(db.select(Modlist).join(Modlist.user.and_(User.id == user_id)).order_by(Modlist.last_updated.desc())).all()
 
     return_list = order_modlists_by_game(all_recent_modlists)
 
@@ -258,9 +247,7 @@ def get_public_modlists_by_game(user_id):
     Return list of games and mods:
     [{'game':game, 'modlists':[modlist, modlist]}]"""
 
-    user = db.session.scalars(db.select(User).where(User.id==user_id)).first()
-
-    recent_public_modlists = db.session.scalars(db.select(Modlist).options(db.selectinload(Modlist.user)).filter_by(private=False).order_by(Modlist.last_updated.desc())).all()
+    recent_public_modlists = db.session.scalars(db.select(Modlist).filter_by(private=False).join(Modlist.user.and_(User.id == user_id)).order_by(Modlist.last_updated.desc())).all()
 
     return_list = order_modlists_by_game(recent_public_modlists)
 
@@ -288,7 +275,6 @@ def order_modlists_by_game(modlist_list):
             recent_games.append(modlist.for_games[0])
 
     for game in recent_games:
-        print("game in users_games: ", game)
         game_modlists = {'game':game, 'modlists':[]}
         for modlist in modlist_list:
             if len(modlist.for_games) != 0 and modlist.for_games[0].id == game.id:
@@ -308,9 +294,7 @@ def get_empty_modlists(user_id):
     Return list of empty modlists:
     [modlist, modlist]"""
 
-    user = db.session.scalars(db.select(User).where(User.id==user_id)).first()
-
-    recent_modlists = db.session.scalars(db.select(Modlist).options(db.selectinload(Modlist.user)).order_by(Modlist.last_updated.desc())).all()
+    recent_modlists = db.session.scalars(db.select(Modlist).join(Modlist.user.and_(User.id == user_id)).order_by(Modlist.name)).all()
 
     return_list = []
 
