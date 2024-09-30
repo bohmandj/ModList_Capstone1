@@ -390,7 +390,66 @@ def modlist_add_mod(user_id, mod_id):
 
     return render_template('users/modlist-add.html', form=form, user=g.user, mod=mod)
 
-    
+
+@app.route('/users/<user_id>/modlists/<modlist_id>/edit', methods=["GET", "POST"])
+@login_required
+def edit_modlist(user_id, modlist_id):
+    """Update modlist info for modlist belonging to current user."""
+
+    form = ModlistEditForm()
+
+    modlist = db.get_or_404(Modlist, modlist_id)
+
+    invalid_message = is_uneditable_modlist(user_id, modlist, g.user.id)
+    if invalid_message:
+        flash(invalid_message, "danger")
+        return redirect(url_for('show_modlist_page', user_id=user_id, modlist_id=modlist_id))
+
+    if form.validate_on_submit():
+
+        users_modlists = db.session.scalars(db.select(Modlist).where(Modlist.user_id==user_id).order_by(Modlist.name)).all()
+
+        users_modlist_names = ['Nexus Tracked Mods']
+
+        for mlist in users_modlists:
+            if mlist.id != int(modlist_id):
+                users_modlist_names.append(mlist.name)
+            else:
+                modlist = mlist
+        
+        try:
+            if form.name.data in users_modlist_names:
+                raise ValueError
+
+            modlist.name=form.name.data
+            modlist.description=form.description.data,
+            modlist.private=form.private.data
+
+            db.session.commit()
+
+        except ValueError as e:
+            db.session.rollback()
+            flash(f"You already have a modlist named '{form.name.data}', please choose another name.", 'danger')
+            return redirect(url_for('edit_modlist', user_id=user_id, modlist_id=modlist_id))
+        
+        except Exception as e:
+            db.session.rollback()
+            print("Error saving modlist edits to db: ", e)
+            flash("Sorry, there was a problem saving your edited modlist. Please try again.", 'danger')
+            return redirect(url_for('edit_modlist', user_id=user_id, modlist_id=modlist_id))
+
+        flash(f"Success! Edits to '{modlist.name}' saved.", 'success')
+
+        return redirect(f'/users/{g.user.id}')
+
+    # pre-fill forms w/ modlist data
+    form.name.data=modlist.name
+    form.description.data=modlist.description
+    form.private.data=modlist.private
+
+    return render_template('users/edit.html', form=form, form_title="Edit Modlist", modlist=modlist)
+
+
 ##############################################################################
 # Game routes (& Mod routes):
 

@@ -303,3 +303,22 @@ def get_empty_modlists(user_id):
             return_list.append(modlist)
 
     return return_list
+
+
+def is_uneditable_modlist(user_id, modlist, g_user_id, ):
+    """Determine if selected modlist is a invalid modlist for 
+    the user to edit. A user can NOT edit a modlist if the 
+    modlist does not belong to the signed in user, or if the 
+    modlist is named 'Nexus Tracked Mods'.
+
+    Returns False if modlist is editable, or the message to 
+    flash if it can not be edited by the signed-in user user."""
+
+    if modlist.user_id != int(g_user_id) or int(user_id) != int(g_user_id):
+        return "A modlist can only be edited by the owner of the modlist."
+
+    elif modlist.name == 'Nexus Tracked Mods':
+        return "The 'Nexus Tracked Mods' modlist is not editable."
+
+    else:
+        return False
