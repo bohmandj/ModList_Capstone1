@@ -16,6 +16,10 @@ body {
     margin: 0 auto;
 }
 
+.alert {
+    z-index: 999;
+}
+
 .split-container {
     width: 100%;
     display: flex;
@@ -24,23 +28,36 @@ body {
 
 .section-heading-split {
     width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin: 40px 0px 10px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    column-gap: 25px;
+    row-gap: 25px;
+    margin: 40px 0px 15px;
 }
 
 .section-heading-split .section-title {
-    margin-bottom: 0px;
-    display: inline-block;
+    display: flex;
+    justify-content: left;
+    vertical-align: middle;
+    grid-column-start: 1;
+    grid-column-end: span 2;
+    width: 100%;
     min-width: fit-content;
 }
 
+.section-heading-split h3 {
+    margin: auto 0;
+}
+
 .section-heading-split .section-buttons {
-    margin-left: 15px;
-    display: inline-block;
-    width: auto;
-    max-width: 40%;
+    display: flex;
+    grid-column-end: -1;
+    width: 100%;
+}
+
+.section-heading-split .section-buttons button,
+.section-heading-split .section-buttons a {
+    width: 100%;
 }
 
 .card-page {
@@ -266,6 +283,7 @@ nav form.navbar-form {
 .dropdown-content a:hover {
     background-color: #f1f1f1;
     color: #5170AF;
+    border-radius: 10px;
 }
 
 /* Show the dropdown menu on hover */
@@ -375,9 +393,9 @@ form .form-switch .form-check-input {
 
 .profile .modlist-card {
     display: flex;
-    background-size: 100% auto;
+    background-size: cover;
     background-position: center;
-    background-repeat: cover;
+    background-repeat: no-repeat;
     width: 100%;
     aspect-ratio: 5/4;
     border-radius: 10px;
@@ -396,7 +414,8 @@ form .form-switch .form-check-input {
     z-index: 1;
 }
 
-.profile .modlist-details .modlist-title a {
+.profile .modlist-details .modlist-title a,
+.profile .modlist-details .modlist-title h5 {
     text-shadow: 1px 1px 2px black, 0 0 0.5em #202020, 0 0 1em #202020;
 }
 
@@ -408,6 +427,87 @@ form .form-switch .form-check-input {
 .profile .modlist-details li {
     line-height: 1.1em;
     margin-bottom: 8px;
+}
+
+.profile .profile-subhead {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    width: 100%;
+    column-gap: 25px;
+    row-gap: 25px;
+    padding: 0px;
+    margin: 40px 0px 10px;
+}
+
+.profile-subhead .modlist-card {
+    aspect-ratio: unset;
+    border: solid 1px #ffffff;
+}
+
+.profile-subhead .modlist-card:hover {
+    aspect-ratio: unset;
+    border: solid 1px #5170AF;
+}
+
+.profile .profile-subhead .modlist-details {
+    background-size: 100% 120px;
+    background-position: top;
+    background-repeat: no-repeat;
+    align-self: flex-start;
+    width: 100%;
+    height: 100%;
+    min-height: fit-content;
+    padding: 0;
+    overflow: hidden;
+}
+
+.profile-subhead .modlist-details .modlist-title {
+    margin: 0;
+}
+
+.profile-subhead .modlist-details .modlist-title a {
+    display: block;
+    width: 100%;
+    height: 100%;
+    padding: 15px;
+}
+
+.profile .profile-subhead .new-modlist-btn {
+    display: flex;
+    grid-column-end: -1;
+}
+
+.profile .profile-subhead a {
+    text-decoration: none;
+}
+
+.profile .profile-subhead button {
+    width: 100%;
+    height: 100%;
+}
+
+.profile-btn-primary svg {
+    height: 1.2rem;
+    width: 1.2rem;
+    fill: #0C6EFD;
+    position: relative;
+    bottom: 2px;
+}
+
+.profile-btn-secondary svg {
+    height: 1.2rem;
+    width: 1.2rem;
+    fill: #6C757D;
+    position: relative;
+    bottom: 2px;
+}
+
+.profile-btn:hover svg {
+    height: 1.2rem;
+    width: 1.2rem;
+    fill: #ffffff;
+    position: relative;
+    bottom: 2px;
 }
 
 /* ===================== Nexus Related */

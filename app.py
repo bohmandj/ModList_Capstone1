@@ -191,8 +191,9 @@ def show_user_page(user_id):
 
         return render_template('users/profile-public.html', user=user, modlists_by_game=modlists_by_game)
         
-    empty_modlists = get_empty_modlists(user_id)
-    modlists_by_game = get_recent_modlists_by_game(user_id)
+    empty_modlists = get_empty_modlists(g.user.id)
+    modlists_by_game = get_recent_modlists_by_game(g.user.id)
+
 
     return render_template('users/profile-user.html', user=user, empty_modlists=empty_modlists, modlists_by_game=modlists_by_game)
 
@@ -208,28 +209,24 @@ def edit_profile():
 
         user = User.authenticate(g.user.username, form.current_password.data)
         if user == False:
-            flash("Username and/or password did not match our records. Please try again.", 'danger')
-            return render_template('users/edit.html', form=form, user=g.user)
+            flash("Password did not match our records for the currently signed-in user account. Please try again.", 'danger')
+            return redirect('edit_profile')
 
         try:
             g.user.username = form.username.data
-            db.session.commit()
-        except:
-            db.session.rollback()
-            flash("Username already taken", 'danger')
-            return render_template('users/edit.html', form=form, user=g.user)
-        
-        try:
             g.user.email = form.email.data
+            g.user.hide_nsfw = form.hide_nsfw.data
             db.session.commit()
-        except:
+        
+        except IntegrityError as e:
             db.session.rollback()
-            flash("Password did not match our records for the currently signed-in user account. Please try again.", 'danger')
-            return render_template('users/edit.html', form=form, user=g.user)
+            if e.__cause__.diag.constraint_name == "users_username_key":
+                flash("Username already taken, please try again with a different username.", 'danger')
+            if e.__cause__.diag.constraint_name == "users_email_key":
+                flash("Email already used - each email can only be used on one account", 'danger')
+            redirect('edit_profile')
 
-        g.user.hide_nsfw = form.hide_nsfw.data
-
-        db.session.commit()
+        flash(f"Success! Edits to {form.username.data} saved.", 'success')
 
         return redirect(f'/users/{g.user.id}')
 
@@ -238,7 +235,7 @@ def edit_profile():
     form.email.data = g.user.email
     form.hide_nsfw.data = g.user.hide_nsfw
 
-    return render_template('users/edit.html', form=form, form_title="Edit Profile", user=g.user)
+    return render_template('users/edit.html', form=form, user=g.user)
 
 
 @app.route('/users/password', methods=["GET", "POST"])
