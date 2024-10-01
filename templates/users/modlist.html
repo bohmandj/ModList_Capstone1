@@ -90,28 +90,32 @@
                     <p>{{ mod.summary | safe }}</p>
                 </div>
                 <div class="mod-buttons">
-                    <a href="{{ url_for('modlist_add_mod', user_id=g.user.id, mod_id=mod.id) }}">
-                        <button class="btn btn-outline-primary btn-sm">
-                            Add to a ModList
-                        </button>
-                    </a>
-                    <a
-                        href="{{ url_for('modlist_delete_mod', user_id=g.user.id, modlist_id=modlist.id, mod_id=mod.id) }}">
-                        <button class="btn btn-outline-danger btn-sm">
-                            Remove from ModList
-                        </button>
-                    </a>
-                    <a href="https://www.nexusmods.com/{{modlist.for_games[0].domain_name}}/mods/{{mod.id}}">
-                        <button class="btn btn-outline-nexus btn-sm">
-                            See on Nexus
-                        </button>
-                    </a>
-                    <a href="https://www.nexusmods.com/{{modlist.for_games[0].domain_name}}/mods/{{mod.id}}?tab=files"
-                        target="_blank">
-                        <button class="btn btn-outline-nexus btn-sm">
-                            Nexus Downloads Page
-                        </button>
-                    </a>
+                    <div class="buttons-subset">
+                        <a href="{{ url_for('modlist_add_mod', user_id=g.user.id, mod_id=mod.id) }}">
+                            <button class="btn btn-outline-primary btn-sm">
+                                Add to a ModList
+                            </button>
+                        </a>
+                        <a
+                            href="{{ url_for('modlist_delete_mod', user_id=g.user.id, modlist_id=modlist.id, mod_id=mod.id) }}">
+                            <button class="btn btn-outline-danger btn-sm">
+                                Remove from ModList
+                            </button>
+                        </a>
+                    </div>
+                    <div class="buttons-subset">
+                        <a href="https://www.nexusmods.com/{{modlist.for_games[0].domain_name}}/mods/{{mod.id}}">
+                            <button class="btn btn-outline-nexus btn-sm">
+                                See on Nexus
+                            </button>
+                        </a>
+                        <a href="https://www.nexusmods.com/{{modlist.for_games[0].domain_name}}/mods/{{mod.id}}?tab=files"
+                            target="_blank">
+                            <button class="btn btn-outline-nexus btn-sm">
+                                Nexus Downloads Page
+                            </button>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>

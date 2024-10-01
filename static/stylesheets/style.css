@@ -844,11 +844,26 @@ fieldset[disabled] .btn-outline-nexus.active {
 }
 
 .modlistpage .modlist-card .mod-buttons {
+    --grid-layout-gap: 15px;
+    --grid-column-count: 2;
+    --grid-item--min-width: 170px;
+
+    --gap-count: calc(var(--grid-column-count) - 1);
+    --total-gap-width: calc(var(--gap-count) * var(--grid-layout-gap));
+    --grid-item--max-width: calc((100% - var(--total-gap-width)) / var(--grid-column-count));
+
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-    column-gap: 20px;
-    margin-top: 8px;
+    grid-template-columns: repeat(auto-fill, minmax(max(var(--grid-item--min-width), var(--grid-item--max-width)), 1fr));
+    column-gap: var(--grid-layout-gap);
+    row-gap: 8px;
     align-items: center;
+}
+
+.modlistpage .modlist-card .mod-buttons .buttons-subset {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(max(var(--grid-item--min-width), var(--grid-item--max-width)), 1fr));
+    column-gap: var(--grid-layout-gap);
+    row-gap: 8px;
 }
 
 .modlistpage .modlist-card .mod-buttons a {
