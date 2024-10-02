@@ -15,9 +15,9 @@
                     title="NSFW visibility can be changed in user settings">
                 <span>NSFW Mod</span>
             </div>
-            {% else %}
+            {% else %}{# handle non-nsfw censored #}
             <img src="{{ mod.picture_url }}" alt="{{ mod.name }} title image" title="{{ mod.name }} title image">
-            {% endif %}
+            {% endif %}{# end 'if mod.is_nsfw...' #}
 
             <div class="mod-detail">
                 <h4>{{ mod.name }}</h4>
@@ -49,9 +49,9 @@
                     <span>{{ option.label }}</span>
                 </label>
             </div>
-            {% endfor %}
+            {% endfor %}{# ends 'for option in field' #}
 
-            {% endfor %}
+            {% endfor %}{# ends 'for field in form...' #}
 
             <button class="btn btn-primary btn-lg btn-block" style="width: 100%; margin-bottom: 20px;">Add {{ mod.name
                 }}!</button>

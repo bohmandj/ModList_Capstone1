@@ -17,24 +17,11 @@
   </div>
 
   <ul class="mod-cat-section">
-    {% if cat.error %}
-    <li class="game-card" style="width: 40%; background-color: #404040;">
-      <div class="game-img" style="width: 100%; height: 100px; padding: 10px;">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/3/34/ErrorMessage.png" alt="{{ game.name }} error"
-          style="height: 80px; width: auto;">
-      </div>
-      <div class="game-title" style="width: 100%;">
-        <span>
-          <h5>Error occurred retrieving {{ cat.section_title }}.<br>Please refresh to reattempt.</h5>
-        </span>
-      </div>
-    </li>
-
-    {% else %}
+    {% if not cat.error %}{# handle mod category data retrieval success #}
     {% for mod in cat.data %}
     <li class="mod-card">
 
-      {% if mod.is_nsfw and g.user.hide_nsfw == True %}
+      {% if mod.is_nsfw and g.user.hide_nsfw == True %}{# handle censored mod display #}
       <a class="mod-img nsfw" href="{{ url_for('show_mod_page', game_domain_name=game.domain_name, mod_id=mod.id) }}">
         <img src="{{ mod.picture_url }}" alt="{{ mod.name }} cover image">
       </a>
@@ -47,7 +34,7 @@
           </button>
         </a>
       </div>
-      {% else %}
+      {% else %}{# handle uncensored mod display #}
       <a class="mod-img" href="{{ url_for('show_mod_page', game_domain_name=game.domain_name, mod_id=mod.id) }}">
         <img src="{{ mod.picture_url }}" alt="{{ mod.name }} cover image">
       </a>
@@ -59,14 +46,27 @@
           </button>
         </a>
       </div>
-      {% endif %}
+      {% endif %}{# ends 'if mod.is_nsfw...' #}
 
       <a class="mod-title" href="{{ url_for('show_mod_page', game_domain_name=game.domain_name, mod_id=mod.id) }}">
         <span>{{ mod.name }}</span>
       </a>
     </li>
-    {% endfor %}
-    {% endif %}
+    {% endfor %}{# end 'for mod in cat.data' #}
+
+    {% else %}{# handle mod category data retrieval error #}
+    <li class="game-card" style="width: 40%; background-color: #404040;">
+      <div class="game-img" style="width: 100%; height: 100px; padding: 10px;">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/3/34/ErrorMessage.png" alt="{{ game.name }} error"
+          style="height: 80px; width: auto;">
+      </div>
+      <div class="game-title" style="width: 100%;">
+        <span>
+          <h5>Error occurred retrieving {{ cat.section_title }}.<br>Please refresh to reattempt.</h5>
+        </span>
+      </div>
+    </li>
+    {% endif %}{# ends 'if not cat.error' #}
 
   </ul>
   <div class="shadowed_hr_outer">
@@ -74,19 +74,8 @@
       <hr style="position: relative; bottom: -8px;">
     </div>
   </div>
-  {% endfor %}
+  {% endfor %}{# ends 'for cat in mod_categories' #}
 
 </div>
-<!-- <div class="grid-container">
-  <div class="grid-item">
-    <div class="top-element">Top Content</div>
-    <div class="bottom-element">Dynamic Content 1</div>
-  </div>
-  <div class="grid-item">
-    <div class="top-element">Top Content</div>
-    <div class="bottom-element">Dynamic Content 2 with different height</div>
-  </div>
-
-</div> -->
 
 {% endblock %}

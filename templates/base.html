@@ -22,14 +22,14 @@
       <div class="navbar-header">
         <a href="/" class="navbar-brand">
           <img src="/static/images/modlist-icon.png" alt="logo">
-          <span>ModList</span>
+          <h3>ModList</h3>
         </a>
       </div>
       <ul class="nav navbar-nav navbar-right">
-        {% if not g.user %}
+        {% if not g.user %}{# display navbar w/ signup & login links #}
         <li><a href="/signup">Sign up</a></li>
         <li><a href="/login">Log in</a></li>
-        {% else %}
+        {% else %}{# display navbar w/ username & user links dropdown #}
         <li>
           <div class="dropdown">
             <button class="dropbtn">{{ g.user.username }} &ensp;
@@ -44,13 +44,13 @@
                 g.user.username }}</a>
               <a href="#######">See ModLists</a>
               <hr style="margin: 0;">
-              <a href="{{ url_for('edit_profile') }}">User Settings</a>
+              <a href="{{ url_for('edit_profile') }}">Edit Profile</a>
               <hr style="margin: 0;">
               <a href="{{ url_for('logout') }}">Log out</a>
             </div>
           </div>
         </li>
-        {% endif %}
+        {% endif %}{# ends 'if not g.user' #}
       </ul>
     </div>
   </nav>

@@ -7,7 +7,7 @@
 <div class="modlistpage">
     <div class="card-page">
         <div class="modlist-header">
-            {% if modlist.for_games[0] %}
+            {% if modlist.for_games[0] %}{# handle game-assigned modlist header #}
             <div class="modlist-detail-background">
                 <img src="https://staticdelivery.nexusmods.com/Images/games/4_3/tile_{{ modlist.for_games[0].id }}.jpg"
                     alt="{{ modlist.name }} game image" title="{{ modlist.name }} game image">
@@ -17,13 +17,13 @@
                     <h1>{{ modlist.name }}</h1>
                     <div class="modlist-credits">
                         <h6>For:
-                            {% if modlist.for_games[1] %}
+                            {% if modlist.for_games[1] %}{# handle modlist w/ multiple games assigned #}
                             {% for game in modlist.for_games %}
                             <a href="{{ url_for('show_game_page', game_domain_name=game.domain_name) }}">
                                 <br>{{ game.name }}
                             </a>
-                            {% endfor %}
-                            {% else %}
+                            {% endfor %}{# for game in modlist.for_games #}
+                            {% else %}{# handle standard single-game-assigned modlists #}
                             <a
                                 href="{{ url_for('show_game_page', game_domain_name=modlist.for_games[0].domain_name) }}">
                                 {{ modlist.for_games[0].name }}
@@ -39,7 +39,7 @@
                 </div>
                 <h5>{{ modlist.description }}</h5>
             </div>
-            {% else %}
+            {% else %}{# handle game-unassigned modlist header #}
             <div class="modlist-detail-background">
                 <img src="/static/images/GamesOnNexus_300_3x4.png" alt="{{ modlist.name }} game image"
                     title="{{ modlist.name }} game image">
@@ -48,11 +48,15 @@
                 <div class="modlist-detail-title">
                     <h1>{{ modlist.name }}</h1>
                     <div class="modlist-credits">
+                        {% if modlist.name == 'Nexus Tracked Mods' %}
                         <h6>Imported From:
                             <a href="https://www.nexusmods.com/mods/trackingcentre">
                                 Nexus Tracking Centre
                             </a>
                         </h6>
+                        {% else %}
+                        <h6>Game: Unassigned</h6>
+                        {% endif %} {# ends 'if modlist.name...' #}
                         <h6>For User:
                             <a href="{{ url_for('show_user_page', user_id=user.id) }}">
                                 {{ user.username }}
@@ -62,23 +66,23 @@
                 </div>
                 <h5>{{ modlist.description }}</h5>
             </div>
-            {% endif %}
+            {% endif %}{# ends 'if modlist.for_games[0]' #}
         </div>
 
-        {% if modlist.mods %}
+        {% if modlist.mods %}{# handles display of each modlist #}
         {% for mod in modlist.mods %}
         <div class="modlist-card">
             <div class="mod-img">
-                {% if mod.is_nsfw and hide_nsfw == True %}
+                {% if mod.is_nsfw and hide_nsfw == True %}{# censor nsfw #}
                 <div class="nsfw">
                     <img class="mod-img" src="{{ modlist.picture_url }}" alt="{{ modlist.name }} title image"
                         title="NSFW visibility can be changed in user settings">
                     <span>NSFW</span>
                 </div>
-                {% else %}
+                {% else %}{# uncensored sfw/user-allowed nsfw #}
                 <img class="mod-img" src="{{ mod.picture_url }}" alt="{{ mod.name }} cover image"
                     title="{{ mod.name }} cover image">
-                {% endif %}
+                {% endif %}{# ends 'if mod.is_nsfw...' #}
             </div>
 
             <div class="mod-info">
@@ -119,8 +123,8 @@
                 </div>
             </div>
         </div>
-        {% endfor %}
-        {% else %}
+        {% endfor %}{# ends 'for mod in modlist.mods' #}
+        {% else %}{# handles display of mod area when no mods in modlist #}
         <div class="modlist-card">
             <div class="mod-img">
                 <img class="mod-img" src="/static/images/GamesOnNexus_300_3x4.png" alt="Empty ModList cover image"
@@ -145,7 +149,7 @@
                 <div class="mod-buttons"></div>
             </div>
         </div>
-        {% endif %}
+        {% endif %}{# ends 'if modlist.mods' #}
     </div>
 </div>
 

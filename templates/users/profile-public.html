@@ -13,7 +13,7 @@
       </div>
     </div>
 
-    {% if not modlists_by_game[0] %}
+    {% if not modlists_by_game[0] %}{# handle user having no modlists #}
     <div class="game-modlists">
       <div class="section-heading-split">
         <h3 class="game-section-title">{{ user.username }} has no public modlists</h3>
@@ -24,8 +24,8 @@
         </div>
       </div>
     </div>
-    {% else %}
 
+    {% else %}{# handle showing public modlists (hide private ones) #}
     {% for index in modlists_by_game %}
     {% if not index.all_private %}
     <div class="game-modlists">
@@ -56,17 +56,14 @@
                   {{ mod.name }}
                 </a>
               </li>
-              {% endfor %}
-              <!-- ends mod in modlist.mods[:3] -->
+              {% endfor %}{# ends 'for mod in modlist.mods[:3]' #}
             </ul>
             <a href="{{ url_for('show_modlist_page', user_id=user.id, modlist_id=modlist.id) }}"><button
                 class="btn btn-sm btn-outline-success">See full ModList page</button></a>
           </div>
         </div>
-        {% endif %}
-        <!-- not modlist.private -->
-        {% endfor %}
-        <!-- ends modlist in index.modlists -->
+        {% endif %}{# ends 'if not modlist.private' #}
+        {% endfor %}{# ends 'for modlist in index.modlists' #}
 
       </div>
       <div class="shadowed_hr_outer">
@@ -76,12 +73,9 @@
       </div>
     </div>
 
-    {% endif %}
-    <!-- ends not index.all_private -->
-    {% endfor %}
-    <!-- ends index in modlists_by_game -->
-    {% endif %}
-    <!-- ends if public modlists is empty -->
+    {% endif %}{# ends 'if not index.all_private' #}
+    {% endfor %}{# ends 'if index in modlists_by_game' #}
+    {% endif %}{# ends 'if not modlists_by_game[0]' #}
   </div>
 </div>
 </div>

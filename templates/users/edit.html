@@ -8,9 +8,9 @@
 <div class="form-page">
   {% if user %}
   <h2 class="form-header">Edit {{ user.username }}'s Profile:</h2>
-  {% else %}
+  {% else %}{# no user #}
   <h2 class="form-header">Edit Modlist '{{ modlist.name }}':</h2>
-  {% endif %}
+  {% endif %}{# end if user #}
 
   <form method="POST" id="user_form">
     {{ form.hidden_tag() }}
@@ -21,7 +21,7 @@
     <span class="text-danger">{{ error }}</span>
     {% endfor %}
 
-    {% if field.widget.input_type == 'checkbox' %}
+    {% if field.widget.input_type == 'checkbox' %}{# handle custom toggle switch formatting #}
     <div class="form-check form-switch">
       <div class="form-check-container">{{ field(checked=False, class="form-check-input", type="checkbox",
         role="switch", id="flexSwitchCheck")
@@ -31,12 +31,12 @@
         <span style="font-size: 0.8rem;">{{ field.description }}</span>
       </label>
     </div>
-    {% else %}
+    {% else %}{# handle regular, non-toggle switch fields #}
     <h6>{{ field.label.text }}</h6>
     {{ field(placeholder=field.label.text, class="form-control") }}
     {% endif %}
 
-    {% endfor %}
+    {% endfor %}{# ends 'for field in form' #}
 
     {% if form.current_password %}
     <br>

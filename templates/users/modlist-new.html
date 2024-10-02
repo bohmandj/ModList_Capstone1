@@ -15,7 +15,7 @@
         <span class="text-danger">{{ error }}</span>
         {% endfor %}
 
-        {% if field.widget.input_type == 'checkbox' %}
+        {% if field.widget.input_type == 'checkbox' %}{# handle custom toggle switch formatting #}
         <div class="form-check form-switch">
             <div class="form-check-container">{{ field(checked=False, class="form-check-input", type="checkbox",
                 role="switch", id="flexSwitchCheck")
@@ -25,11 +25,11 @@
                 <span style="font-size: 0.8rem;">{{ field.description }}</span>
             </label>
         </div>
-        {% else %}
+        {% else %}{# handle regular form fields #}
         {{ field(placeholder=field.label.text, class="form-control") }}
-        {% endif %}
+        {% endif %}{# ends 'if field[...] == checkbox' #}
 
-        {% endfor %}
+        {% endfor %}{# ends 'for field in form...' #}
 
         <button class="btn btn-primary btn-lg btn-block">Create</button>
     </form>

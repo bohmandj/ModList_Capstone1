@@ -25,15 +25,15 @@
             </ul>
         </div>
 
-        {% if mod.is_nsfw and g.user.hide_nsfw == True %}
+        {% if mod.is_nsfw and g.user.hide_nsfw == True %}{# handle nsfw mod image censorship #}
         <div class="nsfw">
             <img src="{{ mod.picture_url }}" alt="{{ mod.name }} title image"
                 title="NSFW visibility can be changed in user settings">
             <span>NSFW Mod</span>
         </div>
-        {% else %}
+        {% else %}{# handle uncensored sfw/user-allowed nsfw mod image #}
         <img src="{{ mod.picture_url }}" alt="{{ mod.name }} title image" title="{{ mod.name }} title image">
-        {% endif %}
+        {% endif %}{# ends 'if mod.is_nsfw...' #}
 
         <div class="modpage-buttons">
             <a id="to-nxs-mod" href="{{ url_for('modlist_add_mod', user_id=g.user.id, mod_id=mod.id) }}">
@@ -55,9 +55,6 @@
             {% endif %}
         </div>
     </div>
-
-
-
 
 </div>
 
