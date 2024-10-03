@@ -65,7 +65,7 @@ def filter_nxs_data(data_list, list_type):
                     'picture_url': mod['picture_url']
                 }
                 if db_ready_mod['picture_url'] == None:
-                    db_ready_mod['picture_url'] = 'https://upload.wikimedia.org/wikipedia/commons/b/b1/Missing-image-232x150.png'
+                    db_ready_mod['picture_url'] = 'None'
                 db_ready_data.append(db_ready_mod)
 
     return db_ready_data
@@ -107,7 +107,7 @@ def filter_nxs_mod_page(nexus_mod, game_obj):
         raise AttributeError
 
     if page_ready_mod['picture_url'] == None:
-        page_ready_mod['picture_url'] = 'https://upload.wikimedia.org/wikipedia/commons/b/b1/Missing-image-232x150.png'
+        page_ready_mod['picture_url'] = 'None'
 
     return page_ready_mod
 
@@ -305,7 +305,7 @@ def get_empty_modlists(user_id):
     return return_list
 
 
-def is_uneditable_modlist(user_id, modlist, g_user_id, ):
+def check_modlist_editable(user_id, modlist, g_user_id, ):
     """Determine if selected modlist is a invalid modlist for 
     the user to edit. A user can NOT edit a modlist if the 
     modlist does not belong to the signed in user, or if the 
