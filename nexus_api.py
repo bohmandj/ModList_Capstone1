@@ -113,3 +113,29 @@ def get_mod_nxs(game, mod_id):
     nexus_mod = res.json()
 
     return nexus_mod
+
+
+def get_tracked_mods_nxs():
+    """Nexus API call.
+    
+    Returns list of objects to identify the mods in the signed-in 
+    user's Tracking Centre on Nexus.
+    
+    Example returned mod data:
+    [{'mod_id': int, 'domain_name': str}]
+    """
+
+    url = f'{base_url}/v1/user/tracked_mods.json'
+
+    try:
+        res = requests.get(url, headers=headers)
+
+    except requests.exceptions.RequestException as e:
+        print("get_tracked_mods_nxs() Failed to retrieve API data: ", res.status_code)
+        print(f'NEXUS API RESPONSE get_tracked_mods_nxs() headers: ', res.headers)
+        print("Error: ", e)
+        raise
+
+    tracked_mods = res.json()
+
+    return tracked_mods
