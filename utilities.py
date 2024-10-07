@@ -34,6 +34,131 @@ def get_game_db(game_domain_name):
     return game
 
 
+def get_tracked_modlist_db(user_id, load_mods=False):
+    """Gets the user's Nexus Tracked Mods modlist from the db.
+    
+    Returns tracked modlist or the modlist with mods eager loaded if load_mods=True is passed."""
+
+    if load_mods:
+        stmt = (
+            db.select(Modlist)
+            .options(db.joinedload(Modlist.mods))  # Eager load mods
+            .where(Modlist.user_id == user_id)
+            .where(Modlist.name == "Nexus Tracked Mods")
+        )
+    else:
+        stmt = (
+            db.select(Modlist)
+            .where(Modlist.user_id == user_id)
+            .where(Modlist.name == "Nexus Tracked Mods")
+        )
+    
+    tracked_modlist = db.session.execute(stmt).scalars().first()
+
+    return tracked_modlist
+
+
+def get_tracked_mods_db(user_id, just_ids=False, order='updated'):
+    """Gets list of tracked mods or mod ids from the user's 
+    Nexus Tracked Mods modlist stored in the db.
+    
+    Returns a list of user's keep_tracked mods or the mods' IDs 
+    based on whether the optional just_ids flag is True. Parameter 
+    'order' sets the order in which mods are returned - 'name' or 
+    'author' returns in alphabetical order of that attribute, otherwise
+    mods are returned in order of most recently updated first."""
+
+    if order == 'name':
+        order = Mod.name
+    elif order == 'author':
+        order = Mod.uploaded_by
+    else:
+        order = Mod.updated_timestamp.desc()
+    
+    if just_ids:
+        stmt = (
+            db.select(Mod.id)
+            .join(Modlist.mods)
+            .where(Modlist.name == "Nexus Tracked Mods")
+            .where(Modlist.user_id == user_id)
+            .order_by(order)
+        )
+    else:
+        stmt = (
+            db.select(Mod)
+            .join(Modlist.mods)
+            .where(Modlist.name == "Nexus Tracked Mods")
+            .where(Modlist.user_id == user_id)
+            .order_by(order)
+        )
+
+    tracked_mods = db.session.execute(stmt).scalars().all()
+
+    return tracked_mods
+
+
+def get_keep_tracked_mods_db(user_id, just_ids=False, order='updated'):
+    """Gets list of user's keep_tracked mods or mod ids 
+    from the database.
+    
+    Returns a list of user's keep_tracked mods or the mods' IDs 
+    based on whether the optional just_ids flag is True. Parameter 
+    'order' sets the order in which mods are returned - 'name' or 
+    'author' returns in alphabetical order of that attribute, otherwise
+    mods are returned in order of most recently updated first."""
+
+    if order == 'name':
+        order = Mod.name
+    elif order == 'author':
+        order = Mod.uploaded_by
+    else:
+        order = Mod.updated_timestamp.desc()
+    
+    if just_ids:
+        stmt = (
+            db.select(Mod.id)
+            .join(keep_tracked)
+            .where(keep_tracked.c.user_id == user_id)
+            .order_by(order)
+        )
+    else:
+        stmt = (
+            db.select(Mod)
+            .join(keep_tracked)
+            .where(keep_tracked.c.user_id == user_id)
+            .order_by(order)
+        )
+    
+    keep_tracked_mods = db.session.execute(stmt).scalars().all()
+
+    return keep_tracked_mods
+
+
+def get_tracked_not_keep_db(user_id, just_ids=False, order='updated'):
+    """Gets list of user's tracked mods, with the mods marked 
+    'keep_tracked' removed from the list.
+    
+    Returns a list of user's non-keep_tracked tracked mods, 
+    or the mods' IDs based on whether the optional just_ids 
+    flag is True. Parameter 
+    'order' sets the order in which mods are returned - 'name' or 
+    'author' returns in alphabetical order of that attribute, otherwise
+    mods are returned in order of most recently updated first."""
+
+    all_tracked_mods = get_tracked_mods_db(user_id, order=order)
+
+    keep_tracked_ids = get_keep_tracked_mods_db(user_id, just_ids=True, order=order)
+
+    return_tracked_mods = []
+
+    # remove keep_tracked from all_tracked
+    for mod in all_tracked_mods:
+        if mod.id not in keep_tracked_ids:
+            return_tracked_mods.append(mod)
+
+    return return_tracked_mods
+
+
 def filter_nxs_data(data_list, list_type):
     """Takes list of data from Nexus API call and 
     filters out unneeded data for db entry.
