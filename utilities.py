@@ -56,13 +56,16 @@ def filter_nxs_data(data_list, list_type):
 
     if list_type == 'mods':
         for mod in data_list:
-            if mod['status'] == 'published':
+            if mod['status'] == 'published' and type(mod['mod_id']):
                 db_ready_mod = {
                     'id': mod['mod_id'], 
                     'name': mod['name'], 
                     'summary': mod['summary'],
                     'is_nsfw': mod['contains_adult_content'],
-                    'picture_url': mod['picture_url']
+                    'name': mod['name'], 
+                    'picture_url': mod['picture_url'],
+                    'updated_timestamp': mod['updated_timestamp'],
+                    'uploaded_by': mod['uploaded_by']
                 }
                 if db_ready_mod['picture_url'] == None:
                     db_ready_mod['picture_url'] = 'None'
@@ -148,7 +151,7 @@ def update_all_games_db(db_ready_games):
 
     except Exception as e:
         db.session.rollback()
-        print("Error updating db: ", e)
+        print("update_all_games_db() Error:\n   ", e)
         return e
         
     return True
@@ -156,7 +159,7 @@ def update_all_games_db(db_ready_games):
 
 def update_list_mods_db(db_ready_mods, game):
     """Takes list of mod data that has been filtered 
-    to only contain: 'id', 'name', 'summary', 'is_nsfw', 'picture_url'
+    to only contain: 'id', 'name', 'summary', 'is_nsfw', 'picture_url', 'updated_timestamp', 'uploaded_by'
     
     Returns True if successful, or Exception details."""
 
@@ -169,7 +172,9 @@ def update_list_mods_db(db_ready_mods, game):
                 'name': stmt.excluded.name,
                 'summary': stmt.excluded.summary,
                 'is_nsfw': stmt.excluded.is_nsfw,
-                'picture_url': stmt.excluded.picture_url
+                'picture_url': stmt.excluded.picture_url,
+                'updated_timestamp': stmt.excluded.updated_timestamp,
+                'uploaded_by': stmt.excluded.uploaded_by
             }
         )
 
@@ -179,8 +184,9 @@ def update_list_mods_db(db_ready_mods, game):
 
     except Exception as e:
         db.session.rollback()
-        print("Error updating db: ", e)
-        return e
+        print("update_list_mods_db() Error:\n   ", e)
+        raise e
+        # return e
             
     return True
 
@@ -202,7 +208,7 @@ def link_mods_to_game(db_ready_mods, game):
 
     except Exception as e:
         db.session.rollback()
-        print("Error updating db: ", e)
+        print("link_mods_to_game() Error:\n ", e)
 
 
 def add_mod_modlist_choices(user_id, mod):

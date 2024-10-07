@@ -309,6 +309,10 @@ class Mod(db.Model):
         default='https://upload.wikimedia.org/wikipedia/commons/b/b1/Missing-image-232x150.png'
     )
 
+    updated_timestamp: Mapped[int] = mapped_column(db.BigInteger)
+
+    uploaded_by: Mapped[str] = mapped_column(db.Text)
+
     in_modlists: Mapped[List['Modlist']] = db.relationship(
         secondary=modlist_mod, 
         back_populates='mods'
