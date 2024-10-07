@@ -9,7 +9,7 @@ from forms import UserAddForm, LoginForm, UserEditForm, UserPasswordForm, Modlis
 from models import db, connect_db, User, Modlist, Mod, Game
 
 from nexus_api import get_all_games_nxs, get_mods_of_type_nxs, get_mod_nxs
-from utilities import get_all_games_db, get_game_db, get_empty_modlists, get_recent_modlists_by_game, get_public_modlists_by_game, filter_nxs_data, filter_nxs_mod_page, update_all_games_db, update_list_mods_db, link_mods_to_game, add_mod_modlist_choices, is_uneditable_modlist
+from utilities import get_all_games_db, get_game_db, get_empty_modlists, get_recent_modlists_by_game, get_public_modlists_by_game, filter_nxs_data, filter_nxs_mod_page, update_all_games_db, update_list_mods_db, link_mods_to_game, add_mod_modlist_choices, check_modlist_editable, update_tracked_mods_from_nexus
 
 CURR_USER_KEY = "curr_user"
 
@@ -50,8 +50,10 @@ def add_user_to_g():
     """If we're logged in, add curr user to Flask global."""
 
     if CURR_USER_KEY in session:
-        g.user = db.get_or_404(User, session[CURR_USER_KEY])
-
+        g.user = db.session.execute(
+            db.select(User)
+            .where(User.id==session[CURR_USER_KEY])
+            ).scalars().first()
     else:
         g.user = None
 
@@ -150,6 +152,9 @@ def login():
                 update_all_games_db(db_ready_games)
             except:
                 flash("Problem occurred refreshing games list from Nexus.\nDisplayed games list may be out of date or incomplete.\nLog out and back in to reattempt.", "danger")
+
+            # use mods from Nexus Tracking Centre to update user's Nexus Tracked Mods modlist
+            update_tracked_mods_from_nexus(user.id)
 
             next_page = request.form.get('next')
 
@@ -400,7 +405,7 @@ def edit_modlist(user_id, modlist_id):
 
     modlist = db.get_or_404(Modlist, modlist_id)
 
-    invalid_message = is_uneditable_modlist(user_id, modlist, g.user.id)
+    invalid_message = check_modlist_editable(user_id, modlist, g.user.id)
     if invalid_message:
         flash(invalid_message, "danger")
         return redirect(url_for('show_modlist_page', user_id=user_id, modlist_id=modlist_id))
@@ -541,8 +546,6 @@ def homepage():
 
     - logged in: show list of popular games Nexus hosts mods for 
     """ 
-    # maybe also links to common locations?
-    # stretch: alphabetical list of all games Nexus hosts mods for searchable by letter
 
     if g.user:       
         try:
