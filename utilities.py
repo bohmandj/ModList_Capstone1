@@ -5,9 +5,9 @@ with PostgreSQL database"""
 
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.postgresql import insert
-from flask import flash
+from flask import flash, g
 from app import db
-from models import User, Modlist, Mod, Game, game_mod
+from models import User, Modlist, Mod, Game, game_mod, keep_tracked, modlist_mod
 from nexus_api import get_mod_nxs, get_tracked_mods_nxs
 from time import sleep
 
@@ -162,6 +162,56 @@ def get_tracked_not_keep_db(user_id, just_ids=False, order='updated'):
     return return_tracked_mods
 
 
+def paginate_tracked_mods(user_id, page=1, per_page=25, order='update', tab='tracked-mods'):
+    """Gets the user's Nexus Tracked Mods excluding their keep tracked mods with pagination."""
+
+    if order == 'name':
+        order = Mod.name
+    elif order == 'author':
+        order = Mod.uploaded_by
+    else:
+        order = Mod.updated_timestamp.desc()
+        
+    # Get the user's Nexus Tracked Mods modlist
+    tracked_modlist = get_tracked_modlist_db(user_id, load_mods=False)
+
+    if not tracked_modlist:
+        Modlist.new_modlist(
+            name='Nexus Tracked Mods', 
+            description="This modlist automatically populates with all the mods in your Nexus account's Tracking Centre.", 
+            private=True,
+            user=g.user
+        )
+        db.session.commit()
+        tracked_modlist = get_tracked_modlist_db(user_id, load_mods=False)
+
+    if tab == 'keep-tracked-mods':
+        # Query to get the keep tracked mods
+        mods_stmt = (
+            db.select(Mod)
+            .join(keep_tracked)
+            .where(keep_tracked.c.user_id == user_id)
+            .order_by(order)
+        )
+    else:
+        # Get the IDs of the mods that the user has marked as keep tracked
+        keep_tracked_mod_ids = get_keep_tracked_mods_db(user_id, just_ids=True)
+
+        # Query to get the tracked mods, excluding the keep tracked mods
+        mods_stmt = (
+           db.select(Mod)
+            .join(modlist_mod)
+            .where(modlist_mod.c.modlist_id == tracked_modlist.id)
+            .where(Mod.id.notin_(keep_tracked_mod_ids))
+            .order_by(order)
+        )
+
+    # Apply pagination
+    paginated_mods = db.paginate(mods_stmt, page=page, per_page=per_page)
+
+    return paginated_mods
+
+
 def add_missing_tracked_mods_db(user_id, nexus_tracked_data):
     """Checks if there are any missing mods in the database 
     compared to fresh nexus_tracked_data argument, and calls 
@@ -172,19 +222,18 @@ def add_missing_tracked_mods_db(user_id, nexus_tracked_data):
     sync_tracked_modlist_mods_db(user_id, nexus_tracked_data) 
     to update modlist.
     
-    Returns nothing.
+    Returns list of unpublished ids that should not get sync'd 
+    in user's modlist.
     """
-
-    print(f'STARTING add_missing_tracked_mods_db')
 
     current_tracked_ids = get_tracked_mods_db(user_id, just_ids=True)
 
-    print(f'current_tracked_ids: {current_tracked_ids}')
-
     nexus_tracked_ids_by_game = group_nexus_tracked_by_game(nexus_tracked_data)
 
-    nxs_req_limit = 5 # Nexus API throws error for >30 requests/sec.
+    nxs_req_limit = 25 # Nexus API throws error for >30 requests/sec.
     counter = 0
+
+    unpublished_ids = []
 
     for domain_name in nexus_tracked_ids_by_game:
 
@@ -192,49 +241,37 @@ def add_missing_tracked_mods_db(user_id, nexus_tracked_data):
 
         nexus_data_to_add = []
 
-        print(f"\n+++++++++++++++++++++++++\ngame: {game}")
-        print(f"\ntracked_ids_by_game[{domain_name}]: {nexus_tracked_ids_by_game[domain_name][:20]}")
-
         for id in nexus_tracked_ids_by_game[domain_name]:
             if id not in current_tracked_ids:
                 counter += 1
                 try:
-                    print(f'get_mod_nxs({game}, id={id})')
                     new_nexus_data = get_mod_nxs(game, id)
-                    print(f'get_mod_nxs() complete, counter: {counter}')
                 except Exception as e:
-                    print('ERROR ERROR ERROR !!! get_mod_nxs() excepted !!! ERROR ERROR ERROR')
                     print('Error in get_mod_nxs(): ', e)
                     flash(f"Error was encountered retrieving data from Nexus Tracking Centre for mod #{id}.\nVisit your Nexus Tracked Mods modlist to reattempt data retrieval.", "warning")
                     if counter >= nxs_req_limit:
                         counter = 0
                         break
                 else:
-                    nexus_data_to_add.append(new_nexus_data)
-                    print(f"\nnexus_data_to_add length:\n{len(nexus_data_to_add)}")
+                    if new_nexus_data['status']=='published':
+                        nexus_data_to_add.append(new_nexus_data)
+                    else:
+                        unpublished_ids.append(id)
+                        flash(f"Mod #{id}'s status is not set to 'published', so we were unable to import its data from Nexus.", "warning")
                 
                 if counter >= nxs_req_limit:
-                    print("SLEEPING")
                     sleep(1)
-                    print("WAKING UP")
                     counter = 0
-                    break # remove break to do full update (~700+ mods)
 
         if len(nexus_data_to_add) == 0:
-            print('NO DATA ADDED FOR Game mods UPDATE - END add_missing_tracked_mods_db()')
             continue
-
-        print(f'\n\n========================================= \nnexus_data_to_add for {domain_name}: ')
-        for data in nexus_data_to_add:
-            print(f"ID: {data['mod_id']},\nName: {data['name']},\nIS_NSFW:{data['contains_adult_content']},\nPicURL: {data['picture_url']}\n") 
         
         db_ready_mods = filter_nxs_data(nexus_data_to_add, 'mods')
-        for mod in db_ready_mods:
-            print('mod in db_ready_mods:\n', mod)
 
         update_all_games_db_resp = update_list_mods_db(db_ready_mods, game)
-        print("update_all_games_db_resp = ", update_all_games_db_resp)
         link_mods_to_game(db_ready_mods, game)
+
+    return unpublished_ids
 
 
 def group_nexus_tracked_by_game(nexus_tracked_data):
@@ -257,7 +294,7 @@ def group_nexus_tracked_by_game(nexus_tracked_data):
     return return_obj
 
 
-def sync_tracked_modlist_mods_db(user_id, nexus_tracked_data):
+def sync_tracked_modlist_mods_db(user_id, nexus_tracked_data, unpublished_ids):
     """If a mod is included in the passed-in Nexus API tracked-mods 
     call response but not in user's Nexus Tracked Mods modlist, the 
     mods is queried from the db and added to the modlist.
@@ -267,13 +304,15 @@ def sync_tracked_modlist_mods_db(user_id, nexus_tracked_data):
 
     tracked_modlist = get_tracked_modlist_db(user_id, load_mods=True)
 
-    # nxs_tracked_mod_ids = [data['mod_id'] for data in nexus_tracked_data]
-    nxs_tracked_mod_ids = [67, 84, 88, 96, 148, 183, 186, 321, 366, 449, 23681, 30962, 54483, 95424]
+    nxs_tracked_mod_ids = []
+    # remove unpublished mods from list of tracked mod ids
+    for data in nexus_tracked_data:
+        if data['mod_id'] not in unpublished_ids:
+            nxs_tracked_mod_ids.append(data['mod_id'])
 
     # add tracked mods from Nexus to tracked_modlist if missing
     for id in nxs_tracked_mod_ids:
         if id not in [mod.id for mod in tracked_modlist.mods]:
-            print(f"((((((((((((db.get_or_404({id}))))))))))))))")
             mod_to_add = db.get_or_404(Mod, id)
             tracked_modlist.mods.append(mod_to_add)
 
@@ -292,18 +331,17 @@ def update_tracked_mods_from_nexus(user_id):
     Call this aggregate function from app.py."""
     try:
         nexus_tracked_data = get_tracked_mods_nxs()
-        add_missing_tracked_mods_db(user_id, nexus_tracked_data)
+        unpublished_ids = add_missing_tracked_mods_db(user_id, nexus_tracked_data)
     except Exception as e:
         print('get_tracked_mods_nxs() or\nadd_missing_tracked_mods_db() Error:\n    ', e)
-        flash("Problem occurred retrieving tracked mods from Nexus Tracking Centre.\nClick 'Refresh Tracked Mods' button on your Nexus Tracked Mods modlist to reattempt.", "danger")
+        flash("Problem occurred retrieving tracked mods from Nexus Tracking Centre.\nClick 'Re-Sync with Nexus Tracking Centre' button on your Nexus Tracked Mods modlist to reattempt.", "danger")
         raise e
     else:
         try:
-            sync_tracked_modlist_mods_db(user_id, nexus_tracked_data)
-            print('FINISHED add_missing_tracked_mods_db()')
+            sync_tracked_modlist_mods_db(user_id, nexus_tracked_data, unpublished_ids)
         except Exception as e:
             print('sync_tracked_modlist_mods_db() Error:\n  ', e)
-            flash(f"Error was encountered syncing mods in your Nexus Tracked Mods modlist to the official Nexus Tracking Centre records.\nIf mods displayed in your Nexus Tracked Mods modlist are inaccurate, click 'Refresh Tracked Mods' button to reattempt sync.", "warning")
+            flash(f"Error was encountered syncing mods in your Nexus Tracked Mods modlist to the official Nexus Tracking Centre records.\nIf mods displayed in your Nexus Tracked Mods modlist are inaccurate, click 'Re-Sync with Nexus Tracking Centre' button to reattempt sync.", "warning")
 
 
 def filter_nxs_data(data_list, list_type):
@@ -577,7 +615,7 @@ def get_empty_modlists(user_id):
     return_list = []
 
     for modlist in recent_modlists:
-        if len(modlist.for_games) == 0:
+        if len(modlist.for_games) == 0 and modlist.name != 'Nexus Tracked Mods':
             return_list.append(modlist)
 
     return return_list

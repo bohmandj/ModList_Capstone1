@@ -9,7 +9,7 @@ from forms import UserAddForm, LoginForm, UserEditForm, UserPasswordForm, Modlis
 from models import db, connect_db, User, Modlist, Mod, Game
 
 from nexus_api import get_all_games_nxs, get_mods_of_type_nxs, get_mod_nxs
-from utilities import get_all_games_db, get_game_db, get_empty_modlists, get_recent_modlists_by_game, get_public_modlists_by_game, filter_nxs_data, filter_nxs_mod_page, update_all_games_db, update_list_mods_db, link_mods_to_game, add_mod_modlist_choices, check_modlist_editable, update_tracked_mods_from_nexus
+from utilities import get_all_games_db, get_game_db, get_empty_modlists, get_tracked_modlist_db, get_recent_modlists_by_game, get_public_modlists_by_game, filter_nxs_data, filter_nxs_mod_page, update_all_games_db, update_list_mods_db, link_mods_to_game, add_mod_modlist_choices, check_modlist_editable, update_tracked_mods_from_nexus, get_tracked_not_keep_db, paginate_tracked_mods
 
 CURR_USER_KEY = "curr_user"
 
@@ -337,6 +337,32 @@ def show_modlist_page(user_id, modlist_id):
         hide_nsfw = g.user.hide_nsfw
     
     return render_template('users/modlist.html', user=user, modlist=modlist, hide_nsfw=hide_nsfw)
+
+
+@app.route('/users/modlists/<string:tab>')
+@login_required
+def show_tracked_modlist_page(tab):
+    """Show the regular 'Tracked' side of the user's 
+    'Nexus Tracked Mods' modlist page. These mods are imported 
+    from Nexus, but are not marked with the 'Keep Tracked' tag 
+    to separate them from the rest of the imported mods.
+
+    Variable 'tab' determines if tracked mods (not marked keep-tracked) or 
+    keep-tracked mods will be displayed. Only 'tracked-mods' and 
+    'keep-tracked-mods' are valid inputs.
+    Mod display order takes 'order' arguments from the query string - 'author' or 'name' valid, otherwise mods display most recently updated first.
+    Pagination takes 'page' and 'per_page' arguments from the query string.
+    """
+
+    order = request.args.get('order')
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 25, type=int)
+
+    page_mods = paginate_tracked_mods(g.user.id, page=1, per_page=25, order='update', tab=tab)
+
+    tracked_modlist = get_tracked_modlist_db(g.user.id)
+
+    return render_template("users/modlist-tracked.html", page_mods=page_mods, page=page, per_page=per_page, tab=tab, modlist=tracked_modlist)
 
 
 @app.route('/users/<user_id>/modlists/add/<mod_id>', methods=["GET", "POST"])

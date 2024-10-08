@@ -22,7 +22,7 @@
         <div class="modlist-details"
           style="background-image: linear-gradient(to bottom, transparent 0%, rgba(32, 32, 32, 0.7) 60%), url(/static/images/GamesOnNexus_300_16x9.png);">
           <h5 class="modlist-title">
-            <a href="url_for('show_modlist_page', user_id=g.user.id, modlist_id=modlist.id)"
+            <a href="{{ url_for('show_tracked_modlist_page', tab='tracked-mods') }}"
               title="Go to Nexus Tracked Mods modlist page">
               Nexus Tracked Mods
             </a>

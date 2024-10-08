@@ -19,19 +19,21 @@
                         <h6>For:
                             {% if modlist.for_games[1] %}{# handle modlist w/ multiple games assigned #}
                             {% for game in modlist.for_games %}
-                            <a href="{{ url_for('show_game_page', game_domain_name=game.domain_name) }}">
+                            <a href="{{ url_for('show_game_page', game_domain_name=game.domain_name) }}"
+                                title="Go to {{game.name}}'s game page">
                                 <br>{{ game.name }}
                             </a>
                             {% endfor %}{# for game in modlist.for_games #}
                             {% else %}{# handle standard single-game-assigned modlists #}
-                            <a
-                                href="{{ url_for('show_game_page', game_domain_name=modlist.for_games[0].domain_name) }}">
+                            <a href="{{ url_for('show_game_page', game_domain_name=modlist.for_games[0].domain_name) }}"
+                                title="Go to {{modlist.for_games[0].name}}'s game page">
                                 {{ modlist.for_games[0].name }}
                             </a>
                             {% endif %}
                         </h6>
                         <h6>Curated By:
-                            <a href="{{ url_for('show_user_page', user_id=user.id) }}">
+                            <a href="{{ url_for('show_user_page', user_id=user.id) }}"
+                                title="Go to {{user.username}}'s user page">
                                 {{ user.username }}
                             </a>
                         </h6>
@@ -41,7 +43,7 @@
             </div>
             {% else %}{# handle game-unassigned modlist header #}
             <div class="modlist-detail-background">
-                <img src="/static/images/GamesOnNexus_300_3x4.png" alt="{{ modlist.name }} game image"
+                <img src="/static/images/GamesOnNexus_300_16x9.png" alt="{{ modlist.name }} game image"
                     title="{{ modlist.name }} game image">
             </div>
             <div class="modlist-detail">
@@ -50,7 +52,8 @@
                     <div class="modlist-credits">
                         {% if modlist.name == 'Nexus Tracked Mods' %}
                         <h6>Imported From:
-                            <a href="https://www.nexusmods.com/mods/trackingcentre">
+                            <a href="https://www.nexusmods.com/mods/trackingcentre"
+                                title="Open the official Nexus Tracking Centre to manage your tracked mods on Nexus.com">
                                 Nexus Tracking Centre
                             </a>
                         </h6>
@@ -69,10 +72,10 @@
             {% endif %}{# ends 'if modlist.for_games[0]' #}
         </div>
 
-        {% if modlist.mods %}{# handles display of each modlist #}
+        {% if modlist.mods %}{# handles display of modlist if it contains mods #}
         {% for mod in modlist.mods %}
         <div class="modlist-card">
-            <div class="mod-img">
+            <div style="width: 100%; height: 100%;">
                 {% if mod.is_nsfw and hide_nsfw == True %}{# censor nsfw #}
                 <div class="nsfw">
                     <img class="mod-img" src="{{ modlist.picture_url }}" alt="{{ modlist.name }} title image"
@@ -87,34 +90,36 @@
 
             <div class="mod-info">
                 <div>
-                    <a
-                        href="{{ url_for('show_mod_page', game_domain_name=modlist.for_games[0].domain_name, mod_id=mod.id) }}">
+                    <a href="{{ url_for('show_mod_page', game_domain_name=modlist.for_games[0].domain_name, mod_id=mod.id) }}"
+                        title="Go to our {{mod.name}} mod page for a summary, endorsing, tracking, or reading or writing your own notes about this mod">
                         <h4>{{ mod.name }}</h4>
                     </a>
                     <p>{{ mod.summary | safe }}</p>
                 </div>
                 <div class="mod-buttons">
                     <div class="buttons-subset">
-                        <a href="{{ url_for('modlist_add_mod', user_id=g.user.id, mod_id=mod.id) }}">
+                        <a href="{{ url_for('modlist_add_mod', user_id=g.user.id, mod_id=mod.id) }}"
+                            title="Add {{mod.name}} to another one of your modlists">
                             <button class="btn btn-outline-primary btn-sm">
                                 Add to a ModList
                             </button>
                         </a>
-                        <a
-                            href="{{ url_for('modlist_delete_mod', user_id=g.user.id, modlist_id=modlist.id, mod_id=mod.id) }}">
+                        <a href="{{ url_for('modlist_delete_mod', user_id=g.user.id, modlist_id=modlist.id, mod_id=mod.id) }}"
+                            title="Delete {{mod.name}} from {{modlist.name}}">
                             <button class="btn btn-outline-danger btn-sm">
                                 Remove from ModList
                             </button>
                         </a>
                     </div>
                     <div class="buttons-subset">
-                        <a href="https://www.nexusmods.com/{{modlist.for_games[0].domain_name}}/mods/{{mod.id}}">
+                        <a href="https://www.nexusmods.com/{{modlist.for_games[0].domain_name}}/mods/{{mod.id}}"
+                            title="Open {{mod.name}} in a new tab on Nexus.com to see full details and download files">
                             <button class="btn btn-outline-nexus btn-sm">
                                 See on Nexus
                             </button>
                         </a>
                         <a href="https://www.nexusmods.com/{{modlist.for_games[0].domain_name}}/mods/{{mod.id}}?tab=files"
-                            target="_blank">
+                            target="_blank" title="Open the file download page for this mod in a new tab on Nexus.com">
                             <button class="btn btn-outline-nexus btn-sm">
                                 Nexus Downloads Page
                             </button>
