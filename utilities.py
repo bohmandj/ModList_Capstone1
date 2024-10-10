@@ -526,17 +526,40 @@ def add_mod_modlist_choices(user_id, mod):
     that are not for the same game as the mod, or are 
     unassigned to a game.
     
-    Returns list of game-matched or game-unassigned modlists."""
+    Returns object containing a list of game-matched or 
+    game-unassigned modlists to show as options for the 
+    to-be-added mod, and a list of modlists belonging to 
+    the user that already contain the to-be-added mod.
+
+    Example: 
+    {'users_modlist_choices':[modlist, modlist], 
+    'modlists_w_mod':[modlist, modlist]}"""
 
     modlists = db.session.scalars(db.select(Modlist).where(Modlist.user_id==user_id).order_by(Modlist.name)).all()
 
     users_modlist_choices = []
+    modlists_w_mod = []
 
     for modlist in modlists:
-        if len(modlist.for_games) == 0 or mod.for_games[0] == modlist.for_games[0]:
-            users_modlist_choices.append(modlist)
+        if modlist.name == "Nexus Tracked Mods":
+            continue
 
-    return users_modlist_choices
+        if modlist.id in [modlist.id for modlist in mod.in_modlists]:
+            modlists_w_mod.append(modlist)
+            continue
+
+        if len(modlist.for_games) == 0:
+            users_modlist_choices.append(modlist)
+            continue
+
+        for game in mod.for_games:
+            if game in modlist.for_games:
+                users_modlist_choices.append(modlist)
+                break
+
+    return_obj = {'users_modlist_choices':users_modlist_choices, 'modlists_w_mod':modlists_w_mod}
+
+    return return_obj
 
 
 def get_recent_modlists_by_game(user_id):
