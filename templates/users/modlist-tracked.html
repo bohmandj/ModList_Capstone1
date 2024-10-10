@@ -98,14 +98,14 @@
                             href="{{ url_for('show_mod_page', game_domain_name=mod.for_games[0].domain_name, mod_id=mod.id) }}">
                             <h4>{{ mod.name }}</h4>
                         </a>
-                        <p>Author:
-                            <a href="https://next.nexusmods.com/profile/{{ mod.uploaded_by }}/mods">
-                                {{ mod.uploaded_by }}
-                            </a>
-                        </p>
                         <p>Game:
                             <a href="https://next.nexusmods.com/profile/{{ mod.uploaded_by }}/mods">
                                 {{ mod.for_games[0].name }}
+                            </a>
+                        </p>
+                        <p>Author:
+                            <a href="https://next.nexusmods.com/profile/{{ mod.uploaded_by }}/mods">
+                                {{ mod.uploaded_by }}
                             </a>
                         </p>
                     </div>
@@ -125,7 +125,7 @@
                             <a href="https://www.nexusmods.com/{{mod.for_games[0].domain_name}}/mods/{{mod.id}}"
                                 title="Open mod in a new tab on Nexus.com to see full details and download files">
                                 <button class="btn btn-outline-nexus btn-sm">
-                                    See on Nexus
+                                    Open on Nexus
                                 </button>
                             </a>
                             <a href=""
@@ -135,7 +135,6 @@
                         </div>
                     </div>
                 </div>
-
             </div>
             {% endfor %}{# ends 'for mod in page_mods' #}
 
@@ -199,10 +198,14 @@
         </div>
 
         <div class="page-selector">
+            {% if page_mods.pages > 1 %}
+            <span class="pages">Mods {{ page_mods.first }} - {{ page_mods.last }} of {{ page_mods.total }}</span>
+            {% else %}
             <span>Mods {{ page_mods.first }} - {{ page_mods.last }} of {{ page_mods.total }}</span>
+            {% endif %}
             <div class=pagination>
                 {% if page_mods.has_prev %}
-                <a href="{{ url_for('show_tracked_modlist_page', tab=tab, page=page_mods.prev_num, per_page=per_page) }}"
+                <a href="{{ url_for('show_tracked_modlist_page', tab=tab, page=page_mods.prev_num, per_page=per_page, order=order) }}"
                     class="pagination-section page-num">
                     <svg xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 320 512"><!--!Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.-->
@@ -211,23 +214,28 @@
                     </svg>
                 </a>
                 {% endif %}
-                {% for page in page_mods.iter_pages() %}
-                {% if page %}
-                <a href="{{ url_for('show_tracked_modlist_page', tab=tab, page=page, per_page=per_page) }}"
-                    class="pagination-section page-num">
-                    {% if page != page_mods.page %}
-                    {{ page }}
-                    {% else %}
-                    <strong>{{ page }}</strong>
-                    {% endif %}
-                </a>
-                {% else %}
-                <div class="pagination-section"><span class=ellipsis>…</span></div>
 
-                {% endif %}
+                {% for iter_page in page_mods.iter_pages(left_edge=1, left_current=2, right_current=3, right_edge=1) %}
+                {% if iter_page %}
+                {% if iter_page != page %}{# handle non-current page numbers #}
+                <a href="{{ url_for('show_tracked_modlist_page', tab=tab, page=iter_page, per_page=per_page, order=order) }}"
+                    class="pagination-section page-num">
+                    {{ iter_page }}
+                </a>
+                {% endif %}{# ends 'if iter_page != page' #}
+                {% if iter_page == page %}{# handle current page number #}
+                <a href="{{ url_for('show_tracked_modlist_page', tab=tab, page=iter_page, per_page=per_page, order=order) }}"
+                    class="pagination-section page-num current">
+                    <strong>{{ page }}</strong>
+                </a>
+                {% endif %}{# ends 'if iter_page == page' #}
+                {% else %}{# handle section that isn't a page (ellipsis) #}
+                <div class="pagination-section"><span class=ellipsis>...</span></div>
+                {% endif %}{# ends 'if iter_page' #}
                 {% endfor %}
+
                 {% if page_mods.has_next %}
-                <a href="{{ url_for('show_tracked_modlist_page', tab=tab, page=page_mods.next_num, per_page=per_page) }}"
+                <a href="{{ url_for('show_tracked_modlist_page', tab=tab, page=page_mods.next_num, per_page=per_page, order=order) }}"
                     class="pagination-section page-num">
                     <svg xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 320 512"><!--!Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.-->

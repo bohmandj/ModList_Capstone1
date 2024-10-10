@@ -66,19 +66,26 @@ body {
     height: 100%;
 }
 
-.card-page a {
+.card-page a,
+.form-page a {
     text-decoration: none;
     color: #ffffff;
+    fill: #ffffff;
 }
 
 .card-page a:hover,
-.card-page a:visited:hover {
+.card-page a:visited:hover,
+.form-page a:hover,
+.form-page a:visited:hover {
     cursor: pointer;
     color: #5170AF;
+    fill: #5170AF;
 }
 
-.card-page a:visited {
+.card-page a:visited,
+.form-page a:visited {
     color: #aaaaaa;
+    fill: #aaaaaa;
 }
 
 h1 {
@@ -92,7 +99,7 @@ h1 {
 }
 
 .btn {
-    border-radius: 10px;
+    border-radius: 8px;
 }
 
 .btn:hover {
@@ -133,6 +140,12 @@ h1 {
     display: block;
     width: 100%;
     text-align: center;
+    color: #21252A;
+}
+
+.page-selector span.pages,
+.page-selector .pagination-section span.ellipsis {
+    color: #ffffff;
 }
 
 .page-selector .pagination {
@@ -143,34 +156,47 @@ h1 {
 }
 
 .pagination-section {
-    width: 50px;
+    width: 45px;
     aspect-ratio: 1/1;
     display: flex;
     justify-content: center;
     align-items: center;
-    /* background-color: #202020; */
     background-image: linear-gradient(to bottom, #202020 0%, #333333 30%, #202020);
     outline: 4px solid #151515;
     outline-offset: -2px;
     border-radius: 5px;
     cursor: pointer;
+    color: #ffffff;
 }
 
 .pagination div {
     background-color: #252525;
     background-image: unset;
+    width: fit-content;
+    height: inherit;
+    padding: 8px;
 }
 
 .pagination .page-num svg {
-    height: 1.3rem;
-    width: 1.3rem;
+    height: 1.1em;
+    width: 1.1em;
     fill: #ffffff;
 }
 
-.card-page .page-num:hover {
+.pagination .pagination-section.page-num.current {
+    background-image: linear-gradient(to bottom, #333333 0%, #202020 40%, #333333);
+    color: #5170AF;
+}
+
+.pagination .pagination-section.page-num:hover {
     color: #ffffff;
     fill: #ffffff;
     background-image: linear-gradient(to bottom, #000e29 0%, #5170AF 30%, #000e29);
+}
+
+.pagination .page-num:visited {
+    color: #ffffff;
+    fill: #ffffff;
 }
 
 /* ======================= Nav */
@@ -868,24 +894,27 @@ fieldset[disabled] .btn-outline-nexus.active {
 .modlistpage .modlist-card .btn {
     width: 100%;
     height: 100%;
-    border-radius: 5px;
+    border-radius: 8px;
 }
 
-.modlistpage .modlist-card .mod-image,
+.modlistpage .modlist-card .mod-img,
 .modlistpage .modlist-card img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    overflow: hidden;
 }
 
-.modlistpage .modlist-card .mod-info {
+.modlistpage .modlist-card .mod-info-and-buttons {
+    display: grid;
+    grid-template-columns: 1fr;
+    max-height: 100%;
+    min-height: 80%;
     padding: 20px;
 }
 
-.modlistpage .modlist-card .mod-info,
-.modlistpage .modlist-card .mod-info a,
-.modlistpage .modlist-card .mod-info p {
+.modlistpage .modlist-card .mod-info-and-buttons,
+.modlistpage .modlist-card .mod-info-and-buttons a,
+.modlistpage .modlist-card .mod-info-and-buttons p {
     width: 100%;
 }
 
@@ -903,6 +932,7 @@ fieldset[disabled] .btn-outline-nexus.active {
     column-gap: var(--grid-layout-gap);
     row-gap: 8px;
     align-items: center;
+    align-self: end;
 }
 
 .modlistpage .mod-buttons .buttons-subset {
@@ -916,7 +946,7 @@ fieldset[disabled] .btn-outline-nexus.active {
     height: max-content;
 }
 
-@media (max-width: 1172px) {
+@media (max-width: 1172px) and (min-width: 768.1px) {
     .modlistpage .card-page .modlist-card {
         display: grid;
         width: 100%;
@@ -928,28 +958,21 @@ fieldset[disabled] .btn-outline-nexus.active {
         border-radius: 20px;
         overflow: hidden;
     }
+
+    .modlistpage .modlist-card .mod-img,
+    .modlistpage .modlist-card img {
+        max-height: 500px;
+    }
 }
 
 @media (max-width: 768px) {
     .modlistpage .card-page .modlist-card {
-        display: grid;
-        width: 100%;
-        margin: 15px 0;
-        text-align: left;
         grid-template-columns: 1fr;
-        align-items: center;
-        background-color: #202020;
-        border-radius: 20px;
-        overflow: hidden;
     }
 
     .modlistpage .modlist-card .mod-image,
     .modlistpage .modlist-card img {
-        width: 100%;
-        height: 100%;
-        max-height: 250px;
-        object-fit: cover;
-        overflow: hidden;
+        max-height: 350px;
     }
 }
 
@@ -1065,7 +1088,7 @@ fieldset[disabled] .btn-outline-nexus.active {
     border-radius: 25px;
 }
 
-.add-page .modpage {
+.form-page .add-page .modpage {
     display: grid;
     grid-template-columns: 2fr 3fr;
     gap: 20px;
@@ -1074,7 +1097,7 @@ fieldset[disabled] .btn-outline-nexus.active {
 }
 
 @media (max-width: 768px) {
-    .add-page .modpage {
+    .form-page .add-page .modpage {
         display: grid;
         grid-template-columns: 1fr;
         gap: 20px;
@@ -1092,13 +1115,27 @@ fieldset[disabled] .btn-outline-nexus.active {
     object-fit: cover;
 }
 
+.form-page .add-page .modpage .img {
+    grid-area: unset;
+}
+
 .add-page .modpage .mod-detail {
     margin: auto 0;
 }
 
 .add-page .modpage .mod-detail h4,
-.add-page .modpage .mod-detail h5 {
+.add-page .modpage .mod-detail h6 {
     margin-bottom: 20px;
+}
+
+.add-page .mod-detail .already-in ul {
+    display: list-item;
+    margin-top: 5px;
+    list-style-type: none;
+}
+
+.add-page .mod-detail .already-in svg {
+    margin-right: 10px;
 }
 
 .add-page .form-check-container {
@@ -1117,7 +1154,15 @@ fieldset[disabled] .btn-outline-nexus.active {
 }
 
 .add-page form h4 {
+    margin-bottom: 5px;
+}
+
+.add-page form h6 {
     margin-bottom: 15px;
+}
+
+.add-page .mod-detail .already-in {
+    max-width: 400px;
 }
 
 /* ============================== Mod Page */
@@ -1126,7 +1171,11 @@ fieldset[disabled] .btn-outline-nexus.active {
     width: 100%;
     height: fit-content;
     display: grid;
-    grid-template-columns: 2fr 3fr;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+        "main-left main-right"
+        "middle-text middle-text"
+        "btns-left btns-right";
     gap: 20px;
     text-align: left;
     padding: 20px;
@@ -1134,9 +1183,30 @@ fieldset[disabled] .btn-outline-nexus.active {
     border-radius: 25px;
 }
 
+.modpage .middle-text {
+    grid-area: middle-text;
+    text-align: center;
+    width: 70%;
+    margin: 0 auto;
+}
+
+.modpage .modpage-buttons {
+    display: grid;
+    grid-template-columns: 1fr;
+    row-gap: 10px;
+    width: 100%;
+}
+
 .modpage .modpage-buttons button {
     width: 100%;
-    margin-bottom: 10px;
+}
+
+.btns1 {
+    grid-area: btns-left;
+}
+
+.btns2 {
+    grid-area: btns-right;
 }
 
 .modpage img {
@@ -1150,6 +1220,7 @@ fieldset[disabled] .btn-outline-nexus.active {
     display: flex;
     justify-content: center;
     align-items: center;
+    grid-area: main-right;
 }
 
 .modpage .img svg {
@@ -1172,6 +1243,7 @@ fieldset[disabled] .btn-outline-nexus.active {
     position: relative;
     bottom: 15px;
     left: 15px;
+    cursor: default;
 }
 
 .modpage .mod-detail {
@@ -1180,9 +1252,21 @@ fieldset[disabled] .btn-outline-nexus.active {
     display: inline-block;
 }
 
+.card-page .modpage .mod-detail {
+    grid-area: main-left;
+}
+
+.modpage .mod-detail svg {
+    width: 1em;
+    height: 1em;
+    position: relative;
+    bottom: 1px;
+    margin-right: 5px;
+}
+
 .mod-detail ul {
     padding: 0px;
-    margin-bottom: 20px;
+    margin: 0px;
 }
 
 .mod-detail li {
@@ -1195,6 +1279,43 @@ fieldset[disabled] .btn-outline-nexus.active {
     margin-bottom: 5px;
     width: 100%;
     white-space: normal;
+}
+
+@media (max-width: 900px) and (min-width: 768.1px) {
+    .card-page .modpage {
+        width: 100%;
+        height: fit-content;
+        display: grid;
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "main-right"
+            "main-left"
+            "middle-text"
+            "btns-left"
+            "btns-right";
+        gap: 20px;
+        text-align: left;
+        padding: 20px;
+        background-color: #202020;
+        border-radius: 25px;
+    }
+
+    .modpage .modpage-buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        column-gap: 15px;
+        row-gap: 10px;
+        width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .modpage .modpage-buttons {
+        display: grid;
+        grid-template-columns: 1fr;
+        row-gap: 10px;
+        width: 100%;
+    }
 }
 
 /* ============================== Tracked Mods page */
@@ -1228,6 +1349,7 @@ fieldset[disabled] .btn-outline-nexus.active {
     background-image: linear-gradient(to bottom, #202020, #101010);
 }
 
+.modlist-mods-container,
 .tracked-mods-container {
     position: relative;
     display: grid;
@@ -1238,6 +1360,7 @@ fieldset[disabled] .btn-outline-nexus.active {
     border-radius: 20px;
 }
 
+.modlist-mod,
 .tracked-mod {
     display: grid;
     grid-template-columns: 1fr 3fr;
@@ -1245,16 +1368,19 @@ fieldset[disabled] .btn-outline-nexus.active {
     overflow: hidden;
 }
 
+.modlist-mod .mod-info,
 .tracked-mod .mod-info {
     display: block;
     text-align: left;
     margin-bottom: 10px;
 }
 
+.modlist-mod .mod-info p,
 .tracked-mod .mod-info p {
     margin: 0px;
 }
 
+.modlist-mod .mod-info-and-buttons,
 .tracked-mod .mod-info-and-buttons {
     display: block;
     justify-content: center;
@@ -1265,6 +1391,7 @@ fieldset[disabled] .btn-outline-nexus.active {
     background-color: #151515;
 }
 
+.modlist-mod .buttons,
 .tracked-mod .buttons {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(153px, 1fr));
@@ -1273,16 +1400,21 @@ fieldset[disabled] .btn-outline-nexus.active {
     width: auto;
 }
 
+.modlistpage .modlist-mod .mod-info-and-buttons .mod-buttons,
 .modlistpage .tracked-mod .mod-info-and-buttons .mod-buttons {
     --grid-item--min-width: 153px;
 }
 
+.tracked-mod button,
+.modlist-mod a,
 .tracked-mod button,
 .tracked-mod a {
     width: 100%;
     height: 100%;
 }
 
+.tracked-mod .mod-image,
+.modlist-mod img,
 .tracked-mod .mod-image,
 .tracked-mod img {
     width: 100%;
@@ -1305,17 +1437,36 @@ fieldset[disabled] .btn-outline-nexus.active {
     max-height: 80%;
 }
 
+.modlist-card .img {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.modlist-card .img svg {
+    opacity: 20%;
+    max-width: 80%;
+    max-height: 80%;
+}
+
+.modlist-card .nsfw,
 .tracked-mod .nsfw {
     width: 100%;
     height: 100%;
     overflow: hidden;
 }
 
+.modlist-card .nsfw img,
 .tracked-mod .nsfw img {
     filter: blur(8px);
 }
 
 @media (max-width: 768px) {
+
+    .modlist-mod,
     .tracked-mod {
         display: grid;
         grid-template-columns: 1fr;
@@ -1324,6 +1475,7 @@ fieldset[disabled] .btn-outline-nexus.active {
         overflow: hidden;
     }
 
+    .modlist-mod .buttons,
     .tracked-mod .buttons {
         display: grid;
         grid-template-columns: 1fr;
@@ -1331,6 +1483,7 @@ fieldset[disabled] .btn-outline-nexus.active {
         width: auto;
     }
 
+    .modlistpage .modlist-mod .mod-info-and-buttons .mod-buttons,
     .modlistpage .tracked-mod .mod-info-and-buttons .mod-buttons {
         --grid-item--min-width: 270px;
     }

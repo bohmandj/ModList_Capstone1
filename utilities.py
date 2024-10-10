@@ -212,6 +212,29 @@ def paginate_tracked_mods(user_id, page=1, per_page=25, order='update', tab='tra
     return paginated_mods
 
 
+def paginate_modlist_mods(user_id, modlist_id, page=1, per_page=25, order='update'):
+    """Gets the user's modlist and the mods it contains."""
+
+    if order == 'name':
+        order = Mod.name
+    elif order == 'author':
+        order = Mod.uploaded_by
+    else:
+        order = Mod.updated_timestamp.desc()
+
+    stmt = (
+        db.session.query(Mod)
+        .join(modlist_mod)
+        .filter(modlist_mod.c.modlist_id == modlist_id)
+        .order_by(order)
+    )
+
+    # Apply pagination
+    paginated_mods = db.paginate(stmt, page=page, per_page=per_page)
+
+    return paginated_mods
+
+
 def add_missing_tracked_mods_db(user_id, nexus_tracked_data):
     """Checks if there are any missing mods in the database 
     compared to fresh nexus_tracked_data argument, and calls 

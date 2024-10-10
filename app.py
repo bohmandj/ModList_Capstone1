@@ -9,7 +9,7 @@ from forms import UserAddForm, LoginForm, UserEditForm, UserPasswordForm, Modlis
 from models import db, connect_db, User, Modlist, Mod, Game
 
 from nexus_api import get_all_games_nxs, get_mods_of_type_nxs, get_mod_nxs
-from utilities import get_all_games_db, get_game_db, get_empty_modlists, get_tracked_modlist_db, get_recent_modlists_by_game, get_public_modlists_by_game, filter_nxs_data, filter_nxs_mod_page, update_all_games_db, update_list_mods_db, link_mods_to_game, add_mod_modlist_choices, check_modlist_editable, update_tracked_mods_from_nexus, get_tracked_not_keep_db, paginate_tracked_mods
+from utilities import get_all_games_db, get_game_db, get_empty_modlists, get_tracked_modlist_db, get_recent_modlists_by_game, get_public_modlists_by_game, filter_nxs_data, filter_nxs_mod_page, update_all_games_db, update_list_mods_db, link_mods_to_game, add_mod_modlist_choices, check_modlist_editable, update_tracked_mods_from_nexus, get_tracked_not_keep_db, paginate_tracked_mods, paginate_modlist_mods
 
 CURR_USER_KEY = "curr_user"
 
@@ -324,19 +324,30 @@ def new_modlist(user_id):
 
 @app.route('/users/<user_id>/modlists/<modlist_id>')
 def show_modlist_page(user_id, modlist_id):
-    """Show modlist page.
+    """Show the user's modlist page. 
+
+    Mod display order takes 'order' arguments from the query string - 'author' or 'name' valid, otherwise mods display most recently updated first.
+    Pagination takes 'page' and 'per_page' arguments from the query string.
     """
 
-    user = db.get_or_404(User, user_id)
+    page = request.args.get('page', default=1, type=int)
+    per_page = request.args.get('per_page', default=25, type=int)
+    order = request.args.get('order', default='update', type=str)
+    if order == '': 
+        order = 'update'
 
-    modlist = db.session.scalars(db.select(Modlist).filter_by(id=modlist_id).join(Modlist.user.and_(User.id == user_id))).first()
+    user = db.get_or_404(User, user_id, description=f"Sorry, we couldn't find user #{user_id}. We either encountered an issue retrieving the data from our database, or the user does not exist. Please try again or use a different user.")
+    
+    modlist = db.get_or_404(Modlist, modlist_id, description=f"Sorry, we couldn't find modlist #{modlist_id}. We either encountered an issue retrieving the data from our database, or the modlist does not exist. Please try again or use a different modlist.")
+
+    page_mods = paginate_modlist_mods(user_id, modlist_id, page, per_page, order)
 
     if not g.user:
         hide_nsfw = True
     else:
         hide_nsfw = g.user.hide_nsfw
     
-    return render_template('users/modlist.html', user=user, modlist=modlist, hide_nsfw=hide_nsfw)
+    return render_template('users/modlist.html', page_mods=page_mods, page=page, per_page=per_page, order=order, user=user, modlist=modlist, hide_nsfw=hide_nsfw)
 
 
 @app.route('/users/modlists/<string:tab>')
@@ -354,15 +365,17 @@ def show_tracked_modlist_page(tab):
     Pagination takes 'page' and 'per_page' arguments from the query string.
     """
 
-    order = request.args.get('order')
-    page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 25, type=int)
+    page = request.args.get('page', default=1, type=int)
+    per_page = request.args.get('per_page', default=25, type=int)
+    order = request.args.get('order', default='update', type=str)
+    if order == '': 
+        order = 'update'
 
-    page_mods = paginate_tracked_mods(g.user.id, page=1, per_page=25, order='update', tab=tab)
+    page_mods = paginate_tracked_mods(g.user.id, page, per_page, order=order, tab=tab)
 
     tracked_modlist = get_tracked_modlist_db(g.user.id)
 
-    return render_template("users/modlist-tracked.html", page_mods=page_mods, page=page, per_page=per_page, tab=tab, modlist=tracked_modlist)
+    return render_template("users/modlist-tracked.html", page_mods=page_mods, page=page, per_page=per_page, order=order, tab=tab, modlist=tracked_modlist)
 
 
 @app.route('/users/<user_id>/modlists/add/<mod_id>', methods=["GET", "POST"])
@@ -415,11 +428,13 @@ def modlist_add_mod(user_id, mod_id):
     
     # pre-fill form w/ available data
     mod = db.get_or_404(Mod, mod_id)
-    users_modlist_choices = add_mod_modlist_choices(g.user.id, mod)
+    choices_response = add_mod_modlist_choices(g.user.id, mod)
+    users_modlist_choices = choices_response['users_modlist_choices']
+    modlists_w_mod = choices_response['modlists_w_mod']
     form_choices = [(modlist.id, modlist.name) for modlist in users_modlist_choices]
     form.users_modlists.choices = form_choices
 
-    return render_template('users/modlist-add.html', form=form, user=g.user, mod=mod)
+    return render_template('users/modlist-add.html', form=form, user=g.user, mod=mod, modlists_w_mod=modlists_w_mod)
 
 
 @app.route('/users/<user_id>/modlists/<modlist_id>/edit', methods=["GET", "POST"])
@@ -431,9 +446,9 @@ def edit_modlist(user_id, modlist_id):
 
     modlist = db.get_or_404(Modlist, modlist_id)
 
-    invalid_message = check_modlist_editable(user_id, modlist, g.user.id)
-    if invalid_message:
-        flash(invalid_message, "danger")
+    is_invalid = check_modlist_editable(user_id, modlist, g.user.id)
+    if is_invalid:
+        flash(is_invalid, "danger")
         return redirect(url_for('show_modlist_page', user_id=user_id, modlist_id=modlist_id))
 
     if form.validate_on_submit():
