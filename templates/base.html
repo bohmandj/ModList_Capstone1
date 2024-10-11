@@ -22,7 +22,7 @@
       <div class="navbar-header">
         <a href="/" class="navbar-brand">
           <img src="/static/images/modlist-icon.png" alt="logo">
-          <h3>ModList</h3>
+          <span>ModList</span>
         </a>
       </div>
       <ul class="nav navbar-nav navbar-right">
@@ -32,7 +32,8 @@
         {% else %}{# display navbar w/ username & user links dropdown #}
         <li>
           <div class="dropdown">
-            <button class="dropbtn">{{ g.user.username }} &ensp;
+            <button class="dropbtn">
+              <span>{{ g.user.username }} &ensp;</span>
               <svg xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 448 512"><!--!Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.-->
                 <path
@@ -40,9 +41,11 @@
               </svg>
             </button>
             <div class="dropdown-content">
-              <a href="{{ url_for('show_user_page', user_id=g.user.id) }}">{{
-                g.user.username }}</a>
-              <a href="#######">See ModLists</a>
+              <a href="{{ url_for('show_user_page', user_id=g.user.id) }}">Profile</a>
+              <hr style="margin: 0;">
+              <a href="{{ url_for('show_tracked_modlist_page', tab='tracked-mods') }}">Nexus Tracked Mods</a>
+              <hr style="margin: 0;">
+              <a href="{{ url_for('new_modlist', user_id=g.user.id) }}">Create New Modlist</a>
               <hr style="margin: 0;">
               <a href="{{ url_for('edit_profile') }}">Edit Profile</a>
               <hr style="margin: 0;">

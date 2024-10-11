@@ -8,11 +8,10 @@ body {
 
 .content-container {
     display: block;
-    width: 80%;
+    width: 80vw;
     max-width: 1000px;
     height: 100%;
-    padding-top: 20px;
-    padding-bottom: 20px;
+    padding: 40px 0;
     margin: 0 auto;
 }
 
@@ -131,83 +130,37 @@ h1 {
     bottom: -8px;
 }
 
-.page-selector {
-    display: block;
-    margin: 20px auto;
-}
-
-.page-selector span {
-    display: block;
-    width: 100%;
-    text-align: center;
-    color: #21252A;
-}
-
-.page-selector span.pages,
-.page-selector .pagination-section span.ellipsis {
-    color: #ffffff;
-}
-
-.page-selector .pagination {
-    width: fit-content;
-    margin: 5px auto;
-    border-radius: 20px;
-    overflow: hidden;
-}
-
-.pagination-section {
-    width: 45px;
-    aspect-ratio: 1/1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-image: linear-gradient(to bottom, #202020 0%, #333333 30%, #202020);
-    outline: 4px solid #151515;
-    outline-offset: -2px;
-    border-radius: 5px;
-    cursor: pointer;
-    color: #ffffff;
-}
-
-.pagination div {
-    background-color: #252525;
-    background-image: unset;
-    width: fit-content;
-    height: inherit;
-    padding: 8px;
-}
-
-.pagination .page-num svg {
-    height: 1.1em;
-    width: 1.1em;
-    fill: #ffffff;
-}
-
-.pagination .pagination-section.page-num.current {
-    background-image: linear-gradient(to bottom, #333333 0%, #202020 40%, #333333);
-    color: #5170AF;
-}
-
-.pagination .pagination-section.page-num:hover {
-    color: #ffffff;
-    fill: #ffffff;
-    background-image: linear-gradient(to bottom, #000e29 0%, #5170AF 30%, #000e29);
-}
-
-.pagination .page-num:visited {
-    color: #ffffff;
-    fill: #ffffff;
-}
-
 /* ======================= Nav */
 
-.navbar {
+body .navbar {
     background-color: #151515;
-    height: 50px;
+    --navbar-height: 50px;
+    height: var(--navbar-height);
     box-shadow: 0px 0px 20px #000000;
-    margin-bottom: 1rem;
-    position: relative;
     z-index: 9999;
+    padding: 0;
+}
+
+.navbar .navbar-expand {
+    flex-wrap: unset;
+}
+
+.navbar-expand .navbar-nav {
+    height: 100%;
+}
+
+.navbar .container-fluid {
+    position: relative;
+    top: 0;
+    height: var(--navbar-height);
+    padding: 6px 30px;
+    padding-right: 45px;
+}
+
+.navbar .navbar-header {
+    display: flex;
+    align-items: center;
+    height: var(--navbar-height);
 }
 
 .navbar a {
@@ -231,29 +184,34 @@ h1 {
 }
 
 .navbar-brand {
+    height: var(--navbar-height);
     display: flex;
     align-items: center;
+    padding: 0;
 }
 
 .navbar-brand>img {
     display: inline-block;
-    margin: 0.2rem 0.6rem;
-    width: 30px;
+    position: relative;
+    margin-right: 0.6rem;
+    height: 1.7rem;
     border-radius: 2px;
 }
 
-.nav>li>a>img {
-    width: 32px;
-    border-radius: 32px;
+.navbar .navbar-header .navbar-brand span {
+    position: relative;
+    background: linear-gradient(176deg, #5170AF, #5170AF 20%, #93A9D7 55%, #5170AF 58%, #435F97 60%, #5170AF 70%);
+    background-clip: text;
+    font-size: 1.8rem;
+    font-weight: bold;
+    line-height: 2.2rem;
+    top: 1px;
+    color: transparent;
+    margin-bottom: 0px;
 }
 
-ul.nav.navbar-nav {
-    align-items: center;
-}
-
-ul.nav.navbar-nav li {
-    margin: 0.2rem 0.6rem;
-    display: flex;
+.onboarding .nav.navbar-nav.navbar-right {
+    height: 100%;
 }
 
 nav form.navbar-form {
@@ -267,20 +225,6 @@ nav form.navbar-form {
 
 .onboarding .navbar-brand {
     margin: 0;
-}
-
-/* .onboarding>.navbar-brand>a {
-    color: #5170AF;
-} */
-
-.navbar .navbar-header .navbar-brand h3 {
-    position: relative;
-    background: linear-gradient(176deg, #5170AF, #5170AF 20%, #93A9D7 55%, #5170AF 58%, #435F97 60%, #5170AF 70%);
-    background-clip: text;
-    font-weight: bold;
-    top: 2px;
-    color: transparent;
-    margin-bottom: 0px;
 }
 
 .onboarding .nav.navbar-nav.navbar-right {
@@ -305,23 +249,8 @@ nav form.navbar-form {
 
 /* ===================== Dropdown */
 
-/* Style The Dropdown Button */
-.dropbtn {
-    font-weight: bold;
-    background-color: #151515;
-    color: #66757F;
-    padding: 6px 15px;
-    border: solid 1px;
-    min-width: 150px;
-    border-color: #303030;
-    border-radius: 8px;
-    cursor: pointer;
-}
-
-/* The container <div> - needed to position the dropdown content */
 .dropdown {
-    position: relative;
-    display: inline-block;
+    height: 100%;
 }
 
 .dropdown svg {
@@ -332,26 +261,63 @@ nav form.navbar-form {
     bottom: 2px;
 }
 
+/* Style The Dropdown Button */
+.dropbtn {
+    height: 100%;
+    font-weight: bold;
+    background-color: #151515;
+    color: #66757F;
+    padding: 0 25px;
+    border: solid 1px;
+    min-width: 150px;
+    border-color: #303030;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.dropbtn span,
+.dropbtn svg {
+    margin: auto 0;
+}
+
 /* Dropdown Content (Hidden by Default) */
 .dropdown-content {
     display: none;
     position: absolute;
     right: 0px;
-    background-color: #f9f9f9;
+    top: 44px;
+    background-color: #252525;
     min-width: min-content;
-    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.4);
     z-index: 1;
     border-bottom-left-radius: 8px;
     border-bottom-right-radius: 8px;
 }
 
+/* navbar shadow on dropdown list */
+.dropdown-content::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 10px;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), transparent);
+}
+
 /* Links inside the dropdown */
 .dropdown-content a {
-    padding: 10px 16px;
+    padding: 10px 25px;
     text-decoration: none;
     display: block;
-    font-size: 1rem;
+    font-size: 1em;
     text-align: right;
+    white-space: nowrap;
+}
+
+.dropdown-content hr {
+    color: #151515;
+    width: 80%;
+    height: 2px;
 }
 
 /* Change color of dropdown links on hover */
@@ -361,24 +327,23 @@ nav form.navbar-form {
     border-radius: 10px;
 }
 
-/* Show the dropdown menu on hover */
-.dropdown:hover .dropdown-content {
+/* Show the dropdown menu when the button is focused */
+.dropdown:focus-within .dropdown-content {
     display: block;
 }
 
 /* Change the background color of the dropdown button when the dropdown content is shown */
-.dropdown:hover .dropbtn {
+.dropdown:focus-within .dropbtn {
     background-color: #5170AF;
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
+    /* border-top-left-radius: 8px;
+    border-top-right-radius: 8px; */
     border-bottom-left-radius: 8px;
     border-bottom-right-radius: 0px;
     color: #ffffff;
 }
 
-.dropdown:hover svg {
+.dropdown:focus-within svg {
     fill: #ffffff;
-
 }
 
 /* ===================== Forms */
@@ -483,7 +448,7 @@ form .form-switch .form-check-input {
     align-self: flex-end;
     width: 100%;
     min-height: 38%;
-    padding: 0px 20px 20px;
+    padding: 0px 20px 15px;
     bottom: 0px;
     list-style-type: none;
     z-index: 1;
@@ -500,7 +465,9 @@ form .form-switch .form-check-input {
 }
 
 .profile .modlist-details li {
+    font-size: 0.8em;
     line-height: 1.1em;
+    text-align: left;
     margin-bottom: 8px;
 }
 
@@ -808,7 +775,7 @@ fieldset[disabled] .btn-outline-nexus.active {
     width: 100%;
 }
 
-/* ===================== ModList Page */
+/* ===================== ModList Page (all user-made modlists) */
 
 .modlistpage .card-page {
     position: relative;
@@ -974,6 +941,247 @@ fieldset[disabled] .btn-outline-nexus.active {
     .modlistpage .modlist-card img {
         max-height: 350px;
     }
+}
+
+/* ============================== ModList Page (Nexus-tracked modlist) */
+
+.tracked-mod-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 20px;
+}
+
+.tracked-mod-tabs .tab {
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    text-align: center;
+    outline: 4px solid #202020;
+    outline-offset: -4px;
+    padding: 10px 15px 30px;
+}
+
+.tracked-mod-tabs .tab h4,
+.tracked-mod-tabs .tab h5 {
+    margin: 8px 0 5px;
+}
+
+.tracked-mod-tabs .selected-tab {
+    background-color: #202020;
+}
+
+.tracked-mod-tabs .unselected-tab {
+    background-color: transparent;
+    background-image: linear-gradient(to bottom, #202020, #101010);
+}
+
+.modlist-mods-container,
+.tracked-mods-container {
+    position: relative;
+    display: grid;
+    row-gap: 20px;
+    top: -15px;
+    background-color: #202020;
+    padding: 15px;
+    border-radius: 20px;
+}
+
+.modlist-mod,
+.tracked-mod {
+    display: grid;
+    grid-template-columns: 1fr 3fr;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.modlist-mod .mod-info,
+.tracked-mod .mod-info {
+    display: block;
+    text-align: left;
+    margin-bottom: 10px;
+}
+
+.modlist-mod .mod-info p,
+.tracked-mod .mod-info p {
+    margin: 0px;
+}
+
+.modlist-mod .mod-info-and-buttons,
+.tracked-mod .mod-info-and-buttons {
+    display: block;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    padding: 20px;
+    background-color: #151515;
+}
+
+.modlist-mod .buttons,
+.tracked-mod .buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(153px, 1fr));
+    column-gap: 10px;
+    row-gap: 5px;
+    width: auto;
+}
+
+.modlistpage .modlist-mod .mod-info-and-buttons .mod-buttons,
+.modlistpage .tracked-mod .mod-info-and-buttons .mod-buttons {
+    --grid-item--min-width: 153px;
+}
+
+.tracked-mod button,
+.modlist-mod a,
+.tracked-mod button,
+.tracked-mod a {
+    width: 100%;
+    height: 100%;
+}
+
+.tracked-mod .mod-image,
+.modlist-mod img,
+.tracked-mod .mod-image,
+.tracked-mod img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.tracked-mod .img {
+    width: 100%;
+    height: 100%;
+    /* width: 150px; */
+    overflow: hidden;
+    background-size: cover;
+    background-position: center;
+}
+
+.tracked-mod .img svg {
+    opacity: 20%;
+    max-width: 80%;
+    max-height: 80%;
+}
+
+.modlist-card .img {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.modlist-card .img svg {
+    opacity: 20%;
+    max-width: 80%;
+    max-height: 80%;
+}
+
+.modlist-card .nsfw,
+.tracked-mod .nsfw {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.modlist-card .nsfw img,
+.tracked-mod .nsfw img {
+    filter: blur(8px);
+}
+
+@media (max-width: 768px) {
+
+    .modlist-mod,
+    .tracked-mod {
+        display: grid;
+        grid-template-columns: 1fr;
+        column-gap: 10px;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .modlist-mod .buttons,
+    .tracked-mod .buttons {
+        display: grid;
+        grid-template-columns: 1fr;
+        row-gap: 5px;
+        width: auto;
+    }
+
+    .modlistpage .modlist-mod .mod-info-and-buttons .mod-buttons,
+    .modlistpage .tracked-mod .mod-info-and-buttons .mod-buttons {
+        --grid-item--min-width: 270px;
+    }
+}
+
+/* ===================== Modlist Pagination - page selector widget */
+
+.page-selector {
+    display: block;
+    margin: 20px auto;
+}
+
+.page-selector span {
+    display: block;
+    width: 100%;
+    text-align: center;
+    color: #21252A;
+}
+
+.page-selector span.pages,
+.page-selector .pagination-section span.ellipsis {
+    color: #ffffff;
+}
+
+.page-selector .pagination {
+    width: fit-content;
+    margin: 5px auto;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.pagination-section {
+    width: 45px;
+    aspect-ratio: 1/1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-image: linear-gradient(to bottom, #202020 0%, #333333 30%, #202020);
+    outline: 4px solid #151515;
+    outline-offset: -2px;
+    border-radius: 5px;
+    cursor: pointer;
+    color: #ffffff;
+}
+
+.pagination div {
+    background-color: #252525;
+    background-image: unset;
+    width: fit-content;
+    height: inherit;
+    padding: 8px;
+}
+
+.pagination .page-num svg {
+    height: 1.1em;
+    width: 1.1em;
+    fill: #ffffff;
+}
+
+.pagination .pagination-section.page-num.current {
+    background-image: linear-gradient(to bottom, #333333 0%, #202020 40%, #333333);
+    color: #5170AF;
+}
+
+.pagination .pagination-section.page-num:hover {
+    color: #ffffff;
+    fill: #ffffff;
+    background-image: linear-gradient(to bottom, #000e29 0%, #5170AF 30%, #000e29);
+}
+
+.pagination .page-num:visited {
+    color: #ffffff;
+    fill: #ffffff;
 }
 
 /* ===================== Mod Cards (Game Page) */
@@ -1317,178 +1525,6 @@ fieldset[disabled] .btn-outline-nexus.active {
         width: 100%;
     }
 }
-
-/* ============================== Tracked Mods page */
-
-.tracked-mod-tabs {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    column-gap: 20px;
-}
-
-.tracked-mod-tabs .tab {
-    border-top-left-radius: 20px;
-    border-top-right-radius: 20px;
-    text-align: center;
-    outline: 4px solid #202020;
-    outline-offset: -4px;
-    padding: 10px 15px 30px;
-}
-
-.tracked-mod-tabs .tab h4,
-.tracked-mod-tabs .tab h5 {
-    margin: 8px 0 5px;
-}
-
-.tracked-mod-tabs .selected-tab {
-    background-color: #202020;
-}
-
-.tracked-mod-tabs .unselected-tab {
-    background-color: transparent;
-    background-image: linear-gradient(to bottom, #202020, #101010);
-}
-
-.modlist-mods-container,
-.tracked-mods-container {
-    position: relative;
-    display: grid;
-    row-gap: 20px;
-    top: -15px;
-    background-color: #202020;
-    padding: 15px;
-    border-radius: 20px;
-}
-
-.modlist-mod,
-.tracked-mod {
-    display: grid;
-    grid-template-columns: 1fr 3fr;
-    border-radius: 10px;
-    overflow: hidden;
-}
-
-.modlist-mod .mod-info,
-.tracked-mod .mod-info {
-    display: block;
-    text-align: left;
-    margin-bottom: 10px;
-}
-
-.modlist-mod .mod-info p,
-.tracked-mod .mod-info p {
-    margin: 0px;
-}
-
-.modlist-mod .mod-info-and-buttons,
-.tracked-mod .mod-info-and-buttons {
-    display: block;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    height: 100%;
-    padding: 20px;
-    background-color: #151515;
-}
-
-.modlist-mod .buttons,
-.tracked-mod .buttons {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(153px, 1fr));
-    column-gap: 10px;
-    row-gap: 5px;
-    width: auto;
-}
-
-.modlistpage .modlist-mod .mod-info-and-buttons .mod-buttons,
-.modlistpage .tracked-mod .mod-info-and-buttons .mod-buttons {
-    --grid-item--min-width: 153px;
-}
-
-.tracked-mod button,
-.modlist-mod a,
-.tracked-mod button,
-.tracked-mod a {
-    width: 100%;
-    height: 100%;
-}
-
-.tracked-mod .mod-image,
-.modlist-mod img,
-.tracked-mod .mod-image,
-.tracked-mod img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.tracked-mod .img {
-    width: 100%;
-    height: 100%;
-    /* width: 150px; */
-    overflow: hidden;
-    background-size: cover;
-    background-position: center;
-}
-
-.tracked-mod .img svg {
-    opacity: 20%;
-    max-width: 80%;
-    max-height: 80%;
-}
-
-.modlist-card .img {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-}
-
-.modlist-card .img svg {
-    opacity: 20%;
-    max-width: 80%;
-    max-height: 80%;
-}
-
-.modlist-card .nsfw,
-.tracked-mod .nsfw {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-}
-
-.modlist-card .nsfw img,
-.tracked-mod .nsfw img {
-    filter: blur(8px);
-}
-
-@media (max-width: 768px) {
-
-    .modlist-mod,
-    .tracked-mod {
-        display: grid;
-        grid-template-columns: 1fr;
-        column-gap: 10px;
-        border-radius: 10px;
-        overflow: hidden;
-    }
-
-    .modlist-mod .buttons,
-    .tracked-mod .buttons {
-        display: grid;
-        grid-template-columns: 1fr;
-        row-gap: 5px;
-        width: auto;
-    }
-
-    .modlistpage .modlist-mod .mod-info-and-buttons .mod-buttons,
-    .modlistpage .tracked-mod .mod-info-and-buttons .mod-buttons {
-        --grid-item--min-width: 270px;
-    }
-}
-
 
 /* ============================== Signed in Home */
 
