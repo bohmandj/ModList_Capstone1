@@ -1,3 +1,4 @@
+{% import 'macros/page-selector.html' as macro_ps %}
 {% extends 'base.html' %}
 
 {% block title %}{{ modlist.name }}{% endblock %}
@@ -166,55 +167,7 @@
             {% endif %}{# ends 'if page_mods.items == []' #}
         </div>
 
-        <div class="page-selector">
-            {% if page_mods.pages > 1 %}
-            <span class="pages">Mods {{ page_mods.first }} - {{ page_mods.last }} of {{ page_mods.total }}</span>
-            {% else %}
-            <span>Mods {{ page_mods.first }} - {{ page_mods.last }} of {{ page_mods.total }}</span>
-            {% endif %}
-            <div class=pagination>
-                {% if page_mods.has_prev %}
-                <a href="{{ url_for('show_modlist_page', user_id=user.id, modlist_id=modlist.id, page=page_mods.prev_num, per_page=per_page, order=order) }}"
-                    class="pagination-section page-num">
-                    <svg xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 320 512"><!--!Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.-->
-                        <path
-                            d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z" />
-                    </svg>
-                </a>
-                {% endif %}
-
-                {% for iter_page in page_mods.iter_pages(left_edge=1, left_current=2, right_current=3, right_edge=1) %}
-                {% if iter_page %}
-                {% if iter_page != page %}{# handle non-current page numbers #}
-                <a href="{{ url_for('show_modlist_page', user_id=user.id, modlist_id=modlist.id, page=iter_page, per_page=per_page, order=order) }}"
-                    class="pagination-section page-num">
-                    {{ iter_page }}
-                </a>
-                {% endif %}{# ends 'if iter_page != page' #}
-                {% if iter_page == page %}{# handle current page number #}
-                <a href="{{ url_for('show_modlist_page', user_id=user.id, modlist_id=modlist.id, page=page, per_page=per_page, order=order) }}"
-                    class="pagination-section page-num current">
-                    <strong>{{ page }}</strong>
-                </a>
-                {% endif %}{# ends 'if iter_page == page' #}
-                {% else %}{# handle section that isn't a page (ellipsis) #}
-                <div class="pagination-section"><span class=ellipsis>...</span></div>
-                {% endif %}{# ends 'if iter_page' #}
-                {% endfor %}
-
-                {% if page_mods.has_next %}
-                <a href="{{ url_for('show_modlist_page', user_id=user.id, modlist_id=modlist.id, page=page_mods.next_num, per_page=per_page, order=order) }}"
-                    class="pagination-section page-num">
-                    <svg xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 320 512"><!--!Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.-->
-                        <path
-                            d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z" />
-                    </svg>
-                </a>
-                {% endif %}
-            </div>
-        </div>
+        {{ macro_ps.page_selector_regular_modlist(user, modlist, page_mods, page, per_page, order) }}
     </div>
 </div>
 
