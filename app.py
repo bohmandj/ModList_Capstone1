@@ -4,6 +4,7 @@ from flask import Flask, render_template, request, flash, redirect, session, g, 
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 from functools import wraps
+from werkzeug.datastructures import ImmutableDict
 
 from forms import UserAddForm, LoginForm, UserEditForm, UserPasswordForm, ModlistAddForm, ModlistEditForm, ModlistAddModForm
 from models import db, connect_db, User, Modlist, Mod, Game
@@ -12,6 +13,8 @@ from nexus_api import get_all_games_nxs, get_mods_of_type_nxs, get_mod_nxs
 from utilities import get_all_games_db, get_game_db, get_empty_modlists, get_tracked_modlist_db, get_recent_modlists_by_game, get_public_modlists_by_game, filter_nxs_data, filter_nxs_mod_page, update_all_games_db, update_list_mods_db, link_mods_to_game, add_mod_modlist_choices, check_modlist_editable, update_tracked_mods_from_nexus, get_tracked_not_keep_db, paginate_tracked_mods, paginate_modlist_mods
 
 CURR_USER_KEY = "curr_user"
+ORDER = "update"
+PER_PAGE = "25"
 
 app = Flask(__name__)
 
@@ -39,6 +42,45 @@ def login_required(f):
             flash("Access unauthorized.", "danger")
             return redirect(url_for('login', next=request.url))
         return f(*args, **kwargs)
+    return decorated_function
+
+def set_listview_session_vals(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+
+        page_reset = False
+
+        if 'set_per_page' in request.args:
+            print("SET_PER_PAGE IN KWARGS = TRUE!")
+            session[PER_PAGE] = request.args['set_per_page']
+            page_reset = True
+
+        if 'set_order' in request.args:
+            print("SET_ORDER IN KWARGS = TRUE!")
+            session[ORDER] = request.args['set_order']
+            page_reset = True
+        
+        if page_reset:
+            return f(*args, **kwargs, page_reset=1)
+        else:
+            return f(*args, **kwargs)
+    return decorated_function
+
+def set_listview_query_vals(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+
+        page = request.args.get('page', default=1, type=int)
+        req_per_page = request.args.get('per_page', default=25, type=int)
+        req_order = request.args.get('order', default='update', type=str)
+            
+        per_page = session[PER_PAGE] if PER_PAGE in session else int(req_per_page)
+        order = session[ORDER] if ORDER in session else int(req_order)
+
+        if 'page_reset' in kwargs:
+            page = 1
+        
+        return f(*args, **kwargs, page=int(page), per_page=int(per_page), order=order)
     return decorated_function
 
 
@@ -323,18 +365,14 @@ def new_modlist(user_id):
 
 
 @app.route('/users/<user_id>/modlists/<modlist_id>')
-def show_modlist_page(user_id, modlist_id):
+@set_listview_session_vals
+@set_listview_query_vals
+def show_modlist_page(user_id, modlist_id, page=1, per_page=25, order="update"):
     """Show the user's modlist page. 
 
     Mod display order takes 'order' arguments from the query string - 'author' or 'name' valid, otherwise mods display most recently updated first.
     Pagination takes 'page' and 'per_page' arguments from the query string.
     """
-
-    page = request.args.get('page', default=1, type=int)
-    per_page = request.args.get('per_page', default=25, type=int)
-    order = request.args.get('order', default='update', type=str)
-    if order == '': 
-        order = 'update'
 
     user = db.get_or_404(User, user_id, description=f"Sorry, we couldn't find user #{user_id}. We either encountered an issue retrieving the data from our database, or the user does not exist. Please try again or use a different user.")
     
@@ -352,7 +390,9 @@ def show_modlist_page(user_id, modlist_id):
 
 @app.route('/users/modlists/<string:tab>')
 @login_required
-def show_tracked_modlist_page(tab):
+@set_listview_session_vals
+@set_listview_query_vals
+def show_tracked_modlist_page(tab, page=1, per_page=25, order="update", **kwargs):
     """Show the regular 'Tracked' side of the user's 
     'Nexus Tracked Mods' modlist page. These mods are imported 
     from Nexus, but are not marked with the 'Keep Tracked' tag 
@@ -364,12 +404,6 @@ def show_tracked_modlist_page(tab):
     Mod display order takes 'order' arguments from the query string - 'author' or 'name' valid, otherwise mods display most recently updated first.
     Pagination takes 'page' and 'per_page' arguments from the query string.
     """
-
-    page = request.args.get('page', default=1, type=int)
-    per_page = request.args.get('per_page', default=25, type=int)
-    order = request.args.get('order', default='update', type=str)
-    if order == '': 
-        order = 'update'
 
     page_mods = paginate_tracked_mods(g.user.id, page, per_page, order=order, tab=tab)
 
@@ -496,6 +530,44 @@ def edit_modlist(user_id, modlist_id):
     return render_template('users/edit.html', form=form, form_title="Edit Modlist", modlist=modlist)
 
 
+@app.route('/users/<user_id>/modlists/<modlist_id>/delete/<mod_id>')
+@login_required
+def modlist_delete_mod(user_id, modlist_id, mod_id):
+    """Remove mod from modlist.
+
+    - db is searched for mod and modlist.
+    - if mod is found in list of mods contained in modlist, 
+      delete mod from modlist.
+    """
+
+    modlist = db.get_or_404(Modlist, modlist_id)
+
+    is_invalid = check_modlist_editable(user_id, modlist, g.user.id)
+    if is_invalid:
+        flash(is_invalid, "danger")
+        return redirect(url_for('show_modlist_page', user_id=user_id, modlist_id=modlist_id))
+
+    else:
+        mod = db.get_or_404(Mod, mod_id)
+        try:
+            if mod in modlist.mods:
+                modlist.mods.remove(mod)
+            else:
+                flash(f"Can't delete mod from modlist. {mod.name} not found in {modlist.name}.", 'danger')
+                return redirect(url_for('show_modlist_page', user_id=g.user.id, modlist_id=modlist_id))
+
+            db.session.commit()
+
+        except Exception as e:
+            db.session.rollback()
+            print("Error deleting mod from modlist in db - modlist_delete_mod(): ", e)
+            flash(f"Error removing {mod.name} from {modlist.name}, please try again.", 'danger')
+
+    flash(f'{mod.name} successfully removed from {modlist.name}!', 'success')
+
+    return render_template(url_for('show_modlist_page', user_id=g.user.id, modlist_id=modlist_id))
+
+    
 ##############################################################################
 # Game routes (& Mod routes):
 
