@@ -44,28 +44,6 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-def set_listview_session_vals(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-
-        page_reset = False
-
-        if 'set_per_page' in request.args:
-            print("SET_PER_PAGE IN KWARGS = TRUE!")
-            session[PER_PAGE] = request.args['set_per_page']
-            page_reset = True
-
-        if 'set_order' in request.args:
-            print("SET_ORDER IN KWARGS = TRUE!")
-            session[ORDER] = request.args['set_order']
-            page_reset = True
-        
-        if page_reset:
-            return f(*args, **kwargs, page_reset=1)
-        else:
-            return f(*args, **kwargs)
-    return decorated_function
-
 def set_listview_query_vals(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -73,8 +51,17 @@ def set_listview_query_vals(f):
         page = request.args.get('page', default=1, type=int)
         req_per_page = request.args.get('per_page', default=25, type=int)
         req_order = request.args.get('order', default='update', type=str)
-            
+
+        if 'set_per_page' in request.args:
+            print("SET_PER_PAGE IN KWARGS = TRUE!")
+            session[PER_PAGE] = request.args['set_per_page']
+            page = 1
         per_page = session[PER_PAGE] if PER_PAGE in session else int(req_per_page)
+
+        if 'set_order' in request.args:
+            print("SET_ORDER IN KWARGS = TRUE!")
+            session[ORDER] = request.args['set_order']
+            page = 1
         order = session[ORDER] if ORDER in session else int(req_order)
 
         if 'page_reset' in kwargs:
@@ -365,7 +352,6 @@ def new_modlist(user_id):
 
 
 @app.route('/users/<user_id>/modlists/<modlist_id>')
-@set_listview_session_vals
 @set_listview_query_vals
 def show_modlist_page(user_id, modlist_id, page=1, per_page=25, order="update"):
     """Show the user's modlist page. 
@@ -390,9 +376,8 @@ def show_modlist_page(user_id, modlist_id, page=1, per_page=25, order="update"):
 
 @app.route('/users/modlists/<string:tab>')
 @login_required
-@set_listview_session_vals
 @set_listview_query_vals
-def show_tracked_modlist_page(tab, page=1, per_page=25, order="update", **kwargs):
+def show_tracked_modlist_page(tab='tracked-mods', page=1, per_page=25, order="update", **kwargs):
     """Show the regular 'Tracked' side of the user's 
     'Nexus Tracked Mods' modlist page. These mods are imported 
     from Nexus, but are not marked with the 'Keep Tracked' tag 
