@@ -99,6 +99,8 @@ def do_login(user):
 def do_logout():
     """Logout user."""
 
+    session.clear()
+
     if CURR_USER_KEY in session:
         del session[CURR_USER_KEY]
     
@@ -359,10 +361,13 @@ def show_modlist_page(user_id, modlist_id, page=1, per_page=25, order="update"):
     Mod display order takes 'order' arguments from the query string - 'author' or 'name' valid, otherwise mods display most recently updated first.
     Pagination takes 'page' and 'per_page' arguments from the query string.
     """
-
-    user = db.get_or_404(User, user_id, description=f"Sorry, we couldn't find user #{user_id}. We either encountered an issue retrieving the data from our database, or the user does not exist. Please try again or use a different user.")
     
     modlist = db.get_or_404(Modlist, modlist_id, description=f"Sorry, we couldn't find modlist #{modlist_id}. We either encountered an issue retrieving the data from our database, or the modlist does not exist. Please try again or use a different modlist.")
+
+    if modlist.user_id != user_id:
+        abort(404)
+
+    user = db.get_or_404(User, user_id, description=f"Sorry, we couldn't find user #{user_id}. We either encountered an issue retrieving the data from our database, or the user does not exist. Please try again or use a different user.")
 
     page_mods = paginate_modlist_mods(user_id, modlist_id, page, per_page, order)
 
