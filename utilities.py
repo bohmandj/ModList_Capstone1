@@ -248,26 +248,24 @@ def add_missing_tracked_mods_db(user_id, nexus_tracked_data):
     Returns list of unpublished ids that should not get sync'd 
     in user's modlist.
     """
-
     current_tracked_ids = get_tracked_mods_db(user_id, just_ids=True)
 
     nexus_tracked_ids_by_game = group_nexus_tracked_by_game(nexus_tracked_data)
 
     nxs_req_limit = 25 # Nexus API throws error for >30 requests/sec.
-    counter = 0
+    sleep_interval = 1 / nxs_req_limit
 
     unpublished_ids = []
 
     for domain_name in nexus_tracked_ids_by_game:
-
         game = db.session.scalars(db.select(Game).where(Game.domain_name==domain_name)).first()
 
         nexus_data_to_add = []
 
         for id in nexus_tracked_ids_by_game[domain_name]:
             if id not in current_tracked_ids:
-                counter += 1
                 try:
+                    sleep(sleep_interval)
                     new_nexus_data = get_mod_nxs(game, id)
                 except Exception as e:
                     print('Error in get_mod_nxs(): ', e)
@@ -281,10 +279,6 @@ def add_missing_tracked_mods_db(user_id, nexus_tracked_data):
                     else:
                         unpublished_ids.append(id)
                         flash(f"Mod #{id}'s status is not set to 'published', so we were unable to import its data from Nexus.", "warning")
-                
-                if counter >= nxs_req_limit:
-                    sleep(1)
-                    counter = 0
 
         if len(nexus_data_to_add) == 0:
             continue

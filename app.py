@@ -383,12 +383,17 @@ def show_tracked_modlist_page(tab='tracked-mods', page=1, per_page=25, order="up
     from Nexus, but are not marked with the 'Keep Tracked' tag 
     to separate them from the rest of the imported mods.
 
-    Variable 'tab' determines if tracked mods (not marked keep-tracked) or 
-    keep-tracked mods will be displayed. Only 'tracked-mods' and 
-    'keep-tracked-mods' are valid inputs.
+    Variable 'tab' determines if tracked mods (not marked keep-tracked), 
+    keep-tracked mods will be displayed, OR if user's tracked mods data 
+    will get synced with Nexus' records. Only 'tracked-mods', 
+    'keep-tracked-mods', or 'tracked-sync' are valid inputs.
     Mod display order takes 'order' arguments from the query string - 'author' or 'name' valid, otherwise mods display most recently updated first.
     Pagination takes 'page' and 'per_page' arguments from the query string.
     """
+
+    if tab == 'tracked-sync':
+        update_tracked_mods_from_nexus(g.user.id)
+        return redirect(url_for('show_tracked_modlist_page', tab='tracked-mods'))
 
     page_mods = paginate_tracked_mods(g.user.id, page, per_page, order=order, tab=tab)
 

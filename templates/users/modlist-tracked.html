@@ -32,7 +32,9 @@
         </div>
 
         <div class="page-settings">
-            <a href=""><button class="btn btn-outline-nexus">Re-Sync Tracked Mods to Nexus</button></a>
+            <a href="{{ url_for('show_tracked_modlist_page', tab='tracked-sync') }}">
+                <button class="btn btn-outline-nexus">Re-Sync Tracked Mods to Nexus</button>
+            </a>
             {{ macro_ps.listview_query_spec_dropdowns(request.path, per_page, order) }}
         </div>
 
