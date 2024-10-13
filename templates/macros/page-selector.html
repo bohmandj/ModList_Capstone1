@@ -86,7 +86,7 @@
 
 
 <!-- Reused Assets -->
-{% set right_arrow_svg %}
+{% set left_arrow_svg %}
 <svg xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 320 512"><!--!Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.-->
     <path
@@ -100,3 +100,61 @@
         d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z" />
 </svg>
 {% endset %}
+
+
+
+{# \\\\\ inserts per_page & order dropdown widget for modlist pages ////// #}
+{% macro listview_query_spec_dropdowns(path, per_page, order) %}
+
+<div class="listview-detail-dropdowns">
+    {% set down_arrow_svg %}
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+        <path
+            d="M201.4 374.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 306.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z" />
+    </svg>
+    {% endset %}
+
+    {# Dropdown for order #}
+    <div class="order-dropdown">
+        {% set order_options = {'update':'Last Updated', 'name':'Mod Name', 'author':'Mod Author'} %}
+        {% set current_option = 'Sort by: ' ~ order_options[order] %}
+        {% set all_options = [{'label':'Last Updated', 'url_val':'update'}, {'label':'Mod Name', 'url_val':'name'},
+        {'label':'Author Name', 'url_val':'author'}] %}
+
+        <button class="dropbtn">
+            <span>{{ current_option }}</span>
+            {{ down_arrow_svg | safe }}
+        </button>
+        <div class="dropdown-content">
+            {% for option in all_options %}
+            <a
+                href="{{ path }}?page=1&per_page={{ per_page }}&order={{ option['url_val'] }}&set_order={{ option['url_val'] }}">{{
+                option['label'] }}</a>
+            <hr style="margin: 0;">
+            {% endfor %}
+        </div>
+    </div>
+
+    {# Dropdown for per_page #}
+    <div class="per-page-dropdown">
+        {% set current_option = 'Show: ' ~ per_page ~ ' /page' %}
+        {% set all_options = [{'label':'10 Mods', 'url_val':10}, {'label':'25 Mods', 'url_val':25}, {'label':'50 Mods',
+        'url_val':50},
+        {'label':'100 Mods', 'url_val':100}] %}
+
+        <button class="dropbtn">
+            <span>{{ current_option }}</span>
+            {{ down_arrow_svg | safe }}
+        </button>
+        <div class="dropdown-content">
+            {% for option in all_options %}
+            <a
+                href="{{ path }}?page=1&per_page={{ option['url_val'] }}&order={{ order }}&set_per_page={{ option['url_val'] }}">{{
+                option['label'] }}</a>
+            <hr style="margin: 0;">
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{% endmacro %}
