@@ -64,6 +64,11 @@
         </div>
 
         <div class="page-settings">
+            {% if user.id == g.user.id %}
+            <a href="{{ url_for('edit_modlist', user_id=g.user.id, modlist_id=modlist.id) }}">
+                <button class="btn btn-outline-secondary">Edit Modlist</button>
+            </a>
+            {% endif %}
             {{ macro_ps.listview_query_spec_dropdowns(request.path, per_page, order) }}
         </div>
 
@@ -123,12 +128,14 @@
                                 title="Add {{mod.name}} to one of your modlist">
                                 <button class="btn btn-outline-primary btn-sm">Add Mod to ModList</button>
                             </a>
+                            {% if user.id == g.user.id %}
                             <a href="{{ url_for('modlist_delete_mod', user_id=g.user.id, modlist_id=modlist.id, mod_id=mod.id) }}"
                                 title="Delete {{mod.name}} from {{modlist.name}}">
                                 <button class="btn btn-outline-danger btn-sm">
                                     Remove from ModList
                                 </button>
                             </a>
+                            {% endif %}
                         </div>
                         <div class="buttons-subset">
                             <a href="https://www.nexusmods.com/{{modlist.for_games[0].domain_name}}/mods/{{mod.id}}"
