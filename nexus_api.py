@@ -1,4 +1,5 @@
 import requests
+from flask import abort
 from flask_sqlalchemy import SQLAlchemy
 from secretkeys import nexus_api_key
 from app import db
@@ -27,14 +28,7 @@ def get_all_games_nxs(include_unapproved=False):
     if include_unapproved:
         url = url.join('?include_unapproved=true')
 
-    try:
-        res = requests.get(url, params=include_unapproved, headers=headers)
-
-    except requests.exceptions.RequestException as e:
-        print("get_all_games_nxs() Failed to retrieve API data: ", res.status_code)
-        print("Error: ", e)
-        raise
-
+    res = requests.get(url, params=include_unapproved, headers=headers)
     nexus_games = res.json()
 
     return nexus_games
@@ -66,19 +60,16 @@ def get_mods_of_type_nxs(game, request_type):
 
     try:
         res = requests.get(url, headers=headers)
-        print(f'NEXUS API RESPONSE: ', res)
-
     except requests.exceptions.RequestException as e:
-        print("get_mods_of_type_nxs() Failed to retrieve API data: ", res.status_code)
-        print("Error: ", e)
-        raise
+        print("Page: Game page, Function: get_mods_of_type_nxs()\nFailed to retrieve Nexus API data, error: ", e)
+        return 'error'
 
     nexus_mods = res.json()
 
     return nexus_mods
 
 
-def get_mod_nxs(game, mod_id):
+def get_mod_nxs(game_domain_name, mod_id):
     """Nexus API call.
     
     Returns object of details for provided mod 
@@ -98,17 +89,22 @@ def get_mod_nxs(game, mod_id):
         "endorsement": { "endorse_status": str, "timestamp": str of datetime, 
         "version": str of int } }
     """
-
-    url = f'{base_url}v1/games/{game.domain_name}/mods/{mod_id}.json'
+    
+    url = f'{base_url}v1/games/{game_domain_name}/mods/{mod_id}.json'
 
     try:
         res = requests.get(url, headers=headers)
-        print(f'NEXUS API RESPONSE get_mod_nxs: ', res)
-
-    except requests.exceptions.RequestException as e:
-        print("get_mods_of_type_nxs() Failed to retrieve API data: ", res.status_code)
-        print("Error: ", e)
-        raise
+        res.raise_for_status()
+    except requests.exceptions.HTTPError as e:
+        print("Page: Mod page, Function: get_mod_nxs()\nFailed to retrieve Nexus API data, error: ", e)
+        description = 'Mod data could not be retrieved from Nexus.<br>Please ensure requested game domain and mod id are correct and try again.'
+        if e.response.status_code == 404:
+            abort(404, description)
+        elif e.response.status_code == 422:
+            abort(422, description)
+        else:
+            abort(e.response.status_code)
+    
 
     nexus_mod = res.json()
 
@@ -129,13 +125,13 @@ def get_tracked_mods_nxs():
 
     try:
         res = requests.get(url, headers=headers)
+        res.raise_for_status()
 
-    except requests.exceptions.RequestException as e:
-        print("get_tracked_mods_nxs() Failed to retrieve API data: ", res.status_code)
-        print(f'NEXUS API RESPONSE get_tracked_mods_nxs() headers: ', res.headers)
-        print("Error: ", e)
-        raise
+    except requests.exceptions.HTTPError as e:
+        print("Page: login() or Tracked Mods page\nFunction: get_tracked_mods_nxs()\nFailed to retrieve Nexus API data, error: ", e)
+        raise e
 
     tracked_mods = res.json()
+    print("response headers: ", res.headers)
 
     return tracked_mods
