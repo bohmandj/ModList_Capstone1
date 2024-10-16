@@ -52,7 +52,7 @@ body {
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     column-gap: 25px;
     row-gap: 25px;
-    margin: 40px 0px 15px;
+    margin: 0px 0px 15px;
 }
 
 .section-heading-split .section-title {
@@ -116,7 +116,8 @@ h1 {
 .page-heading {
     color: #ffffff;
     width: fit-content;
-    margin: 0 auto 25px;
+    /* margin: 0 auto 25px; */
+    margin: 0 auto;
 }
 
 .btn {
@@ -129,6 +130,12 @@ h1 {
 
 .h-glow-primary:hover {
     box-shadow: 0 0 0px 2px #000000, 0 0px 2px 2px #ffffff, 0 4px 12px 6px #5170AF, 0 2px 6px 2px #5170AF;
+}
+
+.shadowed_hr_wrapper {
+    position: relative;
+    bottom: 36px;
+    margin-bottom: -36px;
 }
 
 .shadowed_hr_outer {
@@ -232,26 +239,15 @@ body .navbar {
     margin-bottom: 0px;
 }
 
-.onboarding .nav.navbar-nav.navbar-right {
-    height: 100%;
+.navbar li {
+    display: flex;
+    align-items: center;
+    margin: 0 20px;
 }
 
 nav form.navbar-form {
     display: flex;
     position: relative;
-}
-
-.onboarding .navbar-header {
-    margin: 0 auto;
-}
-
-.onboarding .navbar-brand {
-    margin: 0;
-}
-
-.onboarding .nav.navbar-nav.navbar-right {
-    position: absolute;
-    right: 16px;
 }
 
 .onboarding>.navbar form.navbar-form {
@@ -377,7 +373,7 @@ nav form.navbar-form {
     max-width: 800px;
     min-width: 350px;
     height: 100%;
-    padding-top: 60px;
+    padding-top: 20px;
     margin: 0 auto;
 }
 
@@ -871,6 +867,8 @@ fieldset[disabled] .btn-outline-nexus.active {
 .modlistpage .page-settings {
     display: grid;
     grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+        "sync-btn listview-detail-dropdowns";
     column-gap: 15px;
     align-items: center;
 
@@ -1233,6 +1231,11 @@ fieldset[disabled] .btn-outline-nexus.active {
 .modlistpage .page-settings .listview-detail-dropdowns {
     justify-self: end;
     height: 100%;
+    grid-area: listview-detail-dropdowns;
+}
+
+.modlistpage .page-settings .sync-btn {
+    grid-area: sync-btn;
 }
 
 .page-settings .listview-detail-dropdowns .order-dropdown,
@@ -1246,7 +1249,8 @@ fieldset[disabled] .btn-outline-nexus.active {
     display: inline-block;
     width: fit-content;
     height: 100%;
-    padding: 0 10px;
+    padding-left: 10px;
+    padding-right: 10px;
     color: #ffffff;
     background-image: linear-gradient(to bottom, #202020 0%, #333333 30%, #202020);
     border-color: #ffffff;
@@ -1263,12 +1267,14 @@ fieldset[disabled] .btn-outline-nexus.active {
 
 .listview-detail-dropdowns .dropbtn {
     height: 100%;
+    min-height: 38px;
+    height: 100%;
+    min-width: 150px;
     font-weight: normal;
     background-color: #151515;
     color: #ffffff;
     padding: 0 25px;
     border: solid 1px;
-    min-width: 150px;
     border-color: transparent;
     border-radius: 8px;
     cursor: pointer;
@@ -1748,10 +1754,60 @@ fieldset[disabled] .btn-outline-nexus.active {
 
 /* ================================ 404 page */
 
-.message-404 {
-    color: white;
-    margin-top: 2em;
+.error-page {
+    color: #ffffff;
     text-align: center;
+}
+
+.error-page .error {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+.error-page .error svg {
+    height: 100px;
+    width: 100px;
+    fill: #C01212;
+}
+
+.error-page h1 {
+    font-size: 2rem;
+    margin-bottom: 20px;
+}
+
+.error-page h2 {
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+}
+
+.error-page p {
+    margin-bottom: 20px;
+}
+
+.error-page .button-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    column-gap: 30px;
+    max-width: 430px;
+    margin: 15px auto;
+}
+
+.error-page button.error-btn {
+    margin: 10px auto;
+    width: 200px;
+    color: #ffffff;
+}
+
+.error-page button.error-btn svg {
+    fill: #ffffff;
+    height: 1.1em;
+    width: 1.1em;
+}
+
+.message-404 {
+    margin-top: 2em;
 }
 
 .message-404 a {
