@@ -323,13 +323,12 @@ def new_modlist(user_id):
     form = ModlistAddForm()
 
     if form.validate_on_submit():
-        print("validating new modlist form")
 
         try:
             current_modlists = db.session.scalars(db.select(Modlist).where(Modlist.user_id==user_id).order_by(Modlist.name)).all()
 
             if form.name.data in [modlist.name for modlist in current_modlists]:
-                raise ValueError
+                raise ValueError(f"You already have a modlist named '{form.name.data}', please choose another name.")
 
             modlist = Modlist.new_modlist(
                 name=form.name.data,
@@ -339,16 +338,16 @@ def new_modlist(user_id):
             )
             db.session.commit()
 
-        except ValueError:
-            flash(f"You already have a modlist named '{form.name.data}', please choose another name.", 'danger')
-            return redirect(url_for('new_modlist', form=form))
+        except ValueError as e:
+            flash(str(e), 'danger')
+            return redirect(url_for('new_modlist', user_id=user_id, form=form, next=next_page))
 
         except Exception as e:
             print("Error creating modlist: ", e)
-            flash("Error creating modlist, please try again.", 'danger')
-            return render_template('users/modlist-new.html', form=form)
+            flash("Modlist was not created due to an error, please try again.", 'danger')
+            return redirect(url_for('new_modlist', user_id=user_id, form=form, next=next_page))
 
-        return redirect(url_for("show_user_page", user_id=g.user.id))
+        return redirect(next_page or url_for("show_user_page", user_id=g.user.id))
 
     return render_template('users/modlist-new.html', form=form)
 
