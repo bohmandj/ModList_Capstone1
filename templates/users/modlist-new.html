@@ -8,6 +8,7 @@
     <h2 class="form-header">Create New ModList:</h2>
     <form method="POST" id="modlist_form" class="form-container">
         {{ form.hidden_tag() }}
+        <input type="hidden" value="{{ request.args.get('next', '') }}" />
 
         {% for field in form if field.widget.input_type != 'hidden' %}
 

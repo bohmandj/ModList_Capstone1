@@ -323,6 +323,7 @@ def new_modlist(user_id):
     form = ModlistAddForm()
 
     if form.validate_on_submit():
+        next_page = request.args.get('next')
 
         try:
             current_modlists = db.session.scalars(db.select(Modlist).where(Modlist.user_id==user_id).order_by(Modlist.name)).all()
@@ -459,11 +460,12 @@ def modlist_add_mod(user_id, mod_id):
     # pre-fill form w/ available data
     choices_response = add_mod_modlist_choices(g.user.id, mod)
     users_modlist_choices = choices_response['users_modlist_choices']
+    no_modlists = True if users_modlist_choices == [] else False
     modlists_w_mod = choices_response['modlists_w_mod']
     form_choices = [(modlist.id, modlist.name) for modlist in users_modlist_choices]
     form.users_modlists.choices = form_choices
 
-    return render_template('users/modlist-add.html', form=form, user=g.user, mod=mod, modlists_w_mod=modlists_w_mod)
+    return render_template('users/modlist-add.html', form=form, user=g.user, mod=mod, modlists_w_mod=modlists_w_mod, no_modlists=no_modlists)
 
 
 @app.route('/users/<user_id>/modlists/<modlist_id>/edit', methods=["GET", "POST"])

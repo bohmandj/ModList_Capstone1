@@ -66,6 +66,7 @@
             </div>
         </div>
 
+        {% if no_modlists != True %}
         <form method="POST" id="modlist_add_form" class="form-container" style="width: 50%; margin: 0 auto;">
             {{ form.hidden_tag() }}
 
@@ -91,14 +92,41 @@
                 </label>
             </div>
             {% endfor %}{# ends 'for option in field' #}
-
             {% endfor %}{# ends 'for field in form...' #}
+            <button type="submit" class="btn btn-primary btn-lg btn-block" style="width: 100%; margin-bottom: 30px;">
+                Add {{ mod.name }} to selected modlists!
+            </button>
 
-            <button class="btn btn-primary btn-lg btn-block" style="width: 100%; margin-bottom: 20px;">Add {{ mod.name
-                }} to selected modlists!</button>
-            <a href="{{ url_for('show_mod_page', game_domain_name=mod.for_games[0].domain_name, mod_id=mod.id) }}"
-                class="btn btn-outline-secondary btn-sm" style="width: 100%;">Cancel</a>
+            <h6 style="margin: 0;">Can't find the right modlist? Make a new one!</h6>
+            <a href="{{ url_for('new_modlist', user_id=g.user.id, next=request.url) }}"
+                class="btn btn-outline-primary btn-block" style="width: 100%; margin: 10px 0;">
+                Create New Modlist!
+            </a>
+
+            <a href="{{ url_for('show_mod_page', game_domain_name=mod.for_games[0].domain_name, mod_id=mod.id) }}">
+                <button type="button" class="btn btn-outline-secondary btn-sm" style="width: 100%">
+                    Cancel
+                </button>
+            </a>
         </form>
+
+        {% else %}{# handle form=False w/ link to Create New Mod #}
+        <div class="form-container" style="width: 50%; margin: 0 auto;">
+            <h4>You have no empty modlists or {{ mod.for_games[0].name }} modlists...</h4>
+            <h6>Please create a new modlist so {{ mod.name }} has somewhere to go!</h6>
+
+            <a href="{{ url_for('new_modlist', user_id=g.user.id, next=request.url) }}">
+                <button class="btn btn-primary btn-lg btn-block" style="width: 100%; margin: 20px 0;">
+                    Create New Modlist!
+                </button>
+            </a>
+            <a href="{{ url_for('show_mod_page', game_domain_name=mod.for_games[0].domain_name, mod_id=mod.id) }}">
+                <button class="btn btn-outline-secondary btn-sm" style="width: 100%">
+                    Cancel
+                </button>
+            </a>
+        </div>
+        {% endif %}{# ends 'if form' #}
     </div>
 </div>
 
