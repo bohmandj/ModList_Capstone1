@@ -669,6 +669,53 @@ def homepage():
     return render_template('home-anon.html')
 
 
+@app.errorhandler(400)
+def bad_request(error):
+    message = "The browser (or proxy) sent a request that this server could not understand."
+
+    if error.description == "Invalid Request": 
+           error.description = "An error was encountered retrieving data from the Nexus server. Please try again."
+    return render_template('errors/http-error.html', error=error, error_message=message), 400
+
+
+@app.errorhandler(401)
+def unauthorized(error):
+    message = "The server could not verify that you are authorized to access the URL requested."
+    return render_template('errors/http-error.html', error=error, error_message=message), 401
+
+
+@app.errorhandler(403)
+def forbidden(error):
+    message = "You don't have the permission to access the requested resource. It is either read-protected or not readable by the server."
+    if message[:10] == error.description[:10]:
+        error.description = "The user is authenticated but not authorized to access the requested resource."
+    return render_template('errors/http-error.html', error=error, error_message=message), 403
+
+
+@app.errorhandler(404)
+def not_found(error):
+    message = "The requested URL was not found on the server.<br>If you entered the URL manually please check your spelling and try again"
+
+    if error.description in ["Missing", "Missing Resource", "File not found."]: 
+           error.description = "An error was encountered retrieving data from the Nexus server. Please try again."
+    return render_template('errors/http-error.html', error=error, error_message=message), 404
+
+
+@app.errorhandler(422)
+def unprocessable_entity(error):
+    message = "The request was well-formed but was unable to be followed due to semantic errors."
+
+    if error.description == "Could not save the entity.": 
+           error.description = "An error was encountered retrieving data from the Nexus server. Please try again."
+    return render_template('errors/http-error.html', error=error, error_message=message), 422
+
+
+@app.errorhandler(500)
+def internal_server_error(error):
+    message = "The server encountered an internal error and was unable to complete your request.<br>Either the server is overloaded or there is an error in the application."
+    return render_template('errors/http-error.html', error=error, error_message=message), 500
+
+
 ##############################################################################
 # Turn off all caching in Flask
 #   (useful for dev; in production handled elsewhere)
