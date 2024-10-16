@@ -1,10 +1,11 @@
 import os
 
-from flask import Flask, render_template, request, flash, redirect, session, g, url_for
+from flask import Flask, render_template, request, flash, redirect, session, g, url_for, abort
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 from functools import wraps
 from werkzeug.datastructures import ImmutableDict
+import requests
 
 from forms import UserAddForm, LoginForm, UserEditForm, UserPasswordForm, ModlistAddForm, ModlistEditForm, ModlistAddModForm
 from models import db, connect_db, User, Modlist, Mod, Game
@@ -53,13 +54,11 @@ def set_listview_query_vals(f):
         req_order = request.args.get('order', default='update', type=str)
 
         if 'set_per_page' in request.args:
-            print("SET_PER_PAGE IN KWARGS = TRUE!")
             session[PER_PAGE] = request.args['set_per_page']
             page = 1
         per_page = session[PER_PAGE] if PER_PAGE in session else int(req_per_page)
 
         if 'set_order' in request.args:
-            print("SET_ORDER IN KWARGS = TRUE!")
             session[ORDER] = request.args['set_order']
             page = 1
         order = session[ORDER] if ORDER in session else int(req_order)
@@ -135,6 +134,7 @@ def signup():
             db.session.commit()
 
         except IntegrityError as e:
+            db.session.rollback()
             if e.__cause__.diag.constraint_name == "users_username_key":
                 flash("Username already taken", 'danger')
             if e.__cause__.diag.constraint_name == "users_email_key":
@@ -174,12 +174,10 @@ def login():
             do_login(user)
             flash(f"Hello, {user.username}!", "success")
 
-            # use updated list of games on Nexus from API to update db
+            # use list of all games from Nexus API to update all Games in db
             try:
                 nexus_games = get_all_games_nxs()
-
                 db_ready_games = filter_nxs_data(nexus_games, 'games')
-
                 update_all_games_db(db_ready_games)
             except:
                 flash("Problem occurred refreshing games list from Nexus.\nDisplayed games list may be out of date or incomplete.\nLog out and back in to reattempt.", "danger")
@@ -296,10 +294,10 @@ def edit_password():
         try:
             hashed_password = user.hash_new_password(form.new_password.data)
             user.password = hashed_password
-
             db.session.commit()
         except Exception as e:
-            print("Error making/saving new password to db: ", e)
+            db.session.rollback()
+            print("Page: edit_password\nFunction: hash_new_password()\n;Error making/committing new hashed password to db, error: ", e)
             flash("Error saving new password. Please try again.", 'danger')
             return redirect(url_for('edit_password', form=form, user=g.user))
 
@@ -340,10 +338,12 @@ def new_modlist(user_id):
             db.session.commit()
 
         except ValueError as e:
+            db.session.rollback()
             flash(str(e), 'danger')
             return redirect(url_for('new_modlist', user_id=user_id, form=form, next=next_page))
 
         except Exception as e:
+            db.session.rollback()
             print("Error creating modlist: ", e)
             flash("Modlist was not created due to an error, please try again.", 'danger')
             return redirect(url_for('new_modlist', user_id=user_id, form=form, next=next_page))
@@ -496,7 +496,7 @@ def edit_modlist(user_id, modlist_id):
         
         try:
             if form.name.data in users_modlist_names:
-                raise ValueError
+                raise ValueError("Modlist name can not be used twice by same user.")
 
             modlist.name=form.name.data
             modlist.description=form.description.data,
@@ -580,11 +580,9 @@ def show_game_page(game_domain_name):
 
     try:
         game = get_game_db(game_domain_name)
-        print(f'############### s_g_p route, game return: {game} ###############')
     except:
-        flash("Issue was encountered retrieving game information.")
-        # return redirect(url_for('homepage'))
-        raise
+        description = f"Sorry, an issue was encountered retrieving game information.<br>Please check that the requested game domain name: '{game_domain_name}' matches the one used for this game on Nexus and try again."
+        abort(404, description)
 
     mod_categories = [
         {'mod_cat': 'trending', 'section_title':'Trending Mods'}, 
@@ -593,19 +591,21 @@ def show_game_page(game_domain_name):
     ]
 
     for cat in mod_categories:
-        print(f""":::::::::::::::::::PRE-NEXUS API CALL:::::::::::::::::::: {cat['section_title']}""")
-        try:
-            print("GAME // ", game, " //")
-            nxs_category = get_mods_of_type_nxs(game, cat['mod_cat'])
-        except Exception as e:
-            cat['error'] = True
-            print(f'CAT ERROR: {e}')
-            raise
+        nxs_category = get_mods_of_type_nxs(game, cat['mod_cat'])
+        
+        if nxs_category == "error":
+            cat['error'] = True # displays error message in category area on page
         else:
-            db_ready_data = filter_nxs_data(nxs_category, 'mods')
-            cat['data'] = db_ready_data
-            update_list_mods_db(db_ready_data, game)
-            link_mods_to_game(db_ready_data, game)
+            try:
+                db_ready_data = filter_nxs_data(nxs_category, 'mods')
+                cat['data'] = db_ready_data
+                update_list_mods_db(db_ready_data)
+                link_mods_to_game(db_ready_data, game)
+                db.session.commit()
+
+            except Exception as e:
+                db.session.rollback()
+                print(f"Error func: show_game_page({game_domain_name})\nError detail: {e}")
 
     return render_template('games/game.html', game=game, mod_categories=mod_categories)
 
@@ -625,21 +625,32 @@ def show_mod_page(game_domain_name, mod_id):
     - Link to official mod page on Nexus.
     """
    
+    nexus_mod = get_mod_nxs(game_domain_name, mod_id)
+
     try:
+        # update mod in db from relevant data in API response object
         game = get_game_db(game_domain_name)
-    except:
-        flash("Issue was encountered retrieving game information.")
-        # return redirect(url_for('homepage'))
-        raise
+        db_ready_mods = filter_nxs_data([nexus_mod], 'mods')
+        update_list_mods_db(db_ready_mods)
+        link_mods_to_game(db_ready_mods, game)
+        db.session.commit()
+    except Exception as e:
+        # above try block not necessary, continue to display page
+        db.session.rollback()
+        print("Page: Mod page, Function: get_game_db() or,\n____filter_nxs_data() or,\n____update_list_mods_db() or,\n____link_mods_to_game()\nFailed to update mod in db from Nexus API response; error: ", e)   
 
-    ### Pull relevant data out of API response object to populate page, render_template for mod page ###
-    nexus_mod = get_mod_nxs(game, mod_id)
+    try:
+        # Pull relevant data out of API response object to populate page
+        page_ready_mod = filter_nxs_mod_page(nexus_mod)
+        if not game:
+            game = db.session.scalars(db.select(Game).where(Game.domain_name==game_domain_name)).first()
+            if type(game) == Exception or type(None):
+                raise AttributeError(f"No Game object. Game could not be found using '{game_domain_name}'")
+    except AttributeError as e:
+        print(f"Error page: Mod page\nError func: show_mod_page({game_domain_name}, {mod_id})\nError detail: {e}")
+        description = 'Game data could not be retrieved.<br>Please ensure requested game domain and mod id are correct and try again.'
+        abort(404, description)
 
-    db_ready_mods = filter_nxs_data([nexus_mod], 'mods')
-    update_list_mods_db(db_ready_mods, game)
-    link_mods_to_game(db_ready_mods, game)
-
-    page_ready_mod = filter_nxs_mod_page(nexus_mod, game)
 
     return render_template('games/mod.html', game=game, mod=page_ready_mod)
 
@@ -662,7 +673,7 @@ def homepage():
             games_list = get_all_games_db()
         except Exception as e:
             print("Error getting games from db: ", e)
-            flash("Problem occurred fetching games list, log out and back in to reattempt.")
+            flash("Problem occurred fetching games list, refresh page to reattempt.")
             return render_template('home.html', games_list=[{'name':"Error"}])
 
         else:
