@@ -219,7 +219,7 @@ def show_user_page(user_id):
     - Buttons to: go to list, go to game, make new list.
     """
 
-    user = db.get_or_404(User, user_id)
+    user = db.get_or_404(User, user_id, description=f"Sorry, we couldn't find a user with ID #{user_id}.<br>We either encountered an issue retrieving the data from our database, or the user does not exist.<br>Please check that the correct user id is being requested and try again.")
 
     if not g.user or g.user.id != int(user_id):
 
@@ -362,12 +362,13 @@ def show_modlist_page(user_id, modlist_id, page=1, per_page=25, order="update"):
     Pagination takes 'page' and 'per_page' arguments from the query string.
     """
     
-    modlist = db.get_or_404(Modlist, modlist_id, description=f"Sorry, we couldn't find modlist #{modlist_id}. We either encountered an issue retrieving the data from our database, or the modlist does not exist. Please try again or use a different modlist.")
+    modlist = db.get_or_404(Modlist, modlist_id, description=f"Sorry, we couldn't find modlist #{modlist_id}.<br>We either encountered an issue retrieving the data from our database, or the modlist does not exist.<br>Please try again or use a different modlist.")
 
-    if modlist.user_id != user_id:
-        abort(404)
+    user = db.get_or_404(User, user_id, description=f"Sorry, we couldn't find user #{user_id}.<br>We either encountered an issue retrieving the data from our database, or the user does not exist.<br>Please try again or use a different user.")
 
-    user = db.get_or_404(User, user_id, description=f"Sorry, we couldn't find user #{user_id}. We either encountered an issue retrieving the data from our database, or the user does not exist. Please try again or use a different user.")
+    if int(modlist.user_id) != int(user_id):
+        description = 'Make sure User ID and Modlist ID are compatible.<br>The  requested modlist must be owned by the requested user.'
+        abort(404, description)
 
     page_mods = paginate_modlist_mods(user_id, modlist_id, page, per_page, order)
 
@@ -419,15 +420,16 @@ def modlist_add_mod(user_id, mod_id):
 
     form = ModlistAddModForm()
 
+    mod = db.get_or_404(Mod, mod_id, description=f"Sorry, we couldn't find a mod with ID #{mod_id}.<br>We either encountered an issue retrieving the data from our database, or the mod does not exist.<br>Please check that the correct mod id is being requested and try again.")
+
     if form.validate_on_submit():
 
         modlist_ids = form.users_modlists.data
-        mod = db.get_or_404(Mod, mod_id)
 
         for id in modlist_ids:
 
-            modlist = db.get_or_404(Modlist, id)
-            game = db.get_or_404(Game, mod.for_games[0].id)
+            modlist = db.get_or_404(Modlist, id, description=f"Sorry, we couldn't find a modlist with ID #{id}.<br>We either encountered an issue retrieving the data from our database, or the modlist does not exist.<br>Please check that the correct modlist id is being requested and try again.")
+            game = db.get_or_404(Game, mod.for_games[0].id, description=f"Sorry, we couldn't find a game with ID #{mod.for_games[0].id}.<br>We either encountered an issue retrieving the data from our database, or the game does not exist.<br>Please check that the correct game id is being requested and try again.")
             
             if modlist.user_id != g.user.id:
                 flash("Mod can only be added to modlists owned by the currently signed in user.", "danger")
@@ -456,7 +458,6 @@ def modlist_add_mod(user_id, mod_id):
 
     
     # pre-fill form w/ available data
-    mod = db.get_or_404(Mod, mod_id)
     choices_response = add_mod_modlist_choices(g.user.id, mod)
     users_modlist_choices = choices_response['users_modlist_choices']
     modlists_w_mod = choices_response['modlists_w_mod']
@@ -473,7 +474,7 @@ def edit_modlist(user_id, modlist_id):
 
     form = ModlistEditForm()
 
-    modlist = db.get_or_404(Modlist, modlist_id)
+    modlist = db.get_or_404(Modlist, modlist_id, description=f"Sorry, we couldn't find a modlist with ID #{modlist_id}.<br>We either encountered an issue retrieving the data from our database, or the modlist does not exist.<br>Please check that the correct modlist id is being requested and try again.")
 
     is_invalid = check_modlist_editable(user_id, modlist, g.user.id)
     if is_invalid:
@@ -535,7 +536,7 @@ def modlist_delete_mod(user_id, modlist_id, mod_id):
       delete mod from modlist.
     """
 
-    modlist = db.get_or_404(Modlist, modlist_id)
+    modlist = db.get_or_404(Modlist, modlist_id, description=f"Sorry, we couldn't find a modlist with ID #{modlist_id}.<br>We either encountered an issue retrieving the data from our database, or the modlist does not exist.<br>Please check that the correct modlist id is being requested and try again.")
 
     is_invalid = check_modlist_editable(user_id, modlist, g.user.id)
     if is_invalid:
@@ -543,7 +544,7 @@ def modlist_delete_mod(user_id, modlist_id, mod_id):
         return redirect(url_for('show_modlist_page', user_id=user_id, modlist_id=modlist_id))
 
     else:
-        mod = db.get_or_404(Mod, mod_id)
+        mod = db.get_or_404(Mod, mod_id, description=f"Sorry, we couldn't find a mod with ID #{mod_id}.<br>We either encountered an issue retrieving the data from our database, or the mod does not exist.<br>Please check that the correct mod id is being requested and try again.")
         try:
             if mod in modlist.mods:
                 modlist.mods.remove(mod)
