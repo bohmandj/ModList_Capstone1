@@ -206,7 +206,7 @@ def logout():
 
 
 ##############################################################################
-# User routes (& Modlist routes):
+# User routes:
 
 @app.route('/users/<user_id>')
 def show_user_page(user_id):
@@ -308,6 +308,69 @@ def edit_password():
     return render_template('users/password.html', form=form, user=g.user)
 
 
+##############################################################################
+# Tracked Mods Modlist routes:
+
+
+@app.route('/users/modlists/<string:tab>')
+@login_required
+@set_listview_query_vals
+def show_tracked_modlist_page(tab='tracked-mods', page=1, per_page=25, order="update", **kwargs):
+    """Show the regular 'Tracked' side of the user's 
+    'Nexus Tracked Mods' modlist page. These mods are imported 
+    from Nexus, but are not marked with the 'Keep Tracked' tag 
+    to separate them from the rest of the imported mods.
+
+    Variable 'tab' determines if tracked mods (not marked keep-tracked), 
+    keep-tracked mods will be displayed, OR if user's tracked mods data 
+    will get synced with Nexus' records. Only 'tracked-mods', 
+    'keep-tracked-mods', or 'tracked-sync' are valid inputs.
+    Mod display order takes 'order' arguments from the query string - 'author' or 'name' valid, otherwise mods display most recently updated first.
+    Pagination takes 'page' and 'per_page' arguments from the query string.
+    """
+
+    if tab == 'tracked-sync':
+        update_tracked_mods_from_nexus(g.user.id)
+        return redirect(url_for('show_tracked_modlist_page', tab='tracked-mods'))
+
+    page_mods = paginate_tracked_mods(g.user.id, page, per_page, order=order, tab=tab)
+
+    tracked_modlist = get_tracked_modlist_db(g.user.id)
+
+    return render_template("users/modlist-tracked.html", page_mods=page_mods, page=page, per_page=per_page, order=order, tab=tab, modlist=tracked_modlist)
+
+
+##############################################################################
+# Users-made Modlist routes:
+
+
+@app.route('/users/<user_id>/modlists/<modlist_id>')
+@set_listview_query_vals
+def show_modlist_page(user_id, modlist_id, page=1, per_page=25, order="update"):
+    """Show the user's modlist page. 
+
+    Mod display order takes 'order' arguments from the query string - 'author' or 'name' valid, otherwise mods display most recently updated first.
+    Pagination takes 'page' and 'per_page' arguments from the query string.
+    """
+    
+    modlist = db.get_or_404(Modlist, modlist_id, description=f"Sorry, we couldn't find modlist #{modlist_id}.<br>We either encountered an issue retrieving the data from our database, or the modlist does not exist.<br>Please try again or use a different modlist.")
+
+    user = db.get_or_404(User, user_id, description=f"Sorry, we couldn't find user #{user_id}.<br>We either encountered an issue retrieving the data from our database, or the user does not exist.<br>Please try again or use a different user.")
+
+    if int(modlist.user_id) != int(user_id):
+        description = 'Make sure User ID and Modlist ID are compatible.<br>The  requested modlist must be owned by the requested user.'
+        abort(404, description)
+
+    page_mods = paginate_modlist_mods(user_id, modlist_id, page, per_page, order)
+
+    if not g.user:
+        hide_nsfw = True
+    else:
+        hide_nsfw = g.user.hide_nsfw
+    
+    return render_template('users/modlist.html', page_mods=page_mods, page=page, per_page=per_page, order=order, user=user, modlist=modlist, hide_nsfw=hide_nsfw)
+
+
 @app.route('/users/<user_id>/modlists/new', methods=["GET", "POST"])
 @login_required
 def new_modlist(user_id):
@@ -353,59 +416,113 @@ def new_modlist(user_id):
     return render_template('users/modlist-new.html', form=form)
 
 
-@app.route('/users/<user_id>/modlists/<modlist_id>')
-@set_listview_query_vals
-def show_modlist_page(user_id, modlist_id, page=1, per_page=25, order="update"):
-    """Show the user's modlist page. 
-
-    Mod display order takes 'order' arguments from the query string - 'author' or 'name' valid, otherwise mods display most recently updated first.
-    Pagination takes 'page' and 'per_page' arguments from the query string.
-    """
-    
-    modlist = db.get_or_404(Modlist, modlist_id, description=f"Sorry, we couldn't find modlist #{modlist_id}.<br>We either encountered an issue retrieving the data from our database, or the modlist does not exist.<br>Please try again or use a different modlist.")
-
-    user = db.get_or_404(User, user_id, description=f"Sorry, we couldn't find user #{user_id}.<br>We either encountered an issue retrieving the data from our database, or the user does not exist.<br>Please try again or use a different user.")
-
-    if int(modlist.user_id) != int(user_id):
-        description = 'Make sure User ID and Modlist ID are compatible.<br>The  requested modlist must be owned by the requested user.'
-        abort(404, description)
-
-    page_mods = paginate_modlist_mods(user_id, modlist_id, page, per_page, order)
-
-    if not g.user:
-        hide_nsfw = True
-    else:
-        hide_nsfw = g.user.hide_nsfw
-    
-    return render_template('users/modlist.html', page_mods=page_mods, page=page, per_page=per_page, order=order, user=user, modlist=modlist, hide_nsfw=hide_nsfw)
-
-
-@app.route('/users/modlists/<string:tab>')
+@app.route('/users/<user_id>/modlists/<modlist_id>/edit', methods=["GET", "POST"])
 @login_required
-@set_listview_query_vals
-def show_tracked_modlist_page(tab='tracked-mods', page=1, per_page=25, order="update", **kwargs):
-    """Show the regular 'Tracked' side of the user's 
-    'Nexus Tracked Mods' modlist page. These mods are imported 
-    from Nexus, but are not marked with the 'Keep Tracked' tag 
-    to separate them from the rest of the imported mods.
+def edit_modlist(user_id, modlist_id):
+    """Update modlist info for modlist belonging to current user."""
 
-    Variable 'tab' determines if tracked mods (not marked keep-tracked), 
-    keep-tracked mods will be displayed, OR if user's tracked mods data 
-    will get synced with Nexus' records. Only 'tracked-mods', 
-    'keep-tracked-mods', or 'tracked-sync' are valid inputs.
-    Mod display order takes 'order' arguments from the query string - 'author' or 'name' valid, otherwise mods display most recently updated first.
-    Pagination takes 'page' and 'per_page' arguments from the query string.
+    form = ModlistEditForm()
+
+    modlist = db.get_or_404(Modlist, modlist_id, description=f"Sorry, we couldn't find a modlist with ID #{modlist_id}.<br>We either encountered an issue retrieving the data from our database, or the modlist does not exist.<br>Please check that the correct modlist id is being requested and try again.")
+
+    is_invalid = check_modlist_uneditable(user_id, modlist, g.user.id)
+    if is_invalid:
+        flash(is_invalid, "danger")
+        return redirect(url_for('show_modlist_page', user_id=user_id, modlist_id=modlist_id))
+
+    if form.validate_on_submit():
+
+        users_modlists = db.session.scalars(db.select(Modlist).where(Modlist.user_id==user_id).order_by(Modlist.name)).all()
+
+        users_modlist_names = ['Nexus Tracked Mods']
+
+        for mlist in users_modlists:
+            if mlist.id != int(modlist_id):
+                users_modlist_names.append(mlist.name)
+            else:
+                modlist = mlist
+        
+        try:
+            if form.name.data in users_modlist_names:
+                raise ValueError("Modlist name can not be used twice by same user.")
+
+            modlist.name=form.name.data
+            modlist.description=form.description.data,
+            modlist.private=form.private.data
+
+            db.session.commit()
+
+        except ValueError as e:
+            db.session.rollback()
+            flash(f"You already have a modlist named '{form.name.data}', please choose another name.", 'danger')
+            return redirect(url_for('edit_modlist', user_id=user_id, modlist_id=modlist_id))
+        
+        except Exception as e:
+            db.session.rollback()
+            print("Error saving modlist edits to db: ", e)
+            flash("Sorry, there was a problem saving your edited modlist. Please try again.", 'danger')
+            return redirect(url_for('edit_modlist', user_id=user_id, modlist_id=modlist_id))
+
+        flash(f"Success! Edits to '{modlist.name}' saved.", 'success')
+
+        return redirect(f'/users/{g.user.id}')
+
+    # pre-fill forms w/ modlist data
+    form.name.data=modlist.name
+    form.description.data=modlist.description
+    form.private.data=modlist.private
+
+    return render_template('users/edit.html', form=form, form_title="Edit Modlist", modlist=modlist)
+
+    
+@app.route('/users/<user_id>/modlists/<modlist_id>/delete', methods=["POST"])
+@login_required
+def delete_modlist(user_id, modlist_id, mod_id):
+    """Remove mod from modlist.
+
+    - db is searched for mod and modlist.
+    - if mod is found in list of mods contained in modlist, 
+      delete mod from modlist.
     """
 
-    if tab == 'tracked-sync':
-        update_tracked_mods_from_nexus(g.user.id)
-        return redirect(url_for('show_tracked_modlist_page', tab='tracked-mods'))
+    modlist = db.get_or_404(Modlist, modlist_id, description=f"Sorry, we couldn't find a modlist with ID #{modlist_id}.<br>We either encountered an issue retrieving the data from our database, or the modlist does not exist.<br>Please check that the correct modlist id is being requested and try again.")
 
-    page_mods = paginate_tracked_mods(g.user.id, page, per_page, order=order, tab=tab)
+    is_invalid = check_modlist_uneditable(user_id, modlist, g.user.id)
+    if is_invalid:
+        flash(is_invalid, "danger")
+        return redirect(url_for('show_modlist_page', user_id=user_id, modlist_id=modlist_id))
 
-    tracked_modlist = get_tracked_modlist_db(g.user.id)
+    else:
+        mod = db.get_or_404(Mod, mod_id, description=f"Sorry, we couldn't find a mod with ID #{mod_id}.<br>We either encountered an issue retrieving the data from our database, or the mod does not exist.<br>Please check that the correct mod id is being requested and try again.")
+        try:
+            if mod in modlist.mods:
+                modlist.mods.remove(mod)
+            else:
+                flash(f"Can't delete mod from modlist. {mod.name} not found in {modlist.name}.", 'danger')
+                return redirect(url_for('show_modlist_page', user_id=g.user.id, modlist_id=modlist_id))
 
-    return render_template("users/modlist-tracked.html", page_mods=page_mods, page=page, per_page=per_page, order=order, tab=tab, modlist=tracked_modlist)
+            db.session.commit()
+
+        except Exception as e:
+            db.session.rollback()
+            print("Error deleting mod from modlist in db - modlist_delete_mod(): ", e)
+            flash(f"Error removing {mod.name} from {modlist.name}, please try again.", 'danger')
+            return redirect(url_for('show_modlist_page', user_id=g.user.id, modlist_id=modlist_id))
+
+    flash(f'{mod.name} successfully removed from {modlist.name}!', 'success')
+    print(f"modlist.mods: {modlist.mods}")
+    print(f"len(modlist.mods): {len(modlist.mods)}")
+    if len(modlist.mods) <= 0:
+        for game in modlist.for_games:
+            try:
+                print(f"modlist.for_games: {modlist.for_games}")
+                modlist.for_games.remove(game)
+                db.session.commit()
+            except Exception as e:
+                print("Page: modlist_delete_mod, Function: modlist.for_games.remove(game)\nFailed to un-assign modlist's game assignment, error: ", e)
+                abort(500, f"Only mod was removed from modlist, but an error was encountered removing modlist's assignment to {game.name}.<br>Modlist will still only take mods for {game.name}.<br>Options to resolve future issues with this modlist are:<br>1. Add and remove a mod to reattempt game assignment removal<br>2. Delete this modlist and make a new one.")
+
+    return redirect(url_for('show_modlist_page', user_id=g.user.id, modlist_id=modlist_id))
 
 
 @app.route('/users/<user_id>/modlists/add/<mod_id>', methods=["GET", "POST"])
@@ -470,118 +587,9 @@ def modlist_add_mod(user_id, mod_id):
     return render_template('users/modlist-add.html', form=form, user=g.user, mod=mod, modlists_w_mod=modlists_w_mod, no_modlists=no_modlists)
 
 
-@app.route('/users/<user_id>/modlists/<modlist_id>/edit', methods=["GET", "POST"])
-@login_required
-def edit_modlist(user_id, modlist_id):
-    """Update modlist info for modlist belonging to current user."""
-
-    form = ModlistEditForm()
-
-    modlist = db.get_or_404(Modlist, modlist_id, description=f"Sorry, we couldn't find a modlist with ID #{modlist_id}.<br>We either encountered an issue retrieving the data from our database, or the modlist does not exist.<br>Please check that the correct modlist id is being requested and try again.")
-
-    is_invalid = check_modlist_uneditable(user_id, modlist, g.user.id)
-    if is_invalid:
-        flash(is_invalid, "danger")
-        return redirect(url_for('show_modlist_page', user_id=user_id, modlist_id=modlist_id))
-
-    if form.validate_on_submit():
-
-        users_modlists = db.session.scalars(db.select(Modlist).where(Modlist.user_id==user_id).order_by(Modlist.name)).all()
-
-        users_modlist_names = ['Nexus Tracked Mods']
-
-        for mlist in users_modlists:
-            if mlist.id != int(modlist_id):
-                users_modlist_names.append(mlist.name)
-            else:
-                modlist = mlist
-        
-        try:
-            if form.name.data in users_modlist_names:
-                raise ValueError("Modlist name can not be used twice by same user.")
-
-            modlist.name=form.name.data
-            modlist.description=form.description.data,
-            modlist.private=form.private.data
-
-            db.session.commit()
-
-        except ValueError as e:
-            db.session.rollback()
-            flash(f"You already have a modlist named '{form.name.data}', please choose another name.", 'danger')
-            return redirect(url_for('edit_modlist', user_id=user_id, modlist_id=modlist_id))
-        
-        except Exception as e:
-            db.session.rollback()
-            print("Error saving modlist edits to db: ", e)
-            flash("Sorry, there was a problem saving your edited modlist. Please try again.", 'danger')
-            return redirect(url_for('edit_modlist', user_id=user_id, modlist_id=modlist_id))
-
-        flash(f"Success! Edits to '{modlist.name}' saved.", 'success')
-
-        return redirect(f'/users/{g.user.id}')
-
-    # pre-fill forms w/ modlist data
-    form.name.data=modlist.name
-    form.description.data=modlist.description
-    form.private.data=modlist.private
-
-    return render_template('users/edit.html', form=form, form_title="Edit Modlist", modlist=modlist)
-
-
 @app.route('/users/<user_id>/modlists/<modlist_id>/mods/<mod_id>/delete', methods=["POST"])
 @login_required
 def modlist_delete_mod(user_id, modlist_id, mod_id):
-    """Remove mod from modlist.
-
-    - db is searched for mod and modlist.
-    - if mod is found in list of mods contained in modlist, 
-      delete mod from modlist.
-    """
-
-    modlist = db.get_or_404(Modlist, modlist_id, description=f"Sorry, we couldn't find a modlist with ID #{modlist_id}.<br>We either encountered an issue retrieving the data from our database, or the modlist does not exist.<br>Please check that the correct modlist id is being requested and try again.")
-
-    is_invalid = check_modlist_uneditable(user_id, modlist, g.user.id)
-    if is_invalid:
-        flash(is_invalid, "danger")
-        return redirect(url_for('show_modlist_page', user_id=user_id, modlist_id=modlist_id))
-
-    else:
-        mod = db.get_or_404(Mod, mod_id, description=f"Sorry, we couldn't find a mod with ID #{mod_id}.<br>We either encountered an issue retrieving the data from our database, or the mod does not exist.<br>Please check that the correct mod id is being requested and try again.")
-        try:
-            if mod in modlist.mods:
-                modlist.mods.remove(mod)
-            else:
-                flash(f"Can't delete mod from modlist. {mod.name} not found in {modlist.name}.", 'danger')
-                return redirect(url_for('show_modlist_page', user_id=g.user.id, modlist_id=modlist_id))
-
-            db.session.commit()
-
-        except Exception as e:
-            db.session.rollback()
-            print("Error deleting mod from modlist in db - modlist_delete_mod(): ", e)
-            flash(f"Error removing {mod.name} from {modlist.name}, please try again.", 'danger')
-            return redirect(url_for('show_modlist_page', user_id=g.user.id, modlist_id=modlist_id))
-
-    flash(f'{mod.name} successfully removed from {modlist.name}!', 'success')
-    print(f"modlist.mods: {modlist.mods}")
-    print(f"len(modlist.mods): {len(modlist.mods)}")
-    if len(modlist.mods) <= 0:
-        for game in modlist.for_games:
-            try:
-                print(f"modlist.for_games: {modlist.for_games}")
-                modlist.for_games.remove(game)
-                db.session.commit()
-            except Exception as e:
-                print("Page: modlist_delete_mod, Function: modlist.for_games.remove(game)\nFailed to un-assign modlist's game assignment, error: ", e)
-                abort(500, f"Only mod was removed from modlist, but an error was encountered removing modlist's assignment to {game.name}.<br>Modlist will still only take mods for {game.name}.<br>Options to resolve future issues with this modlist are:<br>1. Add and remove a mod to reattempt game assignment removal<br>2. Delete this modlist and make a new one.")
-
-    return redirect(url_for('show_modlist_page', user_id=g.user.id, modlist_id=modlist_id))
-
-    
-@app.route('/users/<user_id>/modlists/<modlist_id>/delete', methods=["POST"])
-@login_required
-def delete_modlist(user_id, modlist_id, mod_id):
     """Remove mod from modlist.
 
     - db is searched for mod and modlist.
