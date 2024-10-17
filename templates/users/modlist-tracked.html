@@ -105,7 +105,7 @@
                                 <h4>{{ mod.name }}</h4>
                             </a>
                             <p>Game:
-                                <a href="https://next.nexusmods.com/profile/{{ mod.uploaded_by }}/mods">
+                                <a href="https://www.nexusmods.com/{{ mod.for_games[0].domain_name }}">
                                     {{ mod.for_games[0].name }}
                                 </a>
                             </p>
@@ -123,11 +123,14 @@
                                     class="btn btn-outline-primary btn-sm">
                                     Add Mod to ModList
                                 </a>
-                                <a href=""
-                                    title="Add a 'Keep Tracked' tag to this mod, moving it to the 'Keep-Tracked Mods' tab of your 'Nexus Tracked Mods' modlist"
-                                    class="btn btn-outline-success btn-sm">
-                                    Add to Keep Tracked
-                                </a>
+                                <form method="POST"
+                                    action="{{ url_for('add_keep_tracked_mod', user_id=g.user.id, mod_id=mod.id, next=request.url) }}">
+                                    <button
+                                        title="Add '{{ mod.name }}' to the Keep-Tracked tab of your 'Nexus Tracked Mods' modlist"
+                                        class="btn btn-outline-success btn-sm">
+                                        Add to Keep Tracked
+                                    </button>
+                                </form>
                             </div>
                             <div class="buttons-subset">
                                 <a href="https://www.nexusmods.com/{{mod.for_games[0].domain_name}}/mods/{{mod.id}}"

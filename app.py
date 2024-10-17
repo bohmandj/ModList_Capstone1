@@ -340,6 +340,57 @@ def show_tracked_modlist_page(tab='tracked-mods', page=1, per_page=25, order="up
     return render_template("users/modlist-tracked.html", page_mods=page_mods, page=page, per_page=per_page, order=order, tab=tab, modlist=tracked_modlist)
 
 
+@app.route('/users/<int:user_id>/modlists/keep-tracked-mods/mods/<int:mod_id>', methods=["POST"])
+@login_required
+def add_keep_tracked_mod(user_id, mod_id):
+    """Remove tracked mod from keep-tracked tab of user's 
+    Nexus Tracked Mods modlist.
+
+    - db is searched for mod and user.
+    - if mod is in user.keep_tracked, remove from 
+      keep-tracked list.
+    """
+
+    next_page = request.args.get('next')
+    print(f"user_id: {user_id}")
+    print(f"g.user.id: {g.user.id}")
+
+    if user_id != g.user.id:
+        description = f"The user ID in the url, {user_id}, is not the same as the currently signed in user. You may only add mods to your own Keep Tracked list."
+        abort(403, description)
+
+    user = db.session.execute(
+        db.select(User)
+        .options(db.selectinload(User.keep_tracked))
+        .where(User.id == g.user.id)
+    ).scalars().first()
+    
+    mod = db.session.execute(
+        db.select(Mod)
+        .where(Mod.id == mod_id)
+    ).scalars().first()
+
+    if not mod:
+        description = f"A mod with ID #{mod_id} could not be found.<br>We either encountered an issue retrieving the data from our database, or the mod does not exist.<br>Please check that the correct mod id is being requested and try again."
+        abort(404, description)
+
+    if mod not in user.keep_tracked:
+        try:
+            user.keep_tracked.append(mod)
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            print("Page: add_keep_tracked_mod route, Function: user.keep_tracked.append(mod) + commit\nFailed to add mod to keep_tracked, error: ", e)
+            description = f"Sorry, an error was encountered and and '{mod.name}' was not added to your Keep Tracked list. Please try again."
+            abort(500, description)
+        else:
+            flash(f"Success! '{mod.name}' has been added to your Keep-Tracked list.", 'success')
+    else:
+        flash(f"'{mod.name}' could not be added because it is already in your Keep Tracked list.", 'danger')
+
+    return redirect(next_page or url_for('show_tracked_modlist_page', tab='tracked-mods'))
+
+
 ##############################################################################
 # Users-made Modlist routes:
 
@@ -745,7 +796,7 @@ def homepage():
             games_list = get_all_games_db()
         except Exception as e:
             print("Error getting games from db: ", e)
-            flash("Problem occurred fetching games list, refresh page to reattempt.")
+            flash("Problem occurred fetching games list, refresh page to reattempt.", 'warning')
             return render_template('home.html', games_list=[{'name':"Error"}])
 
         else:
@@ -771,9 +822,9 @@ def unauthorized(error):
 
 @app.errorhandler(403)
 def forbidden(error):
-    message = "You don't have the permission to access the requested resource. It is either read-protected or not readable by the server."
+    message = "You don't have the permission to access the requested resource or perform the requested action."
     if message[:10] == error.description[:10]:
-        error.description = "The user is authenticated but not authorized to access the requested resource."
+        error.description = "The user is authenticated but not authorized to access the requested resource or perform the requested action."
     return render_template('errors/http-error.html', error=error, error_message=message), 403
 
 
