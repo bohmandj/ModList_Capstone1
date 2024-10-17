@@ -460,9 +460,11 @@ def modlist_add_mod(user_id, mod_id):
     # pre-fill form w/ available data
     choices_response = add_mod_modlist_choices(g.user.id, mod)
     users_modlist_choices = choices_response['users_modlist_choices']
-    no_modlists = True if users_modlist_choices == [] else False
+    users_empty_modlist_choices = choices_response['users_empty_modlist_choices']
+    no_modlists = True if users_modlist_choices + users_empty_modlist_choices == [] else False
     modlists_w_mod = choices_response['modlists_w_mod']
-    form_choices = [(modlist.id, modlist.name) for modlist in users_modlist_choices]
+    form_choices = [(modlist.id, f"{modlist.name} (Empty)") for modlist in users_empty_modlist_choices]
+    form_choices = form_choices + [(modlist.id, modlist.name) for modlist in users_modlist_choices]
     form.users_modlists.choices = form_choices
 
     return render_template('users/modlist-add.html', form=form, user=g.user, mod=mod, modlists_w_mod=modlists_w_mod, no_modlists=no_modlists)
@@ -530,6 +532,56 @@ def edit_modlist(user_id, modlist_id):
 @app.route('/users/<user_id>/modlists/<modlist_id>/mods/<mod_id>/delete', methods=["POST"])
 @login_required
 def modlist_delete_mod(user_id, modlist_id, mod_id):
+    """Remove mod from modlist.
+
+    - db is searched for mod and modlist.
+    - if mod is found in list of mods contained in modlist, 
+      delete mod from modlist.
+    """
+
+    modlist = db.get_or_404(Modlist, modlist_id, description=f"Sorry, we couldn't find a modlist with ID #{modlist_id}.<br>We either encountered an issue retrieving the data from our database, or the modlist does not exist.<br>Please check that the correct modlist id is being requested and try again.")
+
+    is_invalid = check_modlist_uneditable(user_id, modlist, g.user.id)
+    if is_invalid:
+        flash(is_invalid, "danger")
+        return redirect(url_for('show_modlist_page', user_id=user_id, modlist_id=modlist_id))
+
+    else:
+        mod = db.get_or_404(Mod, mod_id, description=f"Sorry, we couldn't find a mod with ID #{mod_id}.<br>We either encountered an issue retrieving the data from our database, or the mod does not exist.<br>Please check that the correct mod id is being requested and try again.")
+        try:
+            if mod in modlist.mods:
+                modlist.mods.remove(mod)
+            else:
+                flash(f"Can't delete mod from modlist. {mod.name} not found in {modlist.name}.", 'danger')
+                return redirect(url_for('show_modlist_page', user_id=g.user.id, modlist_id=modlist_id))
+
+            db.session.commit()
+
+        except Exception as e:
+            db.session.rollback()
+            print("Error deleting mod from modlist in db - modlist_delete_mod(): ", e)
+            flash(f"Error removing {mod.name} from {modlist.name}, please try again.", 'danger')
+            return redirect(url_for('show_modlist_page', user_id=g.user.id, modlist_id=modlist_id))
+
+    flash(f'{mod.name} successfully removed from {modlist.name}!', 'success')
+    print(f"modlist.mods: {modlist.mods}")
+    print(f"len(modlist.mods): {len(modlist.mods)}")
+    if len(modlist.mods) <= 0:
+        for game in modlist.for_games:
+            try:
+                print(f"modlist.for_games: {modlist.for_games}")
+                modlist.for_games.remove(game)
+                db.session.commit()
+            except Exception as e:
+                print("Page: modlist_delete_mod, Function: modlist.for_games.remove(game)\nFailed to un-assign modlist's game assignment, error: ", e)
+                abort(500, f"Only mod was removed from modlist, but an error was encountered removing modlist's assignment to {game.name}.<br>Modlist will still only take mods for {game.name}.<br>Options to resolve future issues with this modlist are:<br>1. Add and remove a mod to reattempt game assignment removal<br>2. Delete this modlist and make a new one.")
+
+    return redirect(url_for('show_modlist_page', user_id=g.user.id, modlist_id=modlist_id))
+
+    
+@app.route('/users/<user_id>/modlists/<modlist_id>/delete', methods=["POST"])
+@login_required
+def delete_modlist(user_id, modlist_id, mod_id):
     """Remove mod from modlist.
 
     - db is searched for mod and modlist.

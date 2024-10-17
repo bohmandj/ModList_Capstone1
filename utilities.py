@@ -553,6 +553,7 @@ def add_mod_modlist_choices(user_id, mod):
 
     modlists = db.session.scalars(db.select(Modlist).where(Modlist.user_id==user_id).order_by(Modlist.name)).all()
 
+    users_empty_modlist_choices = []
     users_modlist_choices = []
     modlists_w_mod = []
 
@@ -565,7 +566,7 @@ def add_mod_modlist_choices(user_id, mod):
             continue
 
         if len(modlist.for_games) == 0:
-            users_modlist_choices.append(modlist)
+            users_empty_modlist_choices.append(modlist)
             continue
 
         for game in mod.for_games:
@@ -573,7 +574,7 @@ def add_mod_modlist_choices(user_id, mod):
                 users_modlist_choices.append(modlist)
                 break
 
-    return_obj = {'users_modlist_choices':users_modlist_choices, 'modlists_w_mod':modlists_w_mod}
+    return_obj = {'users_empty_modlist_choices':users_empty_modlist_choices, 'users_modlist_choices':users_modlist_choices, 'modlists_w_mod':modlists_w_mod}
 
     return return_obj
 
