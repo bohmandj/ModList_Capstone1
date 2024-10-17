@@ -133,10 +133,14 @@
                                 Add Mod to ModList
                             </a>
                             {% if user.id == g.user.id %}
-                            <a href="{{ url_for('modlist_delete_mod', user_id=g.user.id, modlist_id=modlist.id, mod_id=mod.id) }}"
-                                title="Delete {{mod.name}} from {{modlist.name}}" class="btn btn-outline-danger btn-sm">
-                                Remove from ModList
-                            </a>
+                            <form method="POST"
+                                action="{{ url_for('modlist_delete_mod', user_id=g.user.id, modlist_id=modlist.id, mod_id=mod.id) }}"
+                                onsubmit="return confirm(`Are you sure you want to delete the mod:\n    '{{ mod.name }}'\nfrom the modlist:\n   '{{ modlist.name }}'?`);">
+                                <button title="Delete {{mod.name}} from {{modlist.name}}"
+                                    class="btn btn-outline-danger btn-sm">
+                                    Remove from ModList
+                                </button>
+                            </form>
                             {% endif %}
                         </div>
                         <div class="buttons-subset">

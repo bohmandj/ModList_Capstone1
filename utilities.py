@@ -660,7 +660,7 @@ def get_empty_modlists(user_id):
     return return_list
 
 
-def check_modlist_editable(user_id, modlist, g_user_id, ):
+def check_modlist_uneditable(user_id, modlist, g_user_id, ):
     """Determine if selected modlist is a invalid modlist for 
     the user to edit. A user can NOT edit a modlist if the 
     modlist does not belong to the signed in user, or if the 

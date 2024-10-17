@@ -11,7 +11,7 @@ from forms import UserAddForm, LoginForm, UserEditForm, UserPasswordForm, Modlis
 from models import db, connect_db, User, Modlist, Mod, Game
 
 from nexus_api import get_all_games_nxs, get_mods_of_type_nxs, get_mod_nxs
-from utilities import get_all_games_db, get_game_db, get_empty_modlists, get_tracked_modlist_db, get_recent_modlists_by_game, get_public_modlists_by_game, filter_nxs_data, filter_nxs_mod_page, update_all_games_db, update_list_mods_db, link_mods_to_game, add_mod_modlist_choices, check_modlist_editable, update_tracked_mods_from_nexus, get_tracked_not_keep_db, paginate_tracked_mods, paginate_modlist_mods
+from utilities import get_all_games_db, get_game_db, get_empty_modlists, get_tracked_modlist_db, get_recent_modlists_by_game, get_public_modlists_by_game, filter_nxs_data, filter_nxs_mod_page, update_all_games_db, update_list_mods_db, link_mods_to_game, add_mod_modlist_choices, check_modlist_uneditable, update_tracked_mods_from_nexus, get_tracked_not_keep_db, paginate_tracked_mods, paginate_modlist_mods
 
 CURR_USER_KEY = "curr_user"
 ORDER = "update"
@@ -477,7 +477,7 @@ def edit_modlist(user_id, modlist_id):
 
     modlist = db.get_or_404(Modlist, modlist_id, description=f"Sorry, we couldn't find a modlist with ID #{modlist_id}.<br>We either encountered an issue retrieving the data from our database, or the modlist does not exist.<br>Please check that the correct modlist id is being requested and try again.")
 
-    is_invalid = check_modlist_editable(user_id, modlist, g.user.id)
+    is_invalid = check_modlist_uneditable(user_id, modlist, g.user.id)
     if is_invalid:
         flash(is_invalid, "danger")
         return redirect(url_for('show_modlist_page', user_id=user_id, modlist_id=modlist_id))
@@ -527,7 +527,7 @@ def edit_modlist(user_id, modlist_id):
     return render_template('users/edit.html', form=form, form_title="Edit Modlist", modlist=modlist)
 
 
-@app.route('/users/<user_id>/modlists/<modlist_id>/delete/<mod_id>')
+@app.route('/users/<user_id>/modlists/<modlist_id>/mods/<mod_id>/delete', methods=["POST"])
 @login_required
 def modlist_delete_mod(user_id, modlist_id, mod_id):
     """Remove mod from modlist.
@@ -539,7 +539,7 @@ def modlist_delete_mod(user_id, modlist_id, mod_id):
 
     modlist = db.get_or_404(Modlist, modlist_id, description=f"Sorry, we couldn't find a modlist with ID #{modlist_id}.<br>We either encountered an issue retrieving the data from our database, or the modlist does not exist.<br>Please check that the correct modlist id is being requested and try again.")
 
-    is_invalid = check_modlist_editable(user_id, modlist, g.user.id)
+    is_invalid = check_modlist_uneditable(user_id, modlist, g.user.id)
     if is_invalid:
         flash(is_invalid, "danger")
         return redirect(url_for('show_modlist_page', user_id=user_id, modlist_id=modlist_id))
@@ -559,10 +559,22 @@ def modlist_delete_mod(user_id, modlist_id, mod_id):
             db.session.rollback()
             print("Error deleting mod from modlist in db - modlist_delete_mod(): ", e)
             flash(f"Error removing {mod.name} from {modlist.name}, please try again.", 'danger')
+            return redirect(url_for('show_modlist_page', user_id=g.user.id, modlist_id=modlist_id))
 
     flash(f'{mod.name} successfully removed from {modlist.name}!', 'success')
+    print(f"modlist.mods: {modlist.mods}")
+    print(f"len(modlist.mods): {len(modlist.mods)}")
+    if len(modlist.mods) <= 0:
+        for game in modlist.for_games:
+            try:
+                print(f"modlist.for_games: {modlist.for_games}")
+                modlist.for_games.remove(game)
+                db.session.commit()
+            except Exception as e:
+                print("Page: modlist_delete_mod, Function: modlist.for_games.remove(game)\nFailed to un-assign modlist's game assignment, error: ", e)
+                abort(500, f"Only mod was removed from modlist, but an error was encountered removing modlist's assignment to {game.name}.<br>Modlist will still only take mods for {game.name}.<br>Options to resolve future issues with this modlist are:<br>1. Add and remove a mod to reattempt game assignment removal<br>2. Delete this modlist and make a new one.")
 
-    return render_template(url_for('show_modlist_page', user_id=g.user.id, modlist_id=modlist_id))
+    return redirect(url_for('show_modlist_page', user_id=g.user.id, modlist_id=modlist_id))
 
     
 ##############################################################################
