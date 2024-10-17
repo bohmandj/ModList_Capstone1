@@ -59,7 +59,7 @@
                 <div class="tab selected-tab">
                     <h5>Keep-Tracked Mods</h5>
                 </div>
-                {% endif %}{# ends 'if tab == Tracked' #}
+                {% endif %}{# ends 'if tab == tracked-mods' #}
             </div>
 
             <div class="tracked-mods-container">
@@ -123,14 +123,25 @@
                                     class="btn btn-outline-primary btn-sm">
                                     Add Mod to ModList
                                 </a>
+                                {% if tab == 'tracked-mods' %}
                                 <form method="POST"
-                                    action="{{ url_for('add_keep_tracked_mod', user_id=g.user.id, mod_id=mod.id, next=request.url) }}">
+                                    action="{{ url_for('change_keep_tracked_status', user_id=g.user.id, mod_id=mod.id, keep_action='add', next=request.url) }}">
                                     <button
                                         title="Add '{{ mod.name }}' to the Keep-Tracked tab of your 'Nexus Tracked Mods' modlist"
                                         class="btn btn-outline-success btn-sm">
                                         Add to Keep Tracked
                                     </button>
                                 </form>
+                                {% else %} {# if tab == 'keep-tracked-mods' #}
+                                <form method="POST"
+                                    action="{{ url_for('change_keep_tracked_status', user_id=g.user.id, mod_id=mod.id, keep_action='delete', next=request.url) }}">
+                                    <button
+                                        title="Remove '{{ mod.name }}' from the Keep-Tracked tab of your 'Nexus Tracked Mods' modlist. It will go back to the Imported Tracked Mods tab unless it gets un-tracked on Nexus."
+                                        class="btn btn-outline-danger btn-sm">
+                                        Remove from Keep Tracked
+                                    </button>
+                                </form>
+                                {% endif %}{# ends 'if tab == tracked-mods' #}
                             </div>
                             <div class="buttons-subset">
                                 <a href="https://www.nexusmods.com/{{mod.for_games[0].domain_name}}/mods/{{mod.id}}"

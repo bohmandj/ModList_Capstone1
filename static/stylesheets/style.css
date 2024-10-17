@@ -1002,10 +1002,14 @@ fieldset[disabled] .btn-outline-nexus.active {
     grid-template-columns: repeat(auto-fill, minmax(max(var(--grid-item--min-width), var(--grid-item--max-width)), 1fr));
     column-gap: var(--grid-layout-gap);
     row-gap: 8px;
+    height: 100%;
 }
 
 .modlistpage .mod-buttons a {
-    height: max-content;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
 }
 
 @media (max-width: 1172px) and (min-width: 768.1px) {

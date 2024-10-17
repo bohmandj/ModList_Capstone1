@@ -340,20 +340,18 @@ def show_tracked_modlist_page(tab='tracked-mods', page=1, per_page=25, order="up
     return render_template("users/modlist-tracked.html", page_mods=page_mods, page=page, per_page=per_page, order=order, tab=tab, modlist=tracked_modlist)
 
 
-@app.route('/users/<int:user_id>/modlists/keep-tracked-mods/mods/<int:mod_id>', methods=["POST"])
+@app.route('/users/<int:user_id>/modlists/keep-tracked-mods/mods/<int:mod_id>/<string:keep_action>', methods=["POST"])
 @login_required
-def add_keep_tracked_mod(user_id, mod_id):
-    """Remove tracked mod from keep-tracked tab of user's 
+def change_keep_tracked_status(user_id, mod_id, keep_action):
+    """Add/delete tracked mod to/from keep-tracked tab of user's 
     Nexus Tracked Mods modlist.
 
     - db is searched for mod and user.
-    - if mod is in user.keep_tracked, remove from 
-      keep-tracked list.
+    - If mod is not in user.keep_tracked, add to keep-tracked list.
+    - If mod is in user_keep_tracked, remove from keep-tracked list.
     """
 
     next_page = request.args.get('next')
-    print(f"user_id: {user_id}")
-    print(f"g.user.id: {g.user.id}")
 
     if user_id != g.user.id:
         description = f"The user ID in the url, {user_id}, is not the same as the currently signed in user. You may only add mods to your own Keep Tracked list."
@@ -374,19 +372,39 @@ def add_keep_tracked_mod(user_id, mod_id):
         description = f"A mod with ID #{mod_id} could not be found.<br>We either encountered an issue retrieving the data from our database, or the mod does not exist.<br>Please check that the correct mod id is being requested and try again."
         abort(404, description)
 
-    if mod not in user.keep_tracked:
-        try:
-            user.keep_tracked.append(mod)
-            db.session.commit()
-        except Exception as e:
-            db.session.rollback()
-            print("Page: add_keep_tracked_mod route, Function: user.keep_tracked.append(mod) + commit\nFailed to add mod to keep_tracked, error: ", e)
-            description = f"Sorry, an error was encountered and and '{mod.name}' was not added to your Keep Tracked list. Please try again."
-            abort(500, description)
+    if keep_action == 'add':
+        if mod not in user.keep_tracked:
+            try:
+                user.keep_tracked.append(mod)
+                db.session.commit()
+            except Exception as e:
+                db.session.rollback()
+                print("Page: add_keep_tracked_mod route, Function: user.keep_tracked.append(mod) + commit\nFailed to add mod to keep_tracked, error: ", e)
+                description = f"Sorry, an error was encountered and and '{mod.name}' was not added to your Keep Tracked list. Please try again."
+                abort(500, description)
+            else:
+                flash(f"Success! '{mod.name}' has been added to your Keep-Tracked list.", 'success')
         else:
-            flash(f"Success! '{mod.name}' has been added to your Keep-Tracked list.", 'success')
+            flash(f"'{mod.name}' could not be added because it is already in your Keep Tracked list.", 'danger')
+        
+    elif keep_action == 'delete':
+        if mod in user.keep_tracked:
+            try:
+                user.keep_tracked.remove(mod)
+                db.session.commit()
+            except Exception as e:
+                db.session.rollback()
+                print("Page: add_keep_tracked_mod route, Function: user.keep_tracked.remove(mod) + commit\nFailed to delete mod from keep_tracked, error: ", e)
+                description = f"Sorry, an error was encountered and and '{mod.name}' was not removed from your Keep Tracked list. Please try again."
+                abort(500, description)
+            else:
+                flash(f"Success! '{mod.name}' has been removed from your Keep-Tracked list.", 'success')
+        else:
+            flash(f"'{mod.name}' could not be removed because it is not in your Keep Tracked list.", 'danger')
+
     else:
-        flash(f"'{mod.name}' could not be added because it is already in your Keep Tracked list.", 'danger')
+        description = f"The action '{keep_action}' in the requested url is not valid. Please use 'add' or 'delete' to change whether or not a mod is in the Keep-Tracked tab of your Nexus Tracked Mods modlist."
+        abort(400, description)
 
     return redirect(next_page or url_for('show_tracked_modlist_page', tab='tracked-mods'))
 
@@ -835,6 +853,15 @@ def not_found(error):
     if error.description in ["Missing", "Missing Resource", "File not found."]: 
            error.description = "An error was encountered retrieving data from the Nexus server. Please try again."
     return render_template('errors/http-error.html', error=error, error_message=message), 404
+
+
+@app.errorhandler(405)
+def method_not_allowed(error):
+    message = "The method is not allowed for the requested URL."
+
+    if message[:10] == error.description[:10]: 
+           error.description = "Please check the URL and try a different method.<br>If you were trying to submit a form, make sure you're using the correct method (e.g., POST)."
+    return render_template('errors/http-error.html', error=error, error_message=message), 405
 
 
 @app.errorhandler(422)
