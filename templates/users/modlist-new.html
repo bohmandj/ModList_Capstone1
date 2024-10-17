@@ -18,13 +18,19 @@
 
         {% if field.widget.input_type == 'checkbox' %}{# handle custom toggle switch formatting #}
         <div class="form-check form-switch">
-            <div class="form-check-container">{{ field(checked=False, class="form-check-input", type="checkbox",
-                role="switch", id="flexSwitchCheck")
-                }}</div>
-            <label class="form-check-label" for="flexSwitchCheck">
-                <span>{{ field.label.text }}</span><br>
-                <span style="font-size: 0.8rem;">{{ field.description }}</span>
-            </label>
+            <div class="form-check-container">
+                {{ field(checked=False, class="form-check-input", type="checkbox", role="switch", id="flexSwitchCheck")
+                }}
+            </div>
+            <span>
+                <label for="flexSwitchCheck">
+                    {{ field.label.text }}
+                    <br>
+                    <span style="font-size: 0.8rem;">
+                        {{ field.description }}
+                    </span>
+                </label>
+            </span>
         </div>
         {% else %}{# handle regular form fields #}
         {{ field(placeholder=field.label.text, class="form-control") }}

@@ -1560,15 +1560,83 @@ fieldset[disabled] .btn-outline-nexus.active {
     margin-right: 10px;
 }
 
-.add-page .form-check-container {
-    display: inline-block;
+/* clear unused bootstrap settings */
+.form-switch,
+.form-check {
+    padding-left: unset;
+    min-height: unset;
+    display: unset;
+    margin-bottom: unset;
+}
+
+form .form-check.form-switch {
+    /* container holding custom form toggle switch and label */
+    --toggle-top-bottom-padding: 0.8rem;
+    display: flex;
+    position: relative;
+    z-index: 0;
+    margin-bottom: 20px;
+    align-items: center;
+    height: min-content;
+    width: 100%;
+    border-radius: 10px;
+    border-top-left-radius: 15px;
+    border-bottom-left-radius: 15px;
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+    background-color: #eeeeee;
+}
+
+form .form-check .form-check-container {
+    /* div actually holding toggle switch */
+    position: absolute;
+    z-index: 1;
     height: 100%;
-    border-right: solid 10px #202020;
+    width: 75px;
+    background-color: #202020;
+    padding: var(--toggle-top-bottom-padding) 1rem;
+    align-content: center;
+    border-right: unset;
     border-top-left-radius: 10px;
     border-bottom-left-radius: 10px;
+}
+
+.add-page form .form-check .form-check-container {
+    /* div actually holding toggle switch on add mod page */
     background-color: #151515;
-    padding: 0 1rem;
-    align-content: center;
+}
+
+form .form-switch .form-check-input {
+    /* the toggle switch element */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    left: 0;
+    z-index: 2;
+    height: 1.3rem;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+.form-check span {
+    width: 100%;
+    height: 100%;
+}
+
+.form-check span label,
+.form-check span.toggle-label {
+    /* label text for toggle switch */
+    position: relative;
+    z-index: 3;
+    width: 100%;
+    padding: var(--toggle-top-bottom-padding) 0;
+    padding-left: 85px;
+    background-color: transparent;
+    color: #151515;
+    font-weight: 600;
+    cursor: pointer;
 }
 
 .add-page form {

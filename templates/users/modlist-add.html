@@ -87,9 +87,7 @@
                 <div class="form-check-container">
                     {{ option(checked=False, class="form-check-input", role="switch")}}
                 </div>
-                <label class="form-check-label" for="flexSwitchCheck">
-                    <span>{{ option.label }}</span>
-                </label>
+                <span>{{ option.label }}</span>
             </div>
             {% endfor %}{# ends 'for option in field' #}
             {% endfor %}{# ends 'for field in form...' #}
@@ -109,7 +107,7 @@
             </a>
         </form>
 
-        {% else %}{# handle form=False w/ link to Create New Mod #}
+        {% else %}{# handle no_modlists == True w/ link to Create New Mod #}
         <div class="form-container" style="width: 50%; margin: 0 auto;">
             <h4>You have no empty modlists or {{ mod.for_games[0].name }} modlists...</h4>
             <h6>Please create a new modlist so {{ mod.name }} has somewhere to go!</h6>
