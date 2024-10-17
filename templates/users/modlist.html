@@ -65,8 +65,10 @@
 
         <div class="page-settings">
             {% if user.id == g.user.id %}
-            <a href="{{ url_for('edit_modlist', user_id=g.user.id, modlist_id=modlist.id) }}">
-                <button class="btn btn-outline-secondary">Edit Modlist</button>
+            <a href="{{ url_for('edit_modlist', user_id=g.user.id, modlist_id=modlist.id) }}"
+                class="btn btn-outline-secondary page-settings-left"
+                title="Click here to edit the name, description, or privacy status of this modlist. Ability to delete a modlist is also found on the edit page.">
+                Edit Modlist
             </a>
             {% endif %}
             {{ macro_ps.listview_query_spec_dropdowns(request.path, per_page, order) }}
@@ -115,7 +117,9 @@
                             <h4>{{ mod.name }}</h4>
                         </a>
                         <p>Author:
-                            <a href="https://next.nexusmods.com/profile/{{ mod.uploaded_by }}/mods">
+                            <a href="https://next.nexusmods.com/profile/{{ mod.uploaded_by }}/mods"
+                                title="Open {{mod.uploaded_by}}'s Nexus profile page in a new tab to see all they've contributed to the modding community"
+                                target="_blank">
                                 {{ mod.uploaded_by }}
                             </a>
                         </p>
@@ -125,31 +129,26 @@
                     <div class="mod-buttons">
                         <div class="buttons-subset">
                             <a href="{{ url_for('modlist_add_mod', user_id=g.user.id, mod_id=mod.id) }}"
-                                title="Add {{mod.name}} to one of your modlist">
-                                <button class="btn btn-outline-primary btn-sm">Add Mod to ModList</button>
+                                title="Add {{mod.name}} to one of your modlist" class="btn btn-outline-primary btn-sm">
+                                Add Mod to ModList
                             </a>
                             {% if user.id == g.user.id %}
                             <a href="{{ url_for('modlist_delete_mod', user_id=g.user.id, modlist_id=modlist.id, mod_id=mod.id) }}"
-                                title="Delete {{mod.name}} from {{modlist.name}}">
-                                <button class="btn btn-outline-danger btn-sm">
-                                    Remove from ModList
-                                </button>
+                                title="Delete {{mod.name}} from {{modlist.name}}" class="btn btn-outline-danger btn-sm">
+                                Remove from ModList
                             </a>
                             {% endif %}
                         </div>
                         <div class="buttons-subset">
                             <a href="https://www.nexusmods.com/{{modlist.for_games[0].domain_name}}/mods/{{mod.id}}"
-                                title="Open {{mod.name}} in a new tab on Nexus.com to see full details and download files">
-                                <button class="btn btn-outline-nexus btn-sm">
-                                    Open on Nexus
-                                </button>
+                                title="Open '{{mod.name}}' on Nexus in a new tab to see images, read the full description, check requirements and conflicts, or download files"
+                                target="_blank" class="btn btn-outline-nexus btn-sm">
+                                Open on Nexus
                             </a>
                             <a href="https://www.nexusmods.com/{{modlist.for_games[0].domain_name}}/mods/{{mod.id}}?tab=files"
-                                target="_blank"
-                                title="Open the file download page for this mod in a new tab on Nexus.com">
-                                <button class="btn btn-outline-nexus btn-sm">
-                                    Nexus Downloads Page
-                                </button>
+                                target="_blank" title="Open the file download page on Nexus for this mod in a new tab"
+                                class="btn btn-outline-nexus btn-sm">
+                                Nexus Downloads Page
                             </a>
                         </div>
                     </div>
@@ -166,17 +165,23 @@
                         <h4 class="mb-2">No mods added to '{{modlist.name}}' modlist yet...</h4>
                         <p class="mb-2">
                             The easiest way to find new mods is to search on
-                            <a href="https://www.nexusmods.com/" style="color: #D98F40">Nexus.com</a>
-                            . While browsing mods, use the 'Tracking' feature on
+                            <a href="https://www.nexusmods.com/"
+                                title="Open Nexus in a new tab to search and browse mods, download files, and engage with the modding community!"
+                                target="_blank" class="nexus-link">
+                                Nexus.com
+                            </a>. While browsing mods, use the
+                            'Tracking' feature on
                             Nexus to easily collect mods. Your 'Nexus Tracked Mods' modlist will automatically import
                             all
                             Tracked mods from Nexus. Then add mods to your various modlists from there.
                         </p>
                     </div>
 
-                    <div class="buttons">
-                        https://www.nexusmods.com/
-                    </div>
+                    <a href="https://www.nexusmods.com/"
+                        title="Open Nexus in a new tab to search and browse mods, download files, and engage with the modding community!"
+                        target="_blank" class="btn btn-nexus" style="height: fit-content;">
+                        Open Nexus in New Tab
+                    </a>
                 </div>
                 {% endif %}{# ends 'if page_mods.items == []' #}
             </div>

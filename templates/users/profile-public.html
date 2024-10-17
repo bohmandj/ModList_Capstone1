@@ -5,7 +5,7 @@
 {% block content %}
 
 <div class="profile">
-  <h1 class="page-heading">{{ user.username }}</h1>
+  <h1 class="page-heading">{{ user.username }}'s Modlists:</h1>
   <div class="card-page">
     <div>
       <div class="shadowed_hr_outer">
@@ -32,7 +32,7 @@
     {% if not index.all_private %}
     <div class="game-modlists">
       <div class="section-heading-split">
-        <a href="{{ url_for('show_game_page', game_domain_name=index.game.domain_name) }}"
+        <a class="section-title" href="{{ url_for('show_game_page', game_domain_name=index.game.domain_name) }}"
           title="Go to {{index.game.name}} game page on Modlist">
           <h3 class="game-section-title">{{ index.game.name }}</h3>
         </a>
@@ -60,8 +60,8 @@
               </li>
               {% endfor %}{# ends 'for mod in modlist.mods[:3]' #}
             </ul>
-            <a href="{{ url_for('show_modlist_page', user_id=user.id, modlist_id=modlist.id) }}"><button
-                class="btn btn-sm btn-outline-success">See full ModList page</button></a>
+            <a href="{{ url_for('show_modlist_page', user_id=user.id, modlist_id=modlist.id) }}"
+              class="btn btn-sm btn-outline-success">See full ModList page</a>
           </div>
         </div>
         {% endif %}{# ends 'if not modlist.private' #}

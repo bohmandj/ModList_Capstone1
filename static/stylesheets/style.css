@@ -17,6 +17,13 @@
 
     --nexus-color-primary: #D98F40;
     --nexus-color-dark: #B4762C;
+
+    --bs-color-primary: #0C6EFD;
+    --bs-color-secondary: #6C757D;
+    --bs-color-success: #198754;
+    --bs-color-danger: #DC3644;
+    --bs-color-warning: #FFC109;
+    --bs-color-info: #0CCAF0;
 }
 
 /* ====================== General */
@@ -56,8 +63,7 @@ body {
 }
 
 .section-heading-split .section-title {
-    display: flex;
-    justify-content: left;
+    text-align: left;
     vertical-align: middle;
     grid-column-start: 1;
     grid-column-end: span 2;
@@ -75,7 +81,6 @@ body {
     width: 100%;
 }
 
-.section-heading-split .section-buttons button,
 .section-heading-split .section-buttons a {
     width: 100%;
 }
@@ -105,8 +110,84 @@ body {
 
 .card-page a:visited,
 .form-page a:visited {
-    color: #aaaaaa;
-    fill: #aaaaaa;
+    color: #cccccc;
+    fill: #cccccc;
+}
+
+.content-container a.btn,
+.content-container a.btn:visited,
+.content-container a.btn:hover,
+.content-container a.btn:visited:hover {
+    color: #ffffff;
+}
+
+.content-container a.btn-warning,
+.content-container a.btn-warning:visited:hover,
+.content-container a.btn-info,
+.content-container a.btn-info:visited:hover {
+    color: #000000;
+}
+
+.content-container a.btn-outline-nexus,
+.content-container a.btn-outline-nexus:visited {
+    color: var(--nexus-color-primary);
+}
+
+.content-container a.btn-outline-primary,
+.content-container a.btn-outline-primary:visited {
+    color: var(--bs-color-primary);
+}
+
+.content-container a.btn-outline-secondary,
+.content-container a.btn-outline-secondary:visited {
+    color: var(--bs-color-secondary);
+}
+
+.content-container a.btn-outline-success,
+.content-container a.btn-outline-success:visited {
+    color: var(--bs-color-success);
+}
+
+.content-container a.btn-outline-danger,
+.content-container a.btn-outline-danger:visited {
+    color: var(--bs-color-danger);
+}
+
+.content-container a.btn-outline-warning,
+.content-container a.btn-outline-warning:visited {
+    color: var(--bs-color-warning);
+}
+
+.content-container a.btn-outline-info,
+.content-container a.btn-outline-info:visited {
+    color: var(--bs-color-info);
+}
+
+.content-container a.btn-outline-primary:hover,
+.content-container a.btn-outline-secondary:hover,
+.content-container a.btn-outline-success:hover,
+.content-container a.btn-outline-danger:hover,
+.content-container a.btn-outline-warning:hover,
+.content-container a.btn-outline-info:hover {
+    color: #ffffff;
+}
+
+.content-container a.btn-warning:hover,
+.content-container a.btn-info:hover {
+    color: #000000;
+}
+
+.content-container .modlistpage a.nexus-link {
+    color: var(--nexus-color-primary);
+    text-decoration: underline;
+}
+
+.content-container .modlistpage a.nexus-link:hover {
+    color: var(--nexus-color-dark);
+}
+
+.content-container .modlistpage a.nexus-link:visited {
+    color: var(--nexus-color-primary);
 }
 
 h1 {
@@ -272,15 +353,18 @@ nav form.navbar-form {
 }
 
 .dropdown svg {
-    height: 1.3rem;
-    width: 1.3rem;
+    width: 1.2em;
+    min-width: 20px;
+    aspect-ratio: 1/1;
     fill: #66757F;
     position: relative;
-    bottom: 2px;
 }
 
 /* Style The Dropdown Button */
 .dropbtn {
+    display: flex;
+    justify-content: center;
+    align-items: center;
     height: 100%;
     font-weight: bold;
     background-color: #151515;
@@ -538,36 +622,31 @@ form .form-switch .form-check-input {
 }
 
 .profile .profile-subhead a {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
     text-decoration: none;
 }
 
-.profile .profile-subhead button {
-    width: 100%;
-    height: 100%;
+.profile-btn.btn-outline-primary svg {
+    fill: var(--bs-color-primary);
 }
 
-.profile-btn-primary svg {
-    height: 1.2rem;
-    width: 1.2rem;
-    fill: #0C6EFD;
-    position: relative;
-    bottom: 2px;
+.profile-btn.btn-outline-secondary svg {
+    fill: var(--bs-color-secondary);
 }
 
-.profile-btn-secondary svg {
+.profile-btn svg {
     height: 1.2rem;
     width: 1.2rem;
-    fill: #6C757D;
     position: relative;
-    bottom: 2px;
+    bottom: 1px;
 }
 
 .profile-btn:hover svg {
-    height: 1.2rem;
-    width: 1.2rem;
     fill: #ffffff;
-    position: relative;
-    bottom: 2px;
 }
 
 /* ===================== Nexus Related */
@@ -583,17 +662,15 @@ form .form-switch .form-check-input {
     left: 8px;
     top: 10px;
     font-size: 0.8rem;
+    cursor: pointer;
 }
 
-.nexus-btn {
+img.nexus-btn {
     position: absolute;
     padding: 0px;
     right: 5px;
     border: none;
     background: transparent;
-}
-
-.nexus-btn img {
     width: 30px;
     aspect-ratio: 1/1;
     background-repeat: no-repeat;
@@ -602,7 +679,7 @@ form .form-switch .form-check-input {
     overflow: hidden;
 }
 
-.nexus-btn>img:hover {
+img.nexus-btn:hover {
     -webkit-filter: drop-shadow(0px 0px 8px #D98F40);
     filter: drop-shadow(0px 0px 8px #D98F40);
 }
@@ -773,7 +850,7 @@ fieldset[disabled] .btn-outline-nexus.active {
 }
 
 .game-abc a:visited {
-    color: #aaaaaa;
+    color: #cccccc;
 }
 
 .game-abc ul {
@@ -862,16 +939,6 @@ fieldset[disabled] .btn-outline-nexus.active {
 .modlistpage .modlist-detail-title .modlist-credits {
     display: block;
     text-align: right;
-}
-
-.modlistpage .page-settings {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-areas:
-        "sync-btn listview-detail-dropdowns";
-    column-gap: 15px;
-    align-items: center;
-
 }
 
 .modlistpage .card-page .modlist-card {
@@ -1053,14 +1120,14 @@ fieldset[disabled] .btn-outline-nexus.active {
     background-color: #151515;
 }
 
-.modlist-mod .buttons,
+/* .modlist-mod .buttons,
 .tracked-mod .buttons {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(153px, 1fr));
     column-gap: 10px;
     row-gap: 5px;
     width: auto;
-}
+} */
 
 .modlistpage .modlist-mod .mod-info-and-buttons .mod-buttons,
 .modlistpage .tracked-mod .mod-info-and-buttons .mod-buttons {
@@ -1068,15 +1135,11 @@ fieldset[disabled] .btn-outline-nexus.active {
 }
 
 .tracked-mod button,
-.modlist-mod a,
-.tracked-mod button,
 .tracked-mod a {
     width: 100%;
     height: 100%;
 }
 
-.tracked-mod .mod-image,
-.modlist-mod img,
 .tracked-mod .mod-image,
 .tracked-mod img {
     width: 100%;
@@ -1128,7 +1191,6 @@ fieldset[disabled] .btn-outline-nexus.active {
 
 @media (max-width: 768px) {
 
-    .modlist-mod,
     .tracked-mod {
         display: grid;
         grid-template-columns: 1fr;
@@ -1137,7 +1199,6 @@ fieldset[disabled] .btn-outline-nexus.active {
         overflow: hidden;
     }
 
-    .modlist-mod .buttons,
     .tracked-mod .buttons {
         display: grid;
         grid-template-columns: 1fr;
@@ -1145,7 +1206,6 @@ fieldset[disabled] .btn-outline-nexus.active {
         width: auto;
     }
 
-    .modlistpage .modlist-mod .mod-info-and-buttons .mod-buttons,
     .modlistpage .tracked-mod .mod-info-and-buttons .mod-buttons {
         --grid-item--min-width: 270px;
     }
@@ -1200,13 +1260,14 @@ fieldset[disabled] .btn-outline-nexus.active {
 }
 
 .pagination .page-num svg {
-    height: 1.1em;
-    width: 1.1em;
+    width: 1.2em;
+    min-width: 20px;
+    aspect-ratio: 1/1;
     fill: #ffffff;
 }
 
 .pagination .pagination-section.page-num.current {
-    background-image: linear-gradient(to bottom, #333333 0%, #202020 40%, #333333);
+    background-image: linear-gradient(to bottom, #333333 0%, #151515 40%, #333333);
     color: #5170AF;
 }
 
@@ -1223,61 +1284,67 @@ fieldset[disabled] .btn-outline-nexus.active {
 
 /* ===================== Modlist Query Spec Dropdown */
 
-.modlistpage .page-settings>a {
-    text-align: left;
-    width: fit-content;
+.modlistpage .page-settings {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: center;
+}
+
+.modlistpage .page-settings .page-settings-left {
+    text-align: center;
+    justify-self: start;
+    flex: 1 1 45%;
+    padding-left: 15px;
+    padding-right: 15px;
 }
 
 .modlistpage .page-settings .listview-detail-dropdowns {
+    display: flex;
+    gap: 15px;
     justify-self: end;
-    height: 100%;
-    grid-area: listview-detail-dropdowns;
-}
-
-.modlistpage .page-settings .sync-btn {
-    grid-area: sync-btn;
+    height: fit-content;
+    min-width: 420px;
+    flex: 1 1 45%;
 }
 
 .page-settings .listview-detail-dropdowns .order-dropdown,
 .page-settings .listview-detail-dropdowns .per-page-dropdown {
     display: inline-block;
+    position: relative;
     width: fit-content;
-    height: 100%;
+    height: fit-content;
+    width: 100%;
 }
 
-.listview-detail-dropdowns button {
+.listview-detail-dropdowns button.dropbtn {
     display: inline-block;
-    width: fit-content;
-    height: 100%;
-    padding-left: 10px;
-    padding-right: 10px;
+    width: 100%;
+    min-width: 150px;
+    /* max-width: 225px; */
+    height: fit-content;
+    min-height: 38px;
+    padding-left: 15px;
+    padding-right: 15px;
     color: #ffffff;
     background-image: linear-gradient(to bottom, #202020 0%, #333333 30%, #202020);
-    border-color: #ffffff;
+    background-color: #151515;
+    border: solid 1px;
+    border-color: transparent;
+    color: #ffffff;
     font-weight: normal;
+    border-radius: 8px;
+    cursor: pointer;
 }
 
 .listview-detail-dropdowns svg {
-    height: 1.3rem;
-    width: 1.3rem;
+    width: 1.2em;
+    min-width: 20px;
+    aspect-ratio: 1/1;
     fill: #ffffff;
     position: relative;
-    bottom: 1px;
-}
-
-.listview-detail-dropdowns .dropbtn {
-    height: 100%;
-    min-height: 38px;
-    height: 100%;
-    min-width: 150px;
-    font-weight: normal;
-    background-color: #151515;
-    color: #ffffff;
-    padding: 0 25px;
-    border: solid 1px;
-    border-color: transparent;
-    border-radius: 8px;
-    cursor: pointer;
+    bottom: 2px;
 }
 
 /* Dropdown Content (Hidden by Default) */
@@ -1292,7 +1359,7 @@ fieldset[disabled] .btn-outline-nexus.active {
     border-bottom-left-radius: 8px;
     border-bottom-right-radius: 8px;
     top: auto;
-    right: auto;
+    right: 8px;
 }
 
 /* navbar shadow on dropdown list */
@@ -1326,9 +1393,9 @@ fieldset[disabled] .btn-outline-nexus.active {
 /* Change the background color of the dropdown button when the dropdown content is shown */
 .order-dropdown:focus-within .dropbtn,
 .per-page-dropdown:focus-within .dropbtn {
-    background-image: linear-gradient(to bottom, #333333 0%, #202020 40%, #333333);
+    background-image: linear-gradient(to bottom, #333333 0%, #151515 40%, #333333);
     color: #5170AF;
-    border-bottom-left-radius: 0px;
+    /* border-bottom-right-radius: 0px; */
 }
 
 .order-dropdown:focus-within svg,
@@ -1564,10 +1631,7 @@ fieldset[disabled] .btn-outline-nexus.active {
     grid-template-columns: 1fr;
     row-gap: 10px;
     width: 100%;
-}
-
-.modpage .modpage-buttons button {
-    width: 100%;
+    height: fit-content;
 }
 
 .btns1 {
@@ -1627,7 +1691,8 @@ fieldset[disabled] .btn-outline-nexus.active {
 
 .modpage .mod-detail svg {
     width: 1em;
-    height: 1em;
+    min-width: 20px;
+    aspect-ratio: 1/1;
     position: relative;
     bottom: 1px;
     margin-right: 5px;
@@ -1794,16 +1859,17 @@ fieldset[disabled] .btn-outline-nexus.active {
     margin: 15px auto;
 }
 
-.error-page button.error-btn {
+.error-page .error-btn {
     margin: 10px auto;
     width: 200px;
     color: #ffffff;
 }
 
-.error-page button.error-btn svg {
+.error-page .error-btn svg {
+    width: 1.2em;
+    min-width: 20px;
+    aspect-ratio: 1/1;
     fill: #ffffff;
-    height: 1.1em;
-    width: 1.1em;
 }
 
 .message-404 {

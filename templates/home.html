@@ -32,11 +32,10 @@
         style="background-image: url(https://staticdelivery.nexusmods.com/Images/games/4_3/tile_{{game.id}}.jpg);"
         alt="{{ game.name }} cover image">
       </div>
-      <a class="nexus-btn-container" href="https://www.nexusmods.com/{{ game.domain_name }}" target="_blank">
-        <button class="nexus-btn" title="Open {{ game.name }} on Nexus to search all mods.">
-          <img
-            src="https://raw.githubusercontent.com/github/explore/781dbc058383a2ee8259ebbab057292f16172d5e/topics/nexus-mods/nexus-mods.png">
-        </button>
+      <a class="nexus-btn-container" href="https://www.nexusmods.com/{{ game.domain_name }}" target="_blank"
+        title="Open {{ game.name }} on Nexus to search all mods.">
+        <img class="nexus-btn"
+          src="https://raw.githubusercontent.com/github/explore/781dbc058383a2ee8259ebbab057292f16172d5e/topics/nexus-mods/nexus-mods.png">
       </a>
       <a class="game-title" href="{{ url_for('show_game_page', game_domain_name=game.domain_name) }}">
         <span>{{ game.name }}</span>

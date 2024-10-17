@@ -77,28 +77,29 @@
         <h4 class="middle-text">What would you like to do with {{mod.name}}?</h4>
 
         <div class="modpage-buttons btns1">
-            <a id="to-nxs-mod" href="{{ url_for('modlist_add_mod', user_id=g.user.id, mod_id=mod.id) }}">
-                <button class="btn btn-primary"
-                    title="Pick from your modlists assigned to {{game.name}} or your empty modlists to add {{mod.name}} to">Add
-                    {{ mod.name }} to a modlist!</button>
+            <a href="{{ url_for('modlist_add_mod', user_id=g.user.id, mod_id=mod.id) }}" class="btn btn-primary"
+                title="Add {{mod.name}} to any of your modlists assigned to {{game.name}} or your empty modlists">Add
+                {{ mod.name }} to a modlist!
             </a>
 
         </div>
 
         <div class="modpage-buttons btns2">
             <a id="to-nxs-mod" href="https://www.nexusmods.com/{{ game.domain_name }}/mods/{{ mod.id }}"
-                target="_blank">
-                <button class="btn btn-outline-nexus">Open {{ mod.name }} page on Nexus</button>
+                title="Open {{mod.name}}'s page on Nexus in a new tab to see images, read the full description, check requirements and conflicts, or download files"
+                target="_blank" class="btn btn-outline-nexus">Open {{ mod.name }} page on Nexus
             </a>
 
             {% if mod.user_endorsed == "Endorsed" %}
-            <button class="un-endorse btn btn-outline-danger"
-                title="{{mod.name}} is currently Endorsed by you on Nexus. Click here if you would like your Nexus user profile to stop Endorsing this mod.">Un-Endorse
-                {{ mod.name }} on Nexus</button>
+            <a href="" class="un-endorse btn btn-outline-danger"
+                title="{{mod.name}} is currently Endorsed by you on Nexus. Click here if you would like your Nexus user profile to stop Endorsing this mod.">
+                Un-Endorse {{ mod.name }} on Nexus
+            </a>
             {% else %}
-            <button class="do-endorse btn btn-outline-success"
-                title="{{mod.name}} is currently not currently Endorsed by you on Nexus. Click here if you would like your Nexus user profile to Endorse this mod.">Endorse
-                {{ mod.name }} on Nexus</button>
+            <a href="" class="do-endorse btn btn-outline-success"
+                title="{{mod.name}} is currently not currently Endorsed by you on Nexus. Click here if you would like your Nexus user profile to Endorse this mod.">
+                Endorse {{ mod.name }} on Nexus
+            </a>
             {% endif %}
         </div>
     </div>
