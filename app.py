@@ -5,6 +5,7 @@ from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 from functools import wraps
 from werkzeug.datastructures import ImmutableDict
+from flask_wtf.csrf import CSRFProtect
 import requests
 
 from forms import UserAddForm, LoginForm, UserEditForm, UserPasswordForm, ModlistAddForm, ModlistEditForm, ModlistAddModForm
@@ -26,6 +27,8 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ECHO'] = False
 app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = True
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', "it's a secret")
+app.config['WTF_CSRF_ENABLED'] = True
+csrf = CSRFProtect(app)
 toolbar = DebugToolbarExtension(app)
 
 connect_db(app)
@@ -244,7 +247,7 @@ def edit_profile():
         user = User.authenticate(g.user.username, form.current_password.data)
         if user == False:
             flash("Password did not match our records for the currently signed-in user account. Please try again.", 'danger')
-            return redirect('edit_profile')
+            return redirect(url_for('edit_profile'))
 
         try:
             g.user.username = form.username.data
@@ -258,11 +261,11 @@ def edit_profile():
                 flash("Username already taken, please try again with a different username.", 'danger')
             if e.__cause__.diag.constraint_name == "users_email_key":
                 flash("Email already used - each email can only be used on one account", 'danger')
-            redirect('edit_profile')
+            redirect(url_for('edit_profile'))
 
         flash(f"Success! Edits to {form.username.data} saved.", 'success')
 
-        return redirect(f'/users/{g.user.id}')
+        return redirect(url_for('show_user_page', user_id=g.user.id))
 
     # pre-fill forms w/ user data
     form.username.data = g.user.username
@@ -421,7 +424,7 @@ def show_modlist_page(user_id, modlist_id, page=1, per_page=25, order="update"):
     Mod display order takes 'order' arguments from the query string - 'author' or 'name' valid, otherwise mods display most recently updated first.
     Pagination takes 'page' and 'per_page' arguments from the query string.
     """
-    
+    print("SHOW_MODLIST_PAGE STARTED")
     modlist = db.get_or_404(Modlist, modlist_id, description=f"Sorry, we couldn't find modlist #{modlist_id}.<br>We either encountered an issue retrieving the data from our database, or the modlist does not exist.<br>Please try again or use a different modlist.")
 
     user = db.get_or_404(User, user_id, description=f"Sorry, we couldn't find user #{user_id}.<br>We either encountered an issue retrieving the data from our database, or the user does not exist.<br>Please try again or use a different user.")
@@ -437,6 +440,7 @@ def show_modlist_page(user_id, modlist_id, page=1, per_page=25, order="update"):
     else:
         hide_nsfw = g.user.hide_nsfw
     
+    print("SHOW_MODLIST_PAGE About to return users/modlist.html")
     return render_template('users/modlist.html', page_mods=page_mods, page=page, per_page=per_page, order=order, user=user, modlist=modlist, hide_nsfw=hide_nsfw)
 
 
@@ -546,12 +550,12 @@ def edit_modlist(user_id, modlist_id):
     
 @app.route('/users/<user_id>/modlists/<modlist_id>/delete', methods=["POST"])
 @login_required
-def delete_modlist(user_id, modlist_id, mod_id):
-    """Remove mod from modlist.
+def delete_modlist(user_id, modlist_id):
+    """Delete user's modlist.
 
-    - db is searched for mod and modlist.
-    - if mod is found in list of mods contained in modlist, 
-      delete mod from modlist.
+    - db is searched for user and modlist.
+    - if modlist is found in list of user's modlists, 
+      delete modlist.
     """
 
     modlist = db.get_or_404(Modlist, modlist_id, description=f"Sorry, we couldn't find a modlist with ID #{modlist_id}.<br>We either encountered an issue retrieving the data from our database, or the modlist does not exist.<br>Please check that the correct modlist id is being requested and try again.")
@@ -562,39 +566,31 @@ def delete_modlist(user_id, modlist_id, mod_id):
         return redirect(url_for('show_modlist_page', user_id=user_id, modlist_id=modlist_id))
 
     else:
-        mod = db.get_or_404(Mod, mod_id, description=f"Sorry, we couldn't find a mod with ID #{mod_id}.<br>We either encountered an issue retrieving the data from our database, or the mod does not exist.<br>Please check that the correct mod id is being requested and try again.")
+        user = db.session.execute(
+            db.select(User)
+            .options(db.selectinload(User.modlists))
+            .where(User.id == g.user.id)
+        ).scalars().first()
         try:
-            if mod in modlist.mods:
-                modlist.mods.remove(mod)
-            else:
-                flash(f"Can't delete mod from modlist. {mod.name} not found in {modlist.name}.", 'danger')
-                return redirect(url_for('show_modlist_page', user_id=g.user.id, modlist_id=modlist_id))
-
+            # Remove all mods related to this modlist from modlist_mod table
+            if modlist.mods:
+                for mod in modlist.mods:
+                    modlist.mods.remove(mod)
+            # Delete the modlist itself
+            db.session.delete(modlist)
             db.session.commit()
 
         except Exception as e:
             db.session.rollback()
-            print("Error deleting mod from modlist in db - modlist_delete_mod(): ", e)
-            flash(f"Error removing {mod.name} from {modlist.name}, please try again.", 'danger')
+            print("Error deleting modlist from db - delete_modlist(): ", e)
+            flash(f"An error occurred and modlist '{modlist.name}' was not deleted.\nPlease try again.", 'danger')
             return redirect(url_for('show_modlist_page', user_id=g.user.id, modlist_id=modlist_id))
 
-    flash(f'{mod.name} successfully removed from {modlist.name}!', 'success')
-    print(f"modlist.mods: {modlist.mods}")
-    print(f"len(modlist.mods): {len(modlist.mods)}")
-    if len(modlist.mods) <= 0:
-        for game in modlist.for_games:
-            try:
-                print(f"modlist.for_games: {modlist.for_games}")
-                modlist.for_games.remove(game)
-                db.session.commit()
-            except Exception as e:
-                print("Page: modlist_delete_mod, Function: modlist.for_games.remove(game)\nFailed to un-assign modlist's game assignment, error: ", e)
-                abort(500, f"Only mod was removed from modlist, but an error was encountered removing modlist's assignment to {game.name}.<br>Modlist will still only take mods for {game.name}.<br>Options to resolve future issues with this modlist are:<br>1. Add and remove a mod to reattempt game assignment removal<br>2. Delete this modlist and make a new one.")
-
-    return redirect(url_for('show_modlist_page', user_id=g.user.id, modlist_id=modlist_id))
+    flash(f"Success! Modlist '{modlist.name}' has been deleted!", 'success')
+    return redirect(url_for("show_user_page", user_id=g.user.id))
 
 
-@app.route('/users/<user_id>/modlists/add/<mod_id>', methods=["GET", "POST"])
+@app.route('/users/<user_id>/modlists/add/mods/<mod_id>', methods=["GET", "POST"])
 @login_required
 def modlist_add_mod(user_id, mod_id):
     """Add mod to modlist.

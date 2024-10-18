@@ -6,9 +6,9 @@
 {% block content %}
 
 <div class="form-page">
-  {% if user %}
+  {% if user %}{# #}
   <h2 class="form-header">Edit {{ user.username }}'s Profile:</h2>
-  {% else %}{# no user #}
+  {% else %}{# right hand buttons for edit modlist page #}
   <h2 class="form-header">Edit Modlist '{{ modlist.name }}':</h2>
   {% endif %}{# end if user #}
 
@@ -54,18 +54,39 @@
     {% endif %}
     {{ form.current_password(placeholder=form.current_password.description, class="form-control") }}
     {% endif %}
-
-    <div class="split-container">
-      <div>
-        <button type="submit" class="btn btn-success">Save Changes</button>
-        <a href="{{ url_for('show_user_page', user_id=g.user.id) }}" class="btn btn-outline-secondary">Cancel</a>
-      </div>
-      {% if form.current_password %}
-      <a href="{{ url_for('edit_password') }}" class="btn btn-danger" style="position: relative; right: 0px;">Edit
-        Password</a>
-      {% endif %}
-    </div>
   </form>
+
+  <div class="split-container">
+    <div>
+      <button type="submit" form="user_form" class="btn btn-success">
+        Save Changes
+      </button>
+      <a href="#" class="btn btn-outline-secondary"
+        onclick="if (document.referrer) { window.history.back(); } else { window.location.href = `{{ url_for('show_user_page', user_id=g.user.id) }}`; } return false;">
+        Cancel
+      </a>
+    </div>
+    <div>
+      {% if user %}{# right hand buttons for edit user #}
+      {% if form.current_password %}{# main edit-profile page (not edit-password page) #}
+      <a href="{{ url_for('edit_password') }}" class="btn btn-outline-primary">
+        Edit Password
+      </a>
+      <!-- <a href="" class="btn btn-outline-danger">
+          Delete User Account
+        </a> -->
+      {% endif %}{# ends 'if form.current_password' #}
+      {% else %}{# right hand buttons for edit modlist page #}
+      <form method="POST" action="{{ url_for('delete_modlist', user_id=g.user.id, modlist_id=modlist.id) }}"
+        onsubmit="return confirm(`Are you sure you want to delete your modlist:\n    '{{ modlist.name }}'?`);">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button title="Click here to delete {{modlist.name}} from your modlists." class="btn btn-outline-danger">
+          Delete Modlist
+        </button>
+      </form>
+      {% endif %}{# end if user #}
+    </div>
+  </div>
 </div>
 
 {% endblock %}

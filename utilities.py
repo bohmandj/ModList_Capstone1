@@ -671,10 +671,10 @@ def check_modlist_uneditable(user_id, modlist, g_user_id, ):
     flash if it can not be edited by the signed-in user user."""
 
     if modlist.user_id != int(g_user_id) or int(user_id) != int(g_user_id):
-        return "A modlist can only be edited by the owner of the modlist."
+        return "A modlist can only be edited or deleted by the owner of the modlist."
 
     elif modlist.name == 'Nexus Tracked Mods':
-        return "The 'Nexus Tracked Mods' modlist is not editable."
+        return "The 'Nexus Tracked Mods' modlist is not editable or deleted."
 
     else:
         return False
