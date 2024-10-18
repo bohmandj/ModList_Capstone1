@@ -284,13 +284,13 @@ def add_missing_tracked_mods_db(user_id, nexus_tracked_data):
         
         db_ready_mods = filter_nxs_data(nexus_data_to_add, 'mods')
 
-        update_all_games_db_resp = update_list_mods_db(db_ready_mods, game)
+        update_all_games_db_resp = update_list_mods_db(db_ready_mods)
         link_mods_to_game(db_ready_mods, game)
 
     if len(get_mod_error_ids) != 0:
-        flash(f"An error was encountered retrieving data from Nexus Tracking Centre for tracked mods with these IDs: {str(get_mod_error_ids)[1:-1]}.\nVisit your Nexus Tracked Mods modlist and use the 'Re-Sync Tracked Mods to Nexus' button to reattempt data retrieval.", "warning")
+        flash(f"An error was encountered retrieving data from Nexus Tracking Centre for tracked mods with these IDs: {str(get_mod_error_ids)[1:-1]}.  \nVisit your Nexus Tracked Mods modlist and use the 'Re-Sync Tracked Mods to Nexus' button to reattempt data retrieval.", "warning")
     if len(unpublished_ids) != 0:
-        flash(f"Tracked mods with these IDs: {str(unpublished_ids)[1:-1]} have a status that is not set to 'published'.\nWe did not import data from Nexus for any unpublished mods.", "warning")
+        flash(f"Tracked mods with these IDs: {str(unpublished_ids)[1:-1]} have a status that is not set to 'published'.  \nWe did not import data from Nexus for any unpublished mods.", "warning")
 
     return unpublished_ids
 
@@ -325,23 +325,27 @@ def sync_tracked_modlist_mods_db(user_id, nexus_tracked_data, unpublished_ids):
 
     tracked_modlist = get_tracked_modlist_db(user_id, load_mods=True)
 
-    nxs_tracked_mod_ids = []
+    unpublished_ids_set = set(unpublished_ids)
+    
     # remove unpublished mods from list of tracked mod ids
+    nxs_tracked_mod_ids_set = {
+        data['mod_id'] for data in nexus_tracked_data 
+        if data['mod_id'] not in unpublished_ids_set
+    }
+
+    # Remove mods that are no longer tracked by comparing with the Nexus mod IDs
+    tracked_modlist.mods = [
+        mod for mod in tracked_modlist.mods 
+        if mod.id in nxs_tracked_mod_ids_set
+    ]
+
+    # Add new mods that are tracked on Nexus but not in tracked_modlist.mods
+    tracked_mod_ids = set([mod.id for mod in tracked_modlist.mods])
     for data in nexus_tracked_data:
-        if data['mod_id'] not in unpublished_ids:
-            nxs_tracked_mod_ids.append(data['mod_id'])
-
-    # add tracked mods from Nexus to tracked_modlist if missing
-    for id in nxs_tracked_mod_ids:
-        if id not in [mod.id for mod in tracked_modlist.mods]:
-            mod_to_add = db.get(Mod, id)
-            if mod_to_add != None:
+        if data['mod_id'] not in tracked_mod_ids:
+            mod_to_add = db.session.get(Mod, data['mod_id'])
+            if mod_to_add:
                 tracked_modlist.mods.append(mod_to_add)
-
-    # remove mods from tracked_modlist if not tracked on Nexus
-    for mod in tracked_modlist.mods:
-        if mod.id not in nxs_tracked_mod_ids:
-            tracked_modlist.mods.remove(mod)
 
     db.session.commit()
 
@@ -356,13 +360,13 @@ def update_tracked_mods_from_nexus(user_id):
         unpublished_ids = add_missing_tracked_mods_db(user_id, nexus_tracked_data)
     except Exception as e:
         print("Page: login() or Tracked Mods page\nFunction:\n____get_tracked_mods_nxs(), or\n____add_missing_tracked_mods_db()\n____in update_tracked_mods_from_nexus()\nFailed to retrieve Nexus API data, error: ", e)
-        flash("A problem occurred while retrieving your tracked mods from the Tracking Centre on Nexus.\nClick 'Re-Sync with Nexus Tracking Centre' button on your Nexus Tracked Mods modlist to reattempt sync.", "danger")
+        flash("A problem occurred while retrieving your tracked mods from the Tracking Centre on Nexus.  \nClick 'Re-Sync with Nexus Tracking Centre' button on your Nexus Tracked Mods modlist to reattempt sync.", "danger")
     else:
         try:
             sync_tracked_modlist_mods_db(user_id, nexus_tracked_data, unpublished_ids)
         except Exception as e:
             print('sync_tracked_modlist_mods_db() Error:\n  ', e)
-            flash(f"An error was encountered syncing mods in your Nexus Tracked Mods modlist to the official Nexus Tracking Centre records.\nIf mods displayed in your Nexus Tracked Mods modlist are inaccurate, click 'Re-Sync with Nexus Tracking Centre' button to reattempt sync.", "warning")
+            flash(f"An error was encountered syncing mods in your Nexus Tracked Mods modlist to the official Nexus Tracking Centre records.  \nIf mods displayed in your Nexus Tracked Mods modlist are inaccurate, click 'Re-Sync with Nexus Tracking Centre' button to reattempt sync.", "warning")
 
 
 def filter_nxs_data(data_list, list_type):
