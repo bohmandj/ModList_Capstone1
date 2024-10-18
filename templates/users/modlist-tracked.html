@@ -126,6 +126,7 @@
                                 {% if tab == 'tracked-mods' %}
                                 <form method="POST"
                                     action="{{ url_for('change_keep_tracked_status', user_id=g.user.id, mod_id=mod.id, keep_action='add', next=request.url) }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button
                                         title="Add '{{ mod.name }}' to the Keep-Tracked tab of your 'Nexus Tracked Mods' modlist"
                                         class="btn btn-outline-success btn-sm">
@@ -135,6 +136,7 @@
                                 {% else %} {# if tab == 'keep-tracked-mods' #}
                                 <form method="POST"
                                     action="{{ url_for('change_keep_tracked_status', user_id=g.user.id, mod_id=mod.id, keep_action='delete', next=request.url) }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button
                                         title="Remove '{{ mod.name }}' from the Keep-Tracked tab of your 'Nexus Tracked Mods' modlist. It will go back to the Imported Tracked Mods tab unless it gets un-tracked on Nexus."
                                         class="btn btn-outline-danger btn-sm">
