@@ -78,8 +78,8 @@
 
         <div class="modpage-buttons btns1">
             <a href="{{ url_for('modlist_add_mod', user_id=g.user.id, mod_id=mod.id) }}" class="btn btn-primary"
-                title="Add {{mod.name}} to any of your modlists assigned to {{game.name}} or your empty modlists">Add
-                {{ mod.name }} to a modlist!
+                title="Add {{mod.name}} to any of your modlists assigned to {{game.name}} or your empty modlists">
+                Add this mod to a modlist!
             </a>
 
         </div>
@@ -87,20 +87,37 @@
         <div class="modpage-buttons btns2">
             <a id="to-nxs-mod" href="https://www.nexusmods.com/{{ game.domain_name }}/mods/{{ mod.id }}"
                 title="Open {{mod.name}}'s page on Nexus in a new tab to see images, read the full description, check requirements and conflicts, or download files"
-                target="_blank" class="btn btn-outline-nexus">Open {{ mod.name }} page on Nexus
+                target="_blank" class="btn btn-outline-nexus">Open this mod's page on Nexus
             </a>
 
-            {% if mod.user_endorsed == "Endorsed" %}
-            <a href="" class="un-endorse btn btn-outline-danger"
+            {% if mod.user_endorsed == "Not-Updated" %}
+            {# Nexus records still don't reflect last update - don't add either button #}
+            {% elif mod.user_endorsed == "Endorsed" %}
+            <a href="{{ url_for('endorse_mod', game_domain_name=game.domain_name, mod_id=mod.id, endorse_action='abstain') }}"
+                class="un-endorse btn btn-outline-danger"
+                onclick="return confirm(`Are you sure you want to remove endorsement from '{{mod.name}}'?\nThis endorsement will be removed from the mod in Nexus' records by your Nexus user account, not your account here on ModList.`);"
                 title="{{mod.name}} is currently Endorsed by you on Nexus. Click here if you would like your Nexus user profile to stop Endorsing this mod.">
-                Un-Endorse {{ mod.name }} on Nexus
+                Un-Endorse this mod on Nexus
             </a>
             {% else %}
-            <a href="" class="do-endorse btn btn-outline-success"
-                title="{{mod.name}} is currently not currently Endorsed by you on Nexus. Click here if you would like your Nexus user profile to Endorse this mod.">
-                Endorse {{ mod.name }} on Nexus
+            <a href="{{ url_for('endorse_mod', game_domain_name=game.domain_name, mod_id=mod.id, endorse_action='endorse') }}"
+                class="do-endorse btn btn-outline-success"
+                onclick="return confirm(`Are you sure you want to endorse '{{mod.name}}'?\nThis endorsement will be applied to the mod in Nexus' records by your Nexus user account, not your account here on ModList.`);"
+                title="{{mod.name}} is not currently Endorsed by you on Nexus. Click here if you would like your Nexus user account to Endorse this mod.">
+                Endorse this mod on Nexus
             </a>
             {% endif %}
+            <div class="info-callout"
+                title="Updating records on Nexus from other sites can take a little time. If you received a 'Success' message after endorsing/un-endorsing a mod, the change request has been sent. If you clicked accidentally, you can either open this mod on Nexus to undo your change, or wait 5-10 minutes until the appropriate 'endorse' or 'un-endorse' button appears after page refresh. If no button loads after 10 minutes, you may need to log out and back in to reset.">
+                <svg xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 512 512"><!--!Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.-->
+                    <path
+                        d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336l24 0 0-64-24 0c-13.3 0-24-10.7-24-24s10.7-24 24-24l48 0c13.3 0 24 10.7 24 24l0 88 8 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-80 0c-13.3 0-24-10.7-24-24s10.7-24 24-24zm40-208a32 32 0 1 1 0 64 32 32 0 1 1 0-64z" />
+                </svg>
+                <span>
+                    Endorsement changes may not be immediately reflected
+                </span>
+            </div>
         </div>
     </div>
 

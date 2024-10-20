@@ -11,7 +11,7 @@ import requests
 from forms import UserAddForm, LoginForm, UserEditForm, UserPasswordForm, ModlistAddForm, ModlistEditForm, ModlistAddModForm
 from models import db, connect_db, User, Modlist, Mod, Game
 
-from nexus_api import get_all_games_nxs, get_mods_of_type_nxs, get_mod_nxs
+from nexus_api import get_all_games_nxs, get_mods_of_type_nxs, get_mod_nxs, endorse_mod_nxs
 from utilities import get_all_games_db, get_game_db, get_empty_modlists, get_tracked_modlist_db, get_recent_modlists_by_game, get_public_modlists_by_game, filter_nxs_data, filter_nxs_mod_page, update_all_games_db, update_list_mods_db, link_mods_to_game, add_mod_modlist_choices, check_modlist_uneditable, update_tracked_mods_from_nexus, get_tracked_not_keep_db, paginate_tracked_mods, paginate_modlist_mods
 
 CURR_USER_KEY = "curr_user"
@@ -747,7 +747,7 @@ def show_game_page(game_domain_name):
     return render_template('games/game.html', game=game, mod_categories=mod_categories)
 
 
-@app.route('/games/<game_domain_name>/mods/<mod_id>')
+@app.route('/games/<string:game_domain_name>/mods/<int:mod_id>')
 @login_required
 def show_mod_page(game_domain_name, mod_id):
     """Show mod page of info about a mod hosted on Nexus.
@@ -761,35 +761,62 @@ def show_mod_page(game_domain_name, mod_id):
     - Button to add mod to one of your modlists.
     - Link to official mod page on Nexus.
     """
-   
+    
     nexus_mod = get_mod_nxs(game_domain_name, mod_id)
 
     try:
         # update mod in db from relevant data in API response object
         game = get_game_db(game_domain_name)
+        if not game:
+            raise AttributeError(f"No Game object returned from get_game_db(). Game could not be found using '{game_domain_name}'")
         db_ready_mods = filter_nxs_data([nexus_mod], 'mods')
         update_list_mods_db(db_ready_mods)
         link_mods_to_game(db_ready_mods, game)
         db.session.commit()
     except Exception as e:
-        # above try block not necessary, continue to display page
+        # above try block not necessary for page display, continue to display page
         db.session.rollback()
         print("Page: Mod page, Function: get_game_db() or,\n____filter_nxs_data() or,\n____update_list_mods_db() or,\n____link_mods_to_game()\nFailed to update mod in db from Nexus API response; error: ", e)   
 
-    try:
-        # Pull relevant data out of API response object to populate page
-        page_ready_mod = filter_nxs_mod_page(nexus_mod)
-        if not game:
-            game = db.session.scalars(db.select(Game).where(Game.domain_name==game_domain_name)).first()
-            if type(game) == Exception or type(None):
-                raise AttributeError(f"No Game object. Game could not be found using '{game_domain_name}'")
-    except AttributeError as e:
-        print(f"Error page: Mod page\nError func: show_mod_page({game_domain_name}, {mod_id})\nError detail: {e}")
-        description = 'Game data could not be retrieved.<br>Please ensure requested game domain and mod id are correct and try again.'
+    # Pull relevant data out of API response object to populate page
+    page_ready_mod = filter_nxs_mod_page(nexus_mod)
+    if str(mod_id) in session:
+        if session[str(mod_id)] != page_ready_mod['user_endorsed']:
+            page_ready_mod['user_endorsed'] = "Not-Updated"
+        else:
+            del session[str(mod_id)]
+
+    if not page_ready_mod:
+        description = 'Mod data could not be retrieved from Nexus.<br>Please ensure requested game domain and mod id are correct and try again.'
         abort(404, description)
 
-
     return render_template('games/mod.html', game=game, mod=page_ready_mod)
+
+
+##############################################################################
+# Nexus records changing routes
+
+@app.route('/api/games/<string:game_domain_name>/mods/<int:mod_id>/<string:endorse_action>')
+def endorse_mod(game_domain_name, mod_id, endorse_action):
+    """Sends request to Nexus API to change user's endorsement status for the mod 
+    with mod_id and mod_version to 'Endorsed' or 'Abstained'.
+    
+    Redirects back to same mod page it was requested from."""
+
+    if endorse_action not in ['endorse', 'abstain']:
+        description = "Invalid URL. Mod endorsement request urls must end with '/endorse' or '/abstain'."
+        abort(400, description)
+    
+    endorsement_requested = endorse_mod_nxs(game_domain_name, mod_id, endorse_action)
+    # error handling success or failure message flashed from nexus_api.py
+    
+    if endorse_action == 'endorse' and endorsement_requested:
+        session[str(mod_id)] = 'Endorsed'
+
+    if endorse_action == 'abstain' and endorsement_requested:
+        session[str(mod_id)] = 'Abstained'
+
+    return redirect(url_for('show_mod_page', game_domain_name=game_domain_name, mod_id=int(mod_id)))
 
 
 ##############################################################################

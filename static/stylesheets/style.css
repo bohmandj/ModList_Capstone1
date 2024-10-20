@@ -240,6 +240,22 @@ h1 {
     bottom: -8px;
 }
 
+.info-callout svg {
+    width: 0.9em;
+    aspect-ratio: 1/1;
+    position: relative;
+    bottom: 1px;
+    margin-right: 5px;
+    fill: #d3d3d3;
+    vertical-align: middle;
+}
+
+.info-callout {
+    font-size: 0.9em;
+    color: #d3d3d3;
+    text-align: center;
+}
+
 /* ======================= Nav */
 
 body .navbar {

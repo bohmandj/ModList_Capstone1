@@ -1,5 +1,5 @@
 import requests
-from flask import abort
+from flask import abort, flash
 from flask_sqlalchemy import SQLAlchemy
 from secretkeys import nexus_api_key
 from app import db
@@ -94,6 +94,7 @@ def get_mod_nxs(game_domain_name, mod_id):
 
     try:
         res = requests.get(url, headers=headers)
+        print("RES from API: ", res.json())
         res.raise_for_status()
     except requests.exceptions.HTTPError as e:
         print("Page: Mod page, Function: get_mod_nxs()\nFailed to retrieve Nexus API data, error: ", e)
@@ -135,3 +136,43 @@ def get_tracked_mods_nxs():
     print("response headers: ", res.headers)
 
     return tracked_mods
+
+
+def endorse_mod_nxs(game_domain_name, mod_id, endorse_action):
+    """Nexus API call.
+    
+    Sends request to Nexus API to change user's records for the mod 
+    with mod_id to 'Endorsed' if unendorsed, or 'Abstained' if endorsed.
+    
+    Returns HTTP status codes to confirm or refute successful change request."""
+
+    url = f'{base_url}v1/games/{game_domain_name}/mods/{mod_id}/{endorse_action}.json'
+
+    try:
+        res = requests.post(url, headers=headers)
+        res.raise_for_status()
+
+    except requests.exceptions.HTTPError as e:
+        print("Page: endorse_mod()\nFunction: endorse_mod_nxs()\nFailed to change user account data on Nexus, error: ", e)
+        flash("Sorry, mod endorsement status was not changed.\nAn error was encountered while attempting to have Nexus update your endorsement.\nPlease try again.", 'danger')
+        description = 'Mod endorsement could not be updated by Nexus.<br>Please ensure requested game domain and mod id are correct and try again.'
+        if e.response.status_code == 400:
+            abort(400, description)
+        elif e.response.status_code == 403:
+            if "NOT_DOWNLOADED_MOD" in res.text:
+                description = "Mod endorsement could not be updated by Nexus.\nUsers are not allowed to endorse mods they have not downloaded."
+            abort(404, description)
+        elif e.response.status_code == 404:
+            abort(404, description)
+        elif e.response.status_code == 422:
+            abort(422, description)
+        else:
+            abort(e.response.status_code)
+
+    if endorse_action == 'endorse':
+        flash("Success! Mod endorsement has been added by your Nexus user account.", 'success')
+
+    if endorse_action == 'abstain':
+        flash("Success! Mod endorsement has been removed by your Nexus user account.", 'success')
+
+    return True
