@@ -144,7 +144,8 @@ def endorse_mod_nxs(game_domain_name, mod_id, endorse_action):
     Sends request to Nexus API to change user's records for the mod 
     with mod_id to 'Endorsed' if unendorsed, or 'Abstained' if endorsed.
     
-    Returns HTTP status codes to confirm or refute successful change request."""
+    API returns HTTP status codes to confirm or refute successful change request.
+    Function returns True if successful, or aborts w/ HTTP status code if failed."""
 
     url = f'{base_url}v1/games/{game_domain_name}/mods/{mod_id}/{endorse_action}.json'
 
@@ -161,7 +162,7 @@ def endorse_mod_nxs(game_domain_name, mod_id, endorse_action):
         elif e.response.status_code == 403:
             if "NOT_DOWNLOADED_MOD" in res.text:
                 description = "Mod endorsement could not be updated by Nexus.\nUsers are not allowed to endorse mods they have not downloaded."
-            abort(404, description)
+            abort(403, description)
         elif e.response.status_code == 404:
             abort(404, description)
         elif e.response.status_code == 422:
@@ -174,5 +175,46 @@ def endorse_mod_nxs(game_domain_name, mod_id, endorse_action):
 
     if endorse_action == 'abstain':
         flash("Success! Mod endorsement has been removed by your Nexus user account.", 'success')
+
+    return True
+
+
+def track_mod_nxs(game_domain_name, mod_id, track_action):
+    """Nexus API call.
+    
+    Sends request to Nexus API to add to or remove from user's tracked mods list in Nexus' records for the mod with game_domain_name and mod_id.
+    
+    API returns HTTP status codes to confirm or refute successful change request.
+    Function returns True if successful, or aborts w/ HTTP status code if failed."""
+
+    url = f'{base_url}v1/user/tracked_mods.json?domain_name={game_domain_name}'
+    data = {'mod_id':int(mod_id)}
+
+    try:
+        if track_action == 'add':
+            res = requests.post(url, headers=headers, data=data)
+        if track_action == 'delete':
+            res = requests.delete(url, headers=headers, data=data)
+        res.raise_for_status()
+
+    except requests.exceptions.HTTPError as e:
+        print("Page: track_mod()\nFunction: track_mod_nxs()\nFailed to change user account data on Nexus, error: ", e)
+        flash("Sorry, mod tracking status was not changed.\nAn error was encountered while attempting to have Nexus update your account's Tracking Centre.\nPlease try again.", 'danger')
+        description = 'Mod tracking could not be updated by Nexus.<br>Please ensure requested game domain and mod id are correct and try again.'
+        if e.response.status_code == 400:
+            abort(400, description)
+        elif e.response.status_code == 403:
+            abort(403, description)
+        elif e.response.status_code == 404:
+            abort(404, description)
+        elif e.response.status_code == 422:
+            abort(422, description)
+        else:
+            abort(e.response.status_code)
+
+    if track_action == 'add':
+        flash("Success! Mod has been added to your Nexus user account's Tracking Centre.", 'success')
+    if track_action == 'delete':
+        flash("Success! Mod has been removed from your Nexus user account's Tracking Centre.", 'success')
 
     return True

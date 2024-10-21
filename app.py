@@ -11,7 +11,7 @@ import requests
 from forms import UserAddForm, LoginForm, UserEditForm, UserPasswordForm, ModlistAddForm, ModlistEditForm, ModlistAddModForm
 from models import db, connect_db, User, Modlist, Mod, Game
 
-from nexus_api import get_all_games_nxs, get_mods_of_type_nxs, get_mod_nxs, endorse_mod_nxs
+from nexus_api import get_all_games_nxs, get_mods_of_type_nxs, get_mod_nxs, endorse_mod_nxs, track_mod_nxs
 from utilities import get_all_games_db, get_game_db, get_empty_modlists, get_tracked_modlist_db, get_recent_modlists_by_game, get_public_modlists_by_game, filter_nxs_data, filter_nxs_mod_page, update_all_games_db, update_list_mods_db, link_mods_to_game, add_mod_modlist_choices, check_modlist_uneditable, update_tracked_mods_from_nexus, get_tracked_not_keep_db, paginate_tracked_mods, paginate_modlist_mods
 
 CURR_USER_KEY = "curr_user"
@@ -186,7 +186,8 @@ def login():
                 flash("Problem occurred refreshing games list from Nexus.\nDisplayed games list may be out of date or incomplete.\nLog out and back in to reattempt.", "danger")
 
             # use mods from Nexus Tracking Centre to update user's Nexus Tracked Mods modlist
-            update_tracked_mods_from_nexus(user.id)
+            tracked_mod_ids = update_tracked_mods_from_nexus(user.id)
+            session['tracked_mod_ids'] = tracked_mod_ids
 
             next_page = request.form.get('next')
 
@@ -333,7 +334,8 @@ def show_tracked_modlist_page(tab='tracked-mods', page=1, per_page=25, order="up
     """
 
     if tab == 'tracked-sync':
-        update_tracked_mods_from_nexus(g.user.id)
+        tracked_mod_ids = update_tracked_mods_from_nexus(g.user.id)
+        session['tracked_mod_ids'] = tracked_mod_ids
         return redirect(url_for('show_tracked_modlist_page', tab='tracked-mods'))
 
     page_mods = paginate_tracked_mods(g.user.id, page, per_page, order=order, tab=tab)
@@ -763,6 +765,7 @@ def show_mod_page(game_domain_name, mod_id):
     """
     
     nexus_mod = get_mod_nxs(game_domain_name, mod_id)
+    tracked_mod_ids = None
 
     try:
         # update mod in db from relevant data in API response object
@@ -790,16 +793,20 @@ def show_mod_page(game_domain_name, mod_id):
         description = 'Mod data could not be retrieved from Nexus.<br>Please ensure requested game domain and mod id are correct and try again.'
         abort(404, description)
 
-    return render_template('games/mod.html', game=game, mod=page_ready_mod)
+    if 'tracked_mod_ids' in session:
+        tracked_mod_ids = session['tracked_mod_ids']
+
+    return render_template('games/mod.html', game=game, mod=page_ready_mod, tracked_mod_ids=tracked_mod_ids)
 
 
 ##############################################################################
 # Nexus records changing routes
 
-@app.route('/api/games/<string:game_domain_name>/mods/<int:mod_id>/<string:endorse_action>')
+@app.route('/api/games/<string:game_domain_name>/mods/<int:mod_id>/endorsement/<string:endorse_action>')
+@login_required
 def endorse_mod(game_domain_name, mod_id, endorse_action):
     """Sends request to Nexus API to change user's endorsement status for the mod 
-    with mod_id and mod_version to 'Endorsed' or 'Abstained'.
+    with game_domain_name and mod_id to 'Endorsed' or 'Abstained'.
     
     Redirects back to same mod page it was requested from."""
 
@@ -815,6 +822,37 @@ def endorse_mod(game_domain_name, mod_id, endorse_action):
 
     if endorse_action == 'abstain' and endorsement_requested:
         session[str(mod_id)] = 'Abstained'
+
+    return redirect(url_for('show_mod_page', game_domain_name=game_domain_name, mod_id=int(mod_id)))
+
+
+@app.route('/api/games/<string:game_domain_name>/mods/<int:mod_id>/tracking/<string:track_action>')
+@login_required
+def track_mod(game_domain_name, mod_id, track_action):
+    """Sends request to Nexus API to change user's track tracked mods list on 
+    Nexus to include the mod with game_domain_name and mod_id.
+    
+    Redirects back to same mod page it was requested from."""
+
+    if track_action not in ['add', 'delete']:
+        description = "Invalid URL. Mod endorsement request urls must end with '/add' or '/delete'."
+        abort(400, description)
+
+    if track_action == 'add' and 'tracked_mod_ids' in session and mod_id in session['tracked_mod_ids']:
+        flash("Mod is already tracked by your Nexus account. An already tracked mod can not be tracked again. If this is inaccurate, please go to your Nexus Tracked Mods modpage and click the 'Re-Sync Tracked Mods to Nexus' button so we can display current information.", 'warning')
+
+    if track_action == 'delete' and 'tracked_mod_ids' in session and mod_id not in session['tracked_mod_ids']:
+        flash("Mod is already not tracked by your Nexus account. A mod that is not tracked can not be un-tracked. If this is inaccurate, please go to your Nexus Tracked Mods modpage and click the 'Re-Sync Tracked Mods to Nexus' button so we can display current information.", 'warning')
+    
+    tracking_requested = track_mod_nxs(game_domain_name, mod_id, track_action)
+    # error handling success or failure message flashed from nexus_api.py
+    
+    if tracking_requested:
+        update_tracked_mods_from_nexus(g.user.id)
+        if "tracked_mod_ids" in session and track_action == 'add' and mod_id not in session["tracked_mod_ids"]:
+            session["tracked_mod_ids"].append(mod_id)
+        if "tracked_mod_ids" in session and track_action == 'delete' and mod_id in session["tracked_mod_ids"]:
+            session["tracked_mod_ids"].remove(mod_id)
 
     return redirect(url_for('show_mod_page', game_domain_name=game_domain_name, mod_id=int(mod_id)))
 

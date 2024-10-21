@@ -290,7 +290,7 @@ def add_missing_tracked_mods_db(user_id, nexus_tracked_data):
     if len(get_mod_error_ids) != 0:
         flash(f"An error was encountered retrieving data from Nexus Tracking Centre for tracked mods with these IDs: {str(get_mod_error_ids)[1:-1]}.  \nVisit your Nexus Tracked Mods modlist and use the 'Re-Sync Tracked Mods to Nexus' button to reattempt data retrieval.", "warning")
     if len(unpublished_ids) != 0:
-        flash(f"Tracked mods with these IDs: {str(unpublished_ids)[1:-1]} have a status that is not set to 'published'.  \nWe did not import data from Nexus for any unpublished mods.", "warning")
+        flash(f"Nexus Tracked Mods modlist was synced with Nexus records, but mods with these IDs: {str(unpublished_ids)[1:-1]} have a status that is not set to 'published'.  \nWe did not import data from Nexus for any unpublished mods.", "warning")
 
     return unpublished_ids
 
@@ -321,7 +321,9 @@ def sync_tracked_modlist_mods_db(user_id, nexus_tracked_data, unpublished_ids):
     mods is queried from the db and added to the modlist.
     
     Necessary when mods are added to the Tracking Center on 
-    Nexus' site, not through ModList site."""
+    Nexus' site, not through ModList site.
+    
+    Returns list of tracked mod ids."""
 
     tracked_modlist = get_tracked_modlist_db(user_id, load_mods=True)
 
@@ -349,24 +351,34 @@ def sync_tracked_modlist_mods_db(user_id, nexus_tracked_data, unpublished_ids):
 
     db.session.commit()
 
+    return sorted(nxs_tracked_mod_ids_set)
+
 
 def update_tracked_mods_from_nexus(user_id):
     """Do Nexus API call to get mods currently in Nexus Tracking Centre. Use that mod data to update database with any mods tracked on Nexus that are not yet in the db. Use the currently tracked list to update user's Nexus Tracked Mods modlist with mod data in db (add missing mods & remove mods that shouldn't be there).
     
     Flash error messages to user if issues arise. Return nothing.
-    Call this aggregate function from app.py."""
+    Call this aggregate function from app.py.
+    Returns list of tracked mod ids."""
+
+    tracked_mod_ids = []
+
     try:
         nexus_tracked_data = get_tracked_mods_nxs()
+        print(f"nexus_tracked_data in update_tracked_mods_from_nexus(): {nexus_tracked_data[:5]}")
         unpublished_ids = add_missing_tracked_mods_db(user_id, nexus_tracked_data)
     except Exception as e:
         print("Page: login() or Tracked Mods page\nFunction:\n____get_tracked_mods_nxs(), or\n____add_missing_tracked_mods_db()\n____in update_tracked_mods_from_nexus()\nFailed to retrieve Nexus API data, error: ", e)
         flash("A problem occurred while retrieving your tracked mods from the Tracking Centre on Nexus.  \nClick 'Re-Sync with Nexus Tracking Centre' button on your Nexus Tracked Mods modlist to reattempt sync.", "danger")
     else:
         try:
-            sync_tracked_modlist_mods_db(user_id, nexus_tracked_data, unpublished_ids)
+            tracked_mod_ids = sync_tracked_modlist_mods_db(user_id, nexus_tracked_data, unpublished_ids)
+            print(f"tracked_mod_ids in update_tracked_mods_from_nexus(): {tracked_mod_ids}")
         except Exception as e:
             print('sync_tracked_modlist_mods_db() Error:\n  ', e)
             flash(f"An error was encountered syncing mods in your Nexus Tracked Mods modlist to the official Nexus Tracking Centre records.  \nIf mods displayed in your Nexus Tracked Mods modlist are inaccurate, click 'Re-Sync with Nexus Tracking Centre' button to reattempt sync.", "warning")
+
+    return tracked_mod_ids
 
 
 def filter_nxs_data(data_list, list_type):

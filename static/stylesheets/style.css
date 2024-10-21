@@ -254,6 +254,7 @@ h1 {
     font-size: 0.9em;
     color: #d3d3d3;
     text-align: center;
+    margin: 5px 15px;
 }
 
 /* ======================= Nav */
@@ -1822,13 +1823,13 @@ form .form-switch .form-check-input {
         border-radius: 25px;
     }
 
-    .modpage .modpage-buttons {
+    /* .modpage .modpage-buttons {
         display: grid;
         grid-template-columns: 1fr 1fr;
         column-gap: 15px;
         row-gap: 10px;
         width: 100%;
-    }
+    } */
 }
 
 @media (max-width: 768px) {
