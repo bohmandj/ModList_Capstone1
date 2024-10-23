@@ -25,7 +25,7 @@ def get_all_games_nxs(include_unapproved=False, headers=None):
     url = f'{base_url}/v1/games.json'
 
     if include_unapproved:
-        url = url.join('?include_unapproved=true')
+        url += '?include_unapproved=true'
 
     res = requests.get(url, params=include_unapproved, headers=headers)
     nexus_games = res.json()
