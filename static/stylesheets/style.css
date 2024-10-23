@@ -466,7 +466,9 @@ nav form.navbar-form {
 
 /* Links inside the dropdown */
 .dropdown .dropdown-content a,
-li .dropdown .dropdown-content a {
+li .dropdown .dropdown-content a,
+.order-dropdown .dropdown-content a,
+.per-page-dropdown .dropdown-content a {
     color: #ffffff;
     padding: 10px 25px;
     text-decoration: none;
@@ -1396,7 +1398,7 @@ fieldset[disabled] .btn-outline-nexus.active {
     color: #ffffff;
     background-image: linear-gradient(to bottom, #202020 0%, #333333 30%, #202020);
     background-color: #151515;
-    border: solid 1px;
+    border: solid 1.5px;
     border-color: transparent;
     color: #ffffff;
     font-weight: normal;
@@ -1449,6 +1451,7 @@ fieldset[disabled] .btn-outline-nexus.active {
 .per-page-dropdown .dropbtn:hover {
     color: #ffffff;
     background-image: linear-gradient(to bottom, #000e29 0%, #5170AF 30%, #000e29);
+    border-color: #5170AF;
 }
 
 .order-dropdown:hover svg,
@@ -1460,6 +1463,7 @@ fieldset[disabled] .btn-outline-nexus.active {
 .order-dropdown:focus-within .dropbtn,
 .per-page-dropdown:focus-within .dropbtn {
     background-image: linear-gradient(to bottom, #333333 0%, #151515 40%, #333333);
+    border-color: #5170AF;
     color: #5170AF;
     /* border-bottom-right-radius: 0px; */
 }
