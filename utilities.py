@@ -403,7 +403,7 @@ def filter_nxs_data(data_list, list_type):
 
     if list_type == 'mods':
         for mod in data_list:
-            if mod['status'] == 'published' and type(mod['mod_id']):
+            if mod['status'] == 'published' and isinstance(mod['mod_id'], int):
                 db_ready_mod = {
                     'id': mod['mod_id'], 
                     'name': mod['name'], 
