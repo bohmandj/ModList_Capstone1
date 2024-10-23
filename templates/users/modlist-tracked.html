@@ -16,7 +16,9 @@
                     <h1>{{ modlist.name }}</h1>
                     <div class="modlist-credits">
                         <h6>Imported From:
-                            <a href="https://www.nexusmods.com/mods/trackingcentre">
+                            <a href="https://www.nexusmods.com/mods/trackingcentre"
+                                title="Open Nexus Tracking Centre in a new tab." target="_blank"
+                                rel="noopener noreferrer">
                                 Nexus Tracking Centre
                             </a>
                         </h6>
@@ -100,17 +102,20 @@
 
                     <div class="mod-info-and-buttons">
                         <div class="tracked-mod-section mod-info">
-                            <a
-                                href="{{ url_for('show_mod_page', game_domain_name=mod.for_games[0].domain_name, mod_id=mod.id) }}">
+                            <a href="{{ url_for('show_mod_page', game_domain_name=mod.for_games[0].domain_name, mod_id=mod.id) }}"
+                                title="Go to the ModList mod page for '{{mod.name}}'.">
                                 <h4>{{ mod.name }}</h4>
                             </a>
                             <p>Game:
-                                <a href="https://www.nexusmods.com/{{ mod.for_games[0].domain_name }}">
+                                <a href="https://www.nexusmods.com/{{ mod.for_games[0].domain_name }}"
+                                    title="Open {{mod.for_games[0].name}} in a new tab." target="_blank"
+                                    rel="noopener noreferrer">
                                     {{ mod.for_games[0].name }}
                                 </a>
                             </p>
                             <p>Author:
-                                <a href="https://next.nexusmods.com/profile/{{ mod.uploaded_by }}/mods">
+                                <a href="https://next.nexusmods.com/profile/{{ mod.uploaded_by }}/mods"
+                                    title="Open the user profile that uploaded '{{mod.name}}' in a new tab.">
                                     {{ mod.uploaded_by }}
                                 </a>
                             </p>
@@ -148,7 +153,7 @@
                             <div class="buttons-subset">
                                 <a href="https://www.nexusmods.com/{{mod.for_games[0].domain_name}}/mods/{{mod.id}}"
                                     title="Open mod in a new tab on Nexus.com to see full details and download files"
-                                    class="btn btn-outline-nexus btn-sm">
+                                    target="_blank" rel="noopener noreferrer" class="btn btn-outline-nexus btn-sm">
                                     Open on Nexus
                                 </a>
                                 <a href=""
@@ -173,7 +178,7 @@
                             <p class="mb-2">The easiest way to find new mods is to search on
                                 <a href="https://www.nexusmods.com/"
                                     title="Open Nexus in a new tab to search and browse mods, download files, and engage with the modding community!"
-                                    target="_blank" class="nexus-link">
+                                    target="_blank" rel="noopener noreferrer" class="nexus-link">
                                     Nexus.com
                                 </a>
                                 . While browsing mods, use the 'Tracking' feature on
@@ -182,7 +187,7 @@
                             </p>
                             <p class="mb-3">'Tracking' and your <a href="https://www.nexusmods.com/mods/trackingcentre"
                                     title="Open Nexus Tracking Centre in a new tab to view mods currently tracked on Nexus!"
-                                    target="_blank" class="nexus-link">
+                                    target="_blank" rel="noopener noreferrer" class="nexus-link">
                                     Tracking Centre
                                 </a> on Nexus is intended to help you keep track of installed mods for update
                                 notifications. To make sure you don't accidentally un-track any mods you want to keep in
@@ -194,7 +199,8 @@
 
                         <a href="https://www.nexusmods.com/"
                             title="Open Nexus in a new tab to search and browse mods, download files, and engage with the modding community! Click the 'Tracking' button on the Nexus mod page of any mods you want to save and sort here. It will automatically import to your 'Nexus Tracked Mods' modlist when you log in, or hit the 'Re-Sync with Nexus Tracking Centre' button on this page."
-                            target="_blank" class="btn btn-nexus" style="height: fit-content;">
+                            target="_blank" rel="noopener noreferrer" class="btn btn-nexus"
+                            style="height: fit-content;">
                             Open Nexus in New Tab
                         </a>
                     </div>
@@ -208,7 +214,7 @@
                                 <p class="mb-2">'Tracking' and your <a
                                         href="https://www.nexusmods.com/mods/trackingcentre"
                                         title="Open Nexus Tracking Centre in a new tab to view mods currently tracked on Nexus!"
-                                        target="_blank" class="nexus-link">
+                                        target="_blank" rel="noopener noreferrer" class="nexus-link">
                                         Tracking Centre
                                     </a> on Nexus is intended to help you keep track of installed mods for update
                                     notifications. To make sure you don't accidentally un-track any mods you want to
@@ -222,7 +228,8 @@
 
                             <a href="https://www.nexusmods.com/" style="height: fit-content; margin-top: auto;"
                                 title="Open Nexus in a new tab to search and browse mods, download files, and engage with the modding community! Click the 'Tracking' button on the Nexus mod page of any mods you want to save and sort here. It will automatically import to your 'Nexus Tracked Mods' modlist when you log in, or hit the 'Re-Sync with Nexus Tracking Centre' button on this page."
-                                target="_blank" class="btn btn-nexus" style="height: fit-content;">
+                                target="_blank" rel="noopener noreferrer" class="btn btn-nexus"
+                                style="height: fit-content;">
                                 Open Nexus in New Tab
                             </a>
                         </div>

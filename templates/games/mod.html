@@ -115,7 +115,7 @@
         <div class="modpage-buttons btns2">
             <a id="to-nxs-mod" href="https://www.nexusmods.com/{{ game.domain_name }}/mods/{{ mod.id }}"
                 title="Open {{mod.name}}'s page on Nexus in a new tab to see images, read the full description, check requirements and conflicts, or download files"
-                target="_blank" class="btn btn-outline-nexus">Open this mod's page on Nexus
+                target="_blank" rel="noopener noreferrer" class="btn btn-outline-nexus">Open this mod's page on Nexus
             </a>
 
             {% if mod.user_endorsed == "Not-Updated" %}

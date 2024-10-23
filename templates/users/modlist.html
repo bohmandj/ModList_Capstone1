@@ -119,7 +119,7 @@
                         <p>Author:
                             <a href="https://next.nexusmods.com/profile/{{ mod.uploaded_by }}/mods"
                                 title="Open {{mod.uploaded_by}}'s Nexus profile page in a new tab to see all they've contributed to the modding community"
-                                target="_blank">
+                                target="_blank" rel="noopener noreferrer">
                                 {{ mod.uploaded_by }}
                             </a>
                         </p>
@@ -147,11 +147,12 @@
                         <div class="buttons-subset">
                             <a href="https://www.nexusmods.com/{{modlist.for_games[0].domain_name}}/mods/{{mod.id}}"
                                 title="Open '{{mod.name}}' on Nexus in a new tab to see images, read the full description, check requirements and conflicts, or download files"
-                                target="_blank" class="btn btn-outline-nexus btn-sm">
+                                target="_blank" rel="noopener noreferrer" class="btn btn-outline-nexus btn-sm">
                                 Open on Nexus
                             </a>
                             <a href="https://www.nexusmods.com/{{modlist.for_games[0].domain_name}}/mods/{{mod.id}}?tab=files"
-                                target="_blank" title="Open the file download page on Nexus for this mod in a new tab"
+                                target="_blank" rel="noopener noreferrer"
+                                title="Open the file download page on Nexus for this mod in a new tab"
                                 class="btn btn-outline-nexus btn-sm">
                                 Nexus Downloads Page
                             </a>
@@ -172,7 +173,7 @@
                             The easiest way to find new mods is to search on
                             <a href="https://www.nexusmods.com/"
                                 title="Open Nexus in a new tab to search and browse mods, download files, and engage with the modding community!"
-                                target="_blank" class="nexus-link">
+                                target="_blank" rel="noopener noreferrer" class="nexus-link">
                                 Nexus.com
                             </a>. While browsing mods, use the
                             'Tracking' feature on
@@ -184,7 +185,7 @@
 
                     <a href="https://www.nexusmods.com/"
                         title="Open Nexus in a new tab to search and browse mods, download files, and engage with the modding community!"
-                        target="_blank" class="btn btn-nexus" style="height: fit-content;">
+                        target="_blank" rel="noopener noreferrer" class="btn btn-nexus" style="height: fit-content;">
                         Open Nexus in New Tab
                     </a>
                 </div>
