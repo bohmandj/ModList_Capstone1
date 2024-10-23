@@ -1,14 +1,13 @@
 import requests
-from flask import abort, flash
+from flask import abort, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from secretkeys import nexus_api_key
 from app import db
 from models import User, Modlist, Mod, Game
 
-base_url = 'https://api.nexusmods.com/'
-headers = {'apikey': nexus_api_key}
+base_url = 'https://api.nexusmods.com'
 
-def get_all_games_nxs(include_unapproved=False):
+def get_all_games_nxs(include_unapproved=False, headers=None):
     """Nexus API call.
     
     Returns games list from Nexus if successful, or Exception details.
@@ -23,7 +22,7 @@ def get_all_games_nxs(include_unapproved=False):
     Optionally can also include unapproved games. ( include_unapproved=True )
     """
 
-    url = f'{base_url}v1/games.json'
+    url = f'{base_url}/v1/games.json'
 
     if include_unapproved:
         url = url.join('?include_unapproved=true')
@@ -34,7 +33,7 @@ def get_all_games_nxs(include_unapproved=False):
     return nexus_games
 
 
-def get_mods_of_type_nxs(game, request_type):
+def get_mods_of_type_nxs(game, request_type, headers=None):
     """Nexus API call.
     
     Returns list of most recently added mods for provided 
@@ -56,7 +55,7 @@ def get_mods_of_type_nxs(game, request_type):
         'endorsement': null }
     """
 
-    url = f'{base_url}v1/games/{game.domain_name}/mods/{request_type}.json'
+    url = f'{base_url}/v1/games/{game.domain_name}/mods/{request_type}.json'
 
     try:
         res = requests.get(url, headers=headers)
@@ -69,7 +68,7 @@ def get_mods_of_type_nxs(game, request_type):
     return nexus_mods
 
 
-def get_mod_nxs(game_domain_name, mod_id):
+def get_mod_nxs(game_domain_name, mod_id, headers=None):
     """Nexus API call.
     
     Returns object of details for provided mod 
@@ -90,7 +89,7 @@ def get_mod_nxs(game_domain_name, mod_id):
         "version": str of int } }
     """
     
-    url = f'{base_url}v1/games/{game_domain_name}/mods/{mod_id}.json'
+    url = f'{base_url}/v1/games/{game_domain_name}/mods/{mod_id}.json'
 
     try:
         res = requests.get(url, headers=headers)
@@ -112,7 +111,7 @@ def get_mod_nxs(game_domain_name, mod_id):
     return nexus_mod
 
 
-def get_tracked_mods_nxs():
+def get_tracked_mods_nxs(headers=None):
     """Nexus API call.
     
     Returns list of objects to identify the mods in the signed-in 
@@ -121,6 +120,7 @@ def get_tracked_mods_nxs():
     Example returned mod data:
     [{'mod_id': int, 'domain_name': str}]
     """
+    print(f"headers: {headers}")
 
     url = f'{base_url}/v1/user/tracked_mods.json'
 
@@ -138,7 +138,7 @@ def get_tracked_mods_nxs():
     return tracked_mods
 
 
-def endorse_mod_nxs(game_domain_name, mod_id, endorse_action):
+def endorse_mod_nxs(game_domain_name, mod_id, endorse_action, headers=None):
     """Nexus API call.
     
     Sends request to Nexus API to change user's records for the mod 
@@ -147,7 +147,7 @@ def endorse_mod_nxs(game_domain_name, mod_id, endorse_action):
     API returns HTTP status codes to confirm or refute successful change request.
     Function returns True if successful, or aborts w/ HTTP status code if failed."""
 
-    url = f'{base_url}v1/games/{game_domain_name}/mods/{mod_id}/{endorse_action}.json'
+    url = f'{base_url}/v1/games/{game_domain_name}/mods/{mod_id}/{endorse_action}.json'
 
     try:
         res = requests.post(url, headers=headers)
@@ -179,7 +179,7 @@ def endorse_mod_nxs(game_domain_name, mod_id, endorse_action):
     return True
 
 
-def track_mod_nxs(game_domain_name, mod_id, track_action):
+def track_mod_nxs(game_domain_name, mod_id, track_action, headers=None):
     """Nexus API call.
     
     Sends request to Nexus API to add to or remove from user's tracked mods list in Nexus' records for the mod with game_domain_name and mod_id.
@@ -187,7 +187,7 @@ def track_mod_nxs(game_domain_name, mod_id, track_action):
     API returns HTTP status codes to confirm or refute successful change request.
     Function returns True if successful, or aborts w/ HTTP status code if failed."""
 
-    url = f'{base_url}v1/user/tracked_mods.json?domain_name={game_domain_name}'
+    url = f'{base_url}/v1/user/tracked_mods.json?domain_name={game_domain_name}'
     data = {'mod_id':int(mod_id)}
 
     try:

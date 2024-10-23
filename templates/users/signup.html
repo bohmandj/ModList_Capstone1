@@ -7,7 +7,7 @@
 <div class="row justify-content-md-center">
   <div class="col-md-7 col-lg-5">
     <h2 class="form-header text-center">Join ModList</h2>
-    <p class="form-subheader text-center">Enter user information.</p>
+    <h5 class="form-subheader text-center">Submit your information to register!</h5>
     <form method="POST" id="user_form">
       {{ form.hidden_tag() }}
 
@@ -15,10 +15,18 @@
       {% for error in field.errors %}
       <span class="text-danger">{{ error }}</span>
       {% endfor %}
-      {{ field(placeholder=field.label.text, class="form-control") }}
+      <h6>{{ field.label.text }}</h6>
+      {{ field(placeholder=field.description, class="form-control") }}
       {% endfor %}
 
-      <button class="btn btn-primary btn-lg btn-block w-100">Sign up!</button>
+      <button type="submit" class="btn btn-primary btn-lg btn-block w-100">Sign up!</button>
+      <h6 class="mt-5">
+        Note: an account on nexusmods.com is needed to log in to ModList. Don't have one?
+        <br>
+        <a href="https://users.nexusmods.com/register" class="btn btn-outline-nexus w-100 mt-3">
+          Sign up for a Nexus account!
+        </a>
+      </h6>
     </form>
   </div>
 </div>

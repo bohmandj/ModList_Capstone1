@@ -3,7 +3,7 @@ from wtforms import validators, widgets
 from wtforms import StringField, PasswordField, TextAreaField, BooleanField, SelectMultipleField
 
 
-class UserAddForm(FlaskForm):
+class RegisterForm(FlaskForm):
     """Form for adding users."""
 
     username = StringField(
@@ -30,7 +30,7 @@ class UserAddForm(FlaskForm):
         'Confirm Password',
         [ validators.EqualTo('password', 
             message='"New Password" and "Confirm Password" must match') ],
-        description="Re-enter your password"
+        description="Re-enter the password"
     )
 
 
@@ -47,6 +47,11 @@ class LoginForm(FlaskForm):
         [ validators.Length(min=6, 
             message="Password must contain at least 6 characters") ], 
         description="Enter your password"
+    )
+    user_api_key = StringField(
+        'Nexus Personal API Key',
+        [ validators.InputRequired() ], 
+        description="Enter your Nexus API Key"
     )
 
 

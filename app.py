@@ -6,9 +6,10 @@ from sqlalchemy.exc import IntegrityError
 from functools import wraps
 from werkzeug.datastructures import ImmutableDict
 from flask_wtf.csrf import CSRFProtect
+from cryptography.fernet import Fernet
 import requests
 
-from forms import UserAddForm, LoginForm, UserEditForm, UserPasswordForm, ModlistAddForm, ModlistEditForm, ModlistAddModForm
+from forms import RegisterForm, LoginForm, UserEditForm, UserPasswordForm, ModlistAddForm, ModlistEditForm, ModlistAddModForm
 from models import db, connect_db, User, Modlist, Mod, Game
 
 from nexus_api import get_all_games_nxs, get_mods_of_type_nxs, get_mod_nxs, endorse_mod_nxs, track_mod_nxs
@@ -35,6 +36,10 @@ connect_db(app)
 with app.app_context():
     db.create_all()
 
+encryption_key = os.environ.get('FERNET_ENCRYPTION_KEY')
+if encryption_key is None:
+    raise RuntimeError("Encryption key not found in environment variables")
+cipher_suite = Fernet(encryption_key)
 
 ##############################################################################
 # Custom decorators
@@ -64,12 +69,25 @@ def set_listview_query_vals(f):
         if 'set_order' in request.args:
             session[ORDER] = request.args['set_order']
             page = 1
-        order = session[ORDER] if ORDER in session else int(req_order)
+        order = session[ORDER] if ORDER in session else req_order
 
         if 'page_reset' in kwargs:
             page = 1
         
         return f(*args, **kwargs, page=int(page), per_page=int(per_page), order=order)
+    return decorated_function
+
+def get_api_headers(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        encrypted_api_key = session.get('user_api_key')
+        if not encrypted_api_key:
+            flash("Nexus API key not found. Please login and enter your Nexus account's personal API key. API key is not saved to our server, so it must be entered every time you log in to ModList. If logged in to Nexus, the key can be found at the bottom of this page: https://next.nexusmods.com/settings/api-keys", "danger")
+            do_logout()
+            return redirect(url_for('login', next=request.url))
+        user_api_key = cipher_suite.decrypt(encrypted_api_key).decode()
+        headers = {'apikey': user_api_key}
+        return f(*args, **kwargs, headers=headers)
     return decorated_function
 
 
@@ -125,7 +143,7 @@ def signup():
     if g.user:
         return redirect(url_for('homepage'))
 
-    form = UserAddForm()
+    form = RegisterForm()
 
     if form.validate_on_submit():
         try:
@@ -144,8 +162,6 @@ def signup():
                 flash("Email already used - each email can only be used on one account", 'danger')
             return render_template('users/signup.html', form=form)
 
-        do_login(user)
-
         Modlist.new_modlist(
             name='Nexus Tracked Mods', 
             description="This modlist automatically populates with all the mods in your Nexus account's Tracking Centre.", 
@@ -154,7 +170,7 @@ def signup():
         )
         db.session.commit()
 
-        return redirect(url_for('homepage'))
+        return redirect(url_for('login'))
 
     else:
         return render_template('users/signup.html', form=form)
@@ -175,18 +191,24 @@ def login():
 
         if user:
             do_login(user)
+
+            user_api_key = form.user_api_key.data
+            encrypted_api_key = cipher_suite.encrypt(user_api_key.encode())
+            session['user_api_key'] = encrypted_api_key
+            headers = {'apikey': user_api_key}
+
             flash(f"Hello, {user.username}!", "success")
 
             # use list of all games from Nexus API to update all Games in db
             try:
-                nexus_games = get_all_games_nxs()
+                nexus_games = get_all_games_nxs(headers=headers)
                 db_ready_games = filter_nxs_data(nexus_games, 'games')
                 update_all_games_db(db_ready_games)
             except:
                 flash("Problem occurred refreshing games list from Nexus.\nDisplayed games list may be out of date or incomplete.\nLog out and back in to reattempt.", "danger")
 
             # use mods from Nexus Tracking Centre to update user's Nexus Tracked Mods modlist
-            tracked_mod_ids = update_tracked_mods_from_nexus(user.id)
+            tracked_mod_ids = update_tracked_mods_from_nexus(user.id, headers=headers)
             session['tracked_mod_ids'] = tracked_mod_ids
 
             next_page = request.form.get('next')
@@ -319,7 +341,8 @@ def edit_password():
 @app.route('/users/modlists/<string:tab>')
 @login_required
 @set_listview_query_vals
-def show_tracked_modlist_page(tab='tracked-mods', page=1, per_page=25, order="update", **kwargs):
+@get_api_headers
+def show_tracked_modlist_page(tab='tracked-mods', page=1, per_page=25, order="update", headers=None, **kwargs):
     """Show the regular 'Tracked' side of the user's 
     'Nexus Tracked Mods' modlist page. These mods are imported 
     from Nexus, but are not marked with the 'Keep Tracked' tag 
@@ -332,9 +355,10 @@ def show_tracked_modlist_page(tab='tracked-mods', page=1, per_page=25, order="up
     Mod display order takes 'order' arguments from the query string - 'author' or 'name' valid, otherwise mods display most recently updated first.
     Pagination takes 'page' and 'per_page' arguments from the query string.
     """
+    print(f"headers 361: {headers}")
 
     if tab == 'tracked-sync':
-        tracked_mod_ids = update_tracked_mods_from_nexus(g.user.id)
+        tracked_mod_ids = update_tracked_mods_from_nexus(g.user.id, headers=headers)
         session['tracked_mod_ids'] = tracked_mod_ids
         return redirect(url_for('show_tracked_modlist_page', tab='tracked-mods'))
 
@@ -709,7 +733,8 @@ def modlist_delete_mod(user_id, modlist_id, mod_id):
 
 @app.route('/games/<game_domain_name>')
 @login_required
-def show_game_page(game_domain_name):
+@get_api_headers
+def show_game_page(game_domain_name, headers=None):
     """Show game page with mods hosted by Nexus.
     
     - Nexus API is called to populate Mod categories on page.
@@ -730,7 +755,7 @@ def show_game_page(game_domain_name):
     ]
 
     for cat in mod_categories:
-        nxs_category = get_mods_of_type_nxs(game, cat['mod_cat'])
+        nxs_category = get_mods_of_type_nxs(game, cat['mod_cat'], headers=headers)
         
         if nxs_category == "error":
             cat['error'] = True # displays error message in category area on page
@@ -751,7 +776,8 @@ def show_game_page(game_domain_name):
 
 @app.route('/games/<string:game_domain_name>/mods/<int:mod_id>')
 @login_required
-def show_mod_page(game_domain_name, mod_id):
+@get_api_headers
+def show_mod_page(game_domain_name, mod_id, headers=None):
     """Show mod page of info about a mod hosted on Nexus.
     
     - Nexus API is called to populate details about the mod.
@@ -764,7 +790,7 @@ def show_mod_page(game_domain_name, mod_id):
     - Link to official mod page on Nexus.
     """
     
-    nexus_mod = get_mod_nxs(game_domain_name, mod_id)
+    nexus_mod = get_mod_nxs(game_domain_name, mod_id, headers=headers)
     tracked_mod_ids = None
 
     try:
@@ -804,7 +830,8 @@ def show_mod_page(game_domain_name, mod_id):
 
 @app.route('/api/games/<string:game_domain_name>/mods/<int:mod_id>/endorsement/<string:endorse_action>')
 @login_required
-def endorse_mod(game_domain_name, mod_id, endorse_action):
+@get_api_headers
+def endorse_mod(game_domain_name, mod_id, endorse_action, headers=None):
     """Sends request to Nexus API to change user's endorsement status for the mod 
     with game_domain_name and mod_id to 'Endorsed' or 'Abstained'.
     
@@ -814,7 +841,7 @@ def endorse_mod(game_domain_name, mod_id, endorse_action):
         description = "Invalid URL. Mod endorsement request urls must end with '/endorse' or '/abstain'."
         abort(400, description)
     
-    endorsement_requested = endorse_mod_nxs(game_domain_name, mod_id, endorse_action)
+    endorsement_requested = endorse_mod_nxs(game_domain_name, mod_id, endorse_action, headers=headers)
     # error handling success or failure message flashed from nexus_api.py
     
     if endorse_action == 'endorse' and endorsement_requested:
@@ -828,7 +855,8 @@ def endorse_mod(game_domain_name, mod_id, endorse_action):
 
 @app.route('/api/games/<string:game_domain_name>/mods/<int:mod_id>/tracking/<string:track_action>')
 @login_required
-def track_mod(game_domain_name, mod_id, track_action):
+@get_api_headers
+def track_mod(game_domain_name, mod_id, track_action, headers=None):
     """Sends request to Nexus API to change user's track tracked mods list on 
     Nexus to include the mod with game_domain_name and mod_id.
     
@@ -844,11 +872,11 @@ def track_mod(game_domain_name, mod_id, track_action):
     if track_action == 'delete' and 'tracked_mod_ids' in session and mod_id not in session['tracked_mod_ids']:
         flash("Mod is already not tracked by your Nexus account. A mod that is not tracked can not be un-tracked. If this is inaccurate, please go to your Nexus Tracked Mods modpage and click the 'Re-Sync Tracked Mods to Nexus' button so we can display current information.", 'warning')
     
-    tracking_requested = track_mod_nxs(game_domain_name, mod_id, track_action)
+    tracking_requested = track_mod_nxs(game_domain_name, mod_id, track_action, headers=headers)
     # error handling success or failure message flashed from nexus_api.py
     
     if tracking_requested:
-        update_tracked_mods_from_nexus(g.user.id)
+        update_tracked_mods_from_nexus(g.user.id, headers=headers)
         if "tracked_mod_ids" in session and track_action == 'add' and mod_id not in session["tracked_mod_ids"]:
             session["tracked_mod_ids"].append(mod_id)
         if "tracked_mod_ids" in session and track_action == 'delete' and mod_id in session["tracked_mod_ids"]:

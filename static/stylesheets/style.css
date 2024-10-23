@@ -24,6 +24,8 @@
     --bs-color-danger: #DC3644;
     --bs-color-warning: #FFC109;
     --bs-color-info: #0CCAF0;
+    --bs-link-color: #0d6efd;
+    --bs-link-hover-color: #0a58ca;
 }
 
 /* ====================== General */
@@ -83,6 +85,34 @@ body {
 
 .section-heading-split .section-buttons a {
     width: 100%;
+}
+
+a.standard-link {
+    cursor: pointer;
+    text-decoration: underline;
+    color: var(--bs-link-color);
+    fill: var(--bs-link-color);
+}
+
+a.standard-link:hover {
+    cursor: pointer;
+    text-decoration: underline;
+    color: var(--bs-link-hover-color);
+    fill: var(--bs-link-hover-color);
+}
+
+a.white-link,
+form a.white-link {
+    cursor: pointer;
+    text-decoration: none;
+    color: #ffffff;
+    fill: #ffffff;
+}
+
+a.white-link:hover,
+form a.white-link:hover {
+    color: var(--brand-color-primary);
+    fill: var(--brand-color-primary);
 }
 
 .card-page {
@@ -240,6 +270,14 @@ h1 {
     bottom: -8px;
 }
 
+svg.info-icon {
+    width: 0.9em;
+    aspect-ratio: 1/1;
+    position: relative;
+    bottom: 1px;
+    margin: 3px;
+}
+
 .info-callout svg {
     width: 0.9em;
     aspect-ratio: 1/1;
@@ -251,6 +289,7 @@ h1 {
 }
 
 .info-callout {
+    cursor: pointer;
     font-size: 0.9em;
     color: #d3d3d3;
     text-align: center;
@@ -321,8 +360,7 @@ body .navbar {
     display: inline-block;
     position: relative;
     margin-right: 0.6rem;
-    height: 1.7rem;
-    border-radius: 2px;
+    height: 1.5rem;
 }
 
 .navbar .navbar-header .navbar-brand span {
@@ -330,9 +368,9 @@ body .navbar {
     background: linear-gradient(176deg, #5170AF, #5170AF 20%, #93A9D7 55%, #5170AF 58%, #435F97 60%, #5170AF 70%);
     background-clip: text;
     font-size: 1.8rem;
-    font-weight: bold;
-    line-height: 2.2rem;
-    top: 1px;
+    font-weight: 300;
+    line-height: 1.5rem;
+    top: -1px;
     color: transparent;
     margin-bottom: 0px;
 }
@@ -340,6 +378,9 @@ body .navbar {
 .navbar li {
     display: flex;
     align-items: center;
+}
+
+.navbar li a {
     margin: 0 20px;
 }
 
@@ -424,20 +465,24 @@ nav form.navbar-form {
 }
 
 /* Links inside the dropdown */
-.dropdown-content a {
+.dropdown .dropdown-content a,
+li .dropdown .dropdown-content a {
     color: #ffffff;
     padding: 10px 25px;
     text-decoration: none;
     display: block;
     font-size: 1em;
+    font-weight: 400;
     text-align: right;
     white-space: nowrap;
+    margin: 0;
 }
 
 .dropdown-content hr {
-    color: #151515;
+    color: #aaaaaa;
     width: 80%;
     height: 2px;
+    margin: 0 auto;
 }
 
 /* Change color of dropdown links on hover */
@@ -1822,14 +1867,6 @@ form .form-switch .form-check-input {
         background-color: #202020;
         border-radius: 25px;
     }
-
-    /* .modpage .modpage-buttons {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        column-gap: 15px;
-        row-gap: 10px;
-        width: 100%;
-    } */
 }
 
 @media (max-width: 768px) {

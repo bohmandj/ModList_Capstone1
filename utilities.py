@@ -234,7 +234,7 @@ def paginate_modlist_mods(user_id, modlist_id, page=1, per_page=25, order='updat
     return paginated_mods
 
 
-def add_missing_tracked_mods_db(user_id, nexus_tracked_data):
+def add_missing_tracked_mods_db(user_id, nexus_tracked_data, headers=None):
     """Checks if there are any missing mods in the database 
     compared to fresh nexus_tracked_data argument, and calls 
     Nexus API to get the missing mod's data to add to the db.
@@ -265,7 +265,7 @@ def add_missing_tracked_mods_db(user_id, nexus_tracked_data):
             if id not in current_tracked_ids:
                 try:
                     sleep(sleep_interval)
-                    new_nexus_data = get_mod_nxs(domain_name, id)
+                    new_nexus_data = get_mod_nxs(domain_name, id, headers=headers)
                 except Exception as e:
                     print("Page: login() or Tracked Modlist page\nFunction: get_mod_nxs() in add_missing_tracked_mods_db()\nFailed to retrieve Nexus API data, error: ", e)
                     get_mod_error_ids.append(id)
@@ -354,7 +354,7 @@ def sync_tracked_modlist_mods_db(user_id, nexus_tracked_data, unpublished_ids):
     return sorted(nxs_tracked_mod_ids_set)
 
 
-def update_tracked_mods_from_nexus(user_id):
+def update_tracked_mods_from_nexus(user_id, headers=None):
     """Do Nexus API call to get mods currently in Nexus Tracking Centre. Use that mod data to update database with any mods tracked on Nexus that are not yet in the db. Use the currently tracked list to update user's Nexus Tracked Mods modlist with mod data in db (add missing mods & remove mods that shouldn't be there).
     
     Flash error messages to user if issues arise. Return nothing.
@@ -364,9 +364,9 @@ def update_tracked_mods_from_nexus(user_id):
     tracked_mod_ids = []
 
     try:
-        nexus_tracked_data = get_tracked_mods_nxs()
+        nexus_tracked_data = get_tracked_mods_nxs(headers=headers)
         print(f"nexus_tracked_data in update_tracked_mods_from_nexus(): {nexus_tracked_data[:5]}")
-        unpublished_ids = add_missing_tracked_mods_db(user_id, nexus_tracked_data)
+        unpublished_ids = add_missing_tracked_mods_db(user_id, nexus_tracked_data, headers=headers)
     except Exception as e:
         print("Page: login() or Tracked Mods page\nFunction:\n____get_tracked_mods_nxs(), or\n____add_missing_tracked_mods_db()\n____in update_tracked_mods_from_nexus()\nFailed to retrieve Nexus API data, error: ", e)
         flash("A problem occurred while retrieving your tracked mods from the Tracking Centre on Nexus.  \nClick 'Re-Sync with Nexus Tracking Centre' button on your Nexus Tracked Mods modlist to reattempt sync.", "danger")
