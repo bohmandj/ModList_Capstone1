@@ -24,8 +24,7 @@
     {% if field.widget.input_type == 'checkbox' %}{# handle custom toggle switch formatting #}
     <div class="form-check form-switch">
       <div class="form-check-container">
-        {{ field(checked=False, class="form-check-input", type="checkbox",
-        role="switch", id="flexSwitchCheck") }}
+        {{ field(checked=False, class="form-check-input", type="checkbox", role="switch", id=field.name + '_switch') }}
       </div>
       <span>
         <label for="flexSwitchCheck">
