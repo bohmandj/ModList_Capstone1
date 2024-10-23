@@ -234,7 +234,7 @@ def logout():
 ##############################################################################
 # User routes:
 
-@app.route('/users/<user_id>')
+@app.route('/users/<int:user_id>')
 def show_user_page(user_id):
     """Show user profile page.
     
@@ -442,7 +442,7 @@ def change_keep_tracked_status(user_id, mod_id, keep_action):
 # Users-made Modlist routes:
 
 
-@app.route('/users/<user_id>/modlists/<modlist_id>')
+@app.route('/users/<int:user_id>/modlists/<int:modlist_id>')
 @set_listview_query_vals
 def show_modlist_page(user_id, modlist_id, page=1, per_page=25, order="update"):
     """Show the user's modlist page. 
@@ -470,7 +470,7 @@ def show_modlist_page(user_id, modlist_id, page=1, per_page=25, order="update"):
     return render_template('users/modlist.html', page_mods=page_mods, page=page, per_page=per_page, order=order, user=user, modlist=modlist, hide_nsfw=hide_nsfw)
 
 
-@app.route('/users/<user_id>/modlists/new', methods=["GET", "POST"])
+@app.route('/users/<int:user_id>/modlists/new', methods=["GET", "POST"])
 @login_required
 def new_modlist(user_id):
     """Handle new modlist generation.
@@ -515,7 +515,7 @@ def new_modlist(user_id):
     return render_template('users/modlist-new.html', form=form)
 
 
-@app.route('/users/<user_id>/modlists/<modlist_id>/edit', methods=["GET", "POST"])
+@app.route('/users/<int:user_id>/modlists/<int:modlist_id>/edit', methods=["GET", "POST"])
 @login_required
 def edit_modlist(user_id, modlist_id):
     """Update modlist info for modlist belonging to current user."""
@@ -574,7 +574,7 @@ def edit_modlist(user_id, modlist_id):
     return render_template('users/edit.html', form=form, form_title="Edit Modlist", modlist=modlist)
 
     
-@app.route('/users/<user_id>/modlists/<modlist_id>/delete', methods=["POST"])
+@app.route('/users/<int:user_id>/modlists/<int:modlist_id>/delete', methods=["POST"])
 @login_required
 def delete_modlist(user_id, modlist_id):
     """Delete user's modlist.
@@ -616,7 +616,7 @@ def delete_modlist(user_id, modlist_id):
     return redirect(url_for("show_user_page", user_id=g.user.id))
 
 
-@app.route('/users/<user_id>/modlists/add/mods/<mod_id>', methods=["GET", "POST"])
+@app.route('/users/<int:user_id>/modlists/add/mods/<int:mod_id>', methods=["GET", "POST"])
 @login_required
 def modlist_add_mod(user_id, mod_id):
     """Add mod to modlist.
@@ -678,7 +678,7 @@ def modlist_add_mod(user_id, mod_id):
     return render_template('users/modlist-add.html', form=form, user=g.user, mod=mod, modlists_w_mod=modlists_w_mod, no_modlists=no_modlists)
 
 
-@app.route('/users/<user_id>/modlists/<modlist_id>/mods/<mod_id>/delete', methods=["POST"])
+@app.route('/users/<int:user_id>/modlists/<int:modlist_id>/mods/<int:mod_id>/delete', methods=["POST"])
 @login_required
 def modlist_delete_mod(user_id, modlist_id, mod_id):
     """Remove mod from modlist.
@@ -731,7 +731,7 @@ def modlist_delete_mod(user_id, modlist_id, mod_id):
 ##############################################################################
 # Game routes (& Mod routes):
 
-@app.route('/games/<game_domain_name>')
+@app.route('/games/<string:game_domain_name>')
 @login_required
 @get_api_headers
 def show_game_page(game_domain_name, headers=None):
