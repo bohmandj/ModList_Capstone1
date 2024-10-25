@@ -50,7 +50,49 @@
     {# ================================================= #}
     {# start list of games w/ modlists #}
 
-    {% for index in modlists_by_game %}
+    {% if not modlists_by_game and not empty_modlists %}
+    <div class="no-modlists-card">
+      <div class="info-and-buttons">
+        <div class="modlist-mod-section mod-info">
+          <h4 class="mb-2">You haven't made any modlists yet...</h4>
+          <p class="mb-2">
+            You can create a new modlist by hitting 'Create New Modlist' button below, or where it can always be found
+            in
+            the top right corner of this page.
+          </p>
+        </div>
+        <a href="{{ url_for('new_modlist', user_id=g.user.id) }}" class="new-modlist-btn btn btn-primary profile-btn">
+          <svg xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 448 512"><!--!Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.-->
+            <path
+              d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 144L48 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l144 0 0 144c0 17.7 14.3 32 32 32s32-14.3 32-32l0-144 144 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-144 0 0-144z" />
+          </svg>
+          &ensp; Create New Modlist
+        </a>
+      </div>
+    </div>
+    {% endif %}{# ends 'if not modlists_by_game and not empty_modlists' #}
+    {% if not modlists_by_game %}
+    <div class="no-modlists-card">
+      <div class="info-and-buttons">
+        <div class="modlist-mod-section mod-info">
+          <h4 class="mb-2">If your new to ModList and Nexus:</h4>
+          <p class="mb-2">
+            The easiest way to find new mods is to search on Nexus.com. While browsing mods, use the 'Tracking' feature
+            on Nexus to easily collect mods. Your 'Nexus Tracked Mods' modlist will automatically import
+            all Tracked mods from Nexus. Then you can add mods to your various modlists from there.
+          </p>
+        </div>
+        <a href="https://www.nexusmods.com/"
+          title="Open Nexus in a new tab to search and browse mods, download files, and engage with the modding community!"
+          target="_blank" rel="noopener noreferrer" class="btn btn-nexus" style="height: fit-content;">
+          Open Nexus in New Tab
+        </a>
+      </div>
+    </div>
+    {% endif %}{# ends 'if not modlists_by_game' #}
+
+    {% for index in modlists_by_game %}{# handle non-empty modlists_by_game list #}
     <div class="game-modlists">
       <div class="section-heading-split">
         <a class="section-title" href="{{ url_for('show_game_page', game_domain_name=index.game.domain_name) }}"

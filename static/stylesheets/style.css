@@ -631,6 +631,26 @@ form .form-switch .form-check-input {
     z-index: 0;
 }
 
+.profile .no-modlists-card {
+    display: flex;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    width: 100%;
+    max-width: 700px;
+    margin: 0px auto;
+    border-radius: 10px;
+    overflow: hidden;
+    z-index: 0;
+}
+
+.profile .no-modlists-card .info-and-buttons {
+    display: grid;
+    grid-template-columns: 1fr;
+    height: fit-content;
+    padding: 20px;
+}
+
 .profile .modlist-card .modlist-details {
     display: block;
     align-self: flex-end;
