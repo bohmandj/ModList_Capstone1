@@ -163,6 +163,7 @@
             {% endfor %}{# ends 'for mod in page_mods' #}
 
             {% else %}{# handle empty page_mods.items #}
+            {% if user.id == g.user.id %}
             <div class="modlist-card">
                 <img class="mod-img" src="/static/images/GamesOnNexus_300_3x4.png" alt="Empty ModList cover image"
                     title="Empty ModList cover image">
@@ -189,8 +190,19 @@
                         Open Nexus in New Tab
                     </a>
                 </div>
-                {% endif %}{# ends 'if page_mods.items == []' #}
             </div>
+            {% else %}{# aka if user.id != g.user.id #}
+            <div class="modlist-card" style="height: 120px;">
+                <img class="mod-img" src="/static/images/GamesOnNexus_300_3x4.png" alt="Empty ModList cover image"
+                    title="Empty ModList cover image">
+                <div class="mod-info-and-buttons">
+                    <div class="modlist-mod-section mod-info">
+                        <h4 class="mb-2">No mods added to '{{modlist.name}}' modlist yet...</h4>
+                    </div>
+                </div>
+            </div>
+            {% endif %}{# ends 'if user.id == g.user.id' #}
+            {% endif %}{# ends 'if page_mods.items != []' #}
 
             {{ macro_ps.page_selector_regular_modlist(user, modlist, page_mods, page, per_page, order) }}
         </div>
