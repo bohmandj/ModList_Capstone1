@@ -1,4 +1,5 @@
 {% import 'macros/page-selector.html' as macro_ps %}
+{% import 'macros/loading.html' as macro_ls %}
 {% extends 'base.html' %}
 
 {% block title %}{{ modlist.name }}{% endblock %}
@@ -35,7 +36,7 @@
 
         <div class="page-settings">
             <a href="{{ url_for('show_tracked_modlist_page', tab='tracked-sync') }}"
-                class="btn btn-outline-nexus page-settings-left">
+                class="btn btn-outline-nexus page-settings-left show-loading">
                 Re-Sync Tracked Mods to Nexus
             </a>
             {{ macro_ps.listview_query_spec_dropdowns(request.path, per_page, order) }}
@@ -243,5 +244,13 @@
         {{ macro_ps.page_selector_tracked_modlist(tab, page_mods, page, per_page, order) }}
     </div>
 </div>
+
+{% set custom_page_message %}
+<span>
+    Some actions, like 'Re-Sync Tracked Mods to Nexus', can take up to a couple minutes to complete if you are tracking
+    many new mods.
+</span>
+{% endset %}
+{{ macro_ls.loading_screen_content(custom_page_message) }}
 
 {% endblock %}

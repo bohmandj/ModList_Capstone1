@@ -1,3 +1,4 @@
+{% import 'macros/loading.html' as macro_ls %}
 {% extends 'base.html' %}
 
 {% block body_class %}onboarding{% endblock %}
@@ -34,7 +35,7 @@
       {{ field(placeholder=field.description, class="form-control") }}
       {% endfor %}{# ends 'for field in form if field.widget...' #}
 
-      <button class="btn btn-primary btn-lg btn-block w-100" type="submit">
+      <button class="btn btn-primary btn-lg btn-block w-100 show-loading" type="submit">
         Log in
       </button>
     </form>
@@ -44,5 +45,12 @@
     </a>
   </div>
 </div>
+
+{% set custom_page_message %}
+<span>
+  Some actions, like syncing records with Nexus, can take up to a couple minutes to complete.
+</span>
+{% endset %}
+{{ macro_ls.loading_screen_content(custom_page_message) }}
 
 {% endblock %}

@@ -1,0 +1,21 @@
+<!-- Macros related to loading screen -->
+
+{# \\\\\\\\\\ inserts loading screen content ////////// #}
+{% macro loading_screen_content(custom_page_message) %}
+<div id="loading-container" style="display: none;">
+    <div class="loading-contents">
+        <div class="loading-icon">
+            <img src="/static/images/Modlist_icon_blank.png" alt="" class="loading-folder">
+            <img src="/static/images/Modlist_icon_gear.png" alt="" class="loading-gear">
+        </div>
+        <h1>Loading...</h1>
+        <span>
+            Thanks for your patience!
+        </span>
+        {{ custom_page_message }}
+        <span>
+            Please do not navigate away from this page wile loading.
+        </span>
+    </div>
+</div>
+{% endmacro %}

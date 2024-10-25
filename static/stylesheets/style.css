@@ -298,7 +298,7 @@ body .navbar {
     --navbar-height: 50px;
     height: var(--navbar-height);
     box-shadow: 0px 0px 20px #000000;
-    z-index: 9999;
+    z-index: 50;
     padding: 0;
 }
 
@@ -1987,6 +1987,86 @@ form .form-switch .form-check-input {
     font-size: 18px;
     font-weight: bold;
     padding: 12px;
+}
+
+/* ================================ Loading screen */
+
+#loading-container {
+    height: 100vh;
+    width: 100vw;
+    display: none;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    z-index: 999;
+    background-color: rgba(20, 20, 20, 0.95);
+    justify-content: center;
+    align-items: center;
+}
+
+#loading-container span {
+    line-height: 1.5em;
+    font-size: larger;
+}
+
+#loading-container .loading-contents {
+    height: fit-content;
+    width: 50vw;
+    position: relative;
+    display: grid;
+    gap: 25px;
+    justify-content: inherit;
+    align-items: inherit;
+    text-align: center;
+}
+
+#loading-container .loading-contents .loading-icon {
+    height: fit-content;
+    width: fit-content;
+    margin: 0 auto;
+    display: flex;
+    justify-content: center;
+}
+
+#loading-container .loading-contents .loading-icon .loading-folder {
+    z-index: 12;
+    display: flex;
+    position: relative;
+    left: 3px;
+    height: 120px;
+    width: auto;
+}
+
+#loading-container .loading-contents .loading-icon .loading-gear {
+    z-index: 13;
+    display: flex;
+    position: absolute;
+    height: 70px;
+    width: auto;
+    top: 32px;
+    animation: spin 10s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@media (max-width: 1000px) and (min-width: 768.1px) {
+    #loading-container .loading-contents {
+        width: 65vw;
+    }
+}
+
+@media (max-width: 768px) {
+    #loading-container .loading-contents {
+        width: 80vw;
+    }
 }
 
 /* ================================ 404 page */
