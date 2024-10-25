@@ -117,20 +117,26 @@ keep_tracked = db.Table(
 
 #Connection of a modlist to the mods in it.
 modlist_mod = db.Table(
-    
+
     'modlist_mod',
-        
+
     db.Column(
         'modlist_id', 
-        db.ForeignKey('modlists.id'), 
+        db.ForeignKey(
+            'modlists.id', 
+            ondelete='CASCADE'
+            ), 
         primary_key=True
-    ),
+        ),
 
     db.Column(
         'mod_id', 
-        db.ForeignKey('mods.id'), 
+        db.ForeignKey(
+            'mods.id', 
+            ondelete='CASCADE'
+            ), 
         primary_key=True
-    ),
+        )
 )
 
 
@@ -159,16 +165,22 @@ game_modlist = db.Table(
     'game_modlist',
         
     db.Column(
-        'game_id', 
-        db.ForeignKey('games.id'), 
+        'modlist_id', 
+        db.ForeignKey(
+            'modlists.id', 
+            ondelete='CASCADE'
+            ), 
         primary_key=True
     ),
 
     db.Column(
-        'modlist_id', 
-        db.ForeignKey('modlists.id'), 
+        'game_id', 
+        db.ForeignKey(
+            'games.id', 
+            ondelete='CASCADE'
+            ), 
         primary_key=True
-    ),
+    )
 )
 
 ###########################################################
@@ -236,17 +248,27 @@ class Modlist(db.Model):
     )
 
     mods: Mapped[List['Mod']] = db.relationship(
-        secondary=modlist_mod, 
-        back_populates='in_modlists'
+        secondary=modlist_mod,
+        back_populates='in_modlists',
+        passive_deletes=True
     )
 
-    user_id: Mapped[int] = mapped_column(db.ForeignKey('users.id', ondelete='CASCADE'))
-    user: Mapped['User'] = db.relationship(back_populates='modlists') # user that made/owns the modlist
+    user_id: Mapped[int] = mapped_column(
+        db.ForeignKey(
+            'users.id', 
+            ondelete='CASCADE'
+        )
+    )
+    # user that made/owns the modlist
+    user: Mapped['User'] = db.relationship(
+        back_populates='modlists'
+    )
 
     # game the modlist is built for
     for_games: Mapped[List['Game']] = db.relationship(
-        secondary=game_modlist, 
-        back_populates='subject_of_modlists'
+        secondary=game_modlist,
+        back_populates='subject_of_modlists',
+        passive_deletes=True
     )
 
     # users that follow this modlist
@@ -315,12 +337,14 @@ class Mod(db.Model):
 
     in_modlists: Mapped[List['Modlist']] = db.relationship(
         secondary=modlist_mod, 
-        back_populates='mods'
+        back_populates='mods',
+        passive_deletes=True
     )
     
     for_games: Mapped[List['Game']] = db.relationship(
         secondary=game_mod,
-        back_populates='subject_of_mods'
+        back_populates='subject_of_mods',
+        passive_deletes=True
     )
 
     # List of Users who have taken notes on this mod, 
@@ -435,18 +459,21 @@ class Game(db.Model):
     domain_name: Mapped[str]
 
     # full name of game on Nexus (w/ caps & spaces)
-    name: Mapped[str]
+    name: Mapped[str] = mapped_column(db.Text)
 
     downloads: Mapped[int] = mapped_column(db.BigInteger)
 
-    subject_of_modlists: Mapped[List["Modlist"]] = db.relationship(
-        secondary=game_modlist, 
-        back_populates='for_games'
+    subject_of_modlists: Mapped[List['Modlist']] = db.relationship(
+        secondary=game_modlist,
+        back_populates='for_games',
+        passive_deletes=True
     )
 
     subject_of_mods: Mapped[List['Mod']] = db.relationship(
         secondary=game_mod, 
-        back_populates='for_games')
+        back_populates='for_games',
+        passive_deletes=True
+    )
 
     def __repr__(self):
         return f'<Game #{self.id}: "{self.name}", #downloads:{self.downloads}>'
@@ -492,7 +519,7 @@ class User(db.Model):
     # modlists made/owned by the user
     modlists: Mapped[List['Modlist']] = db.relationship(
         back_populates='user',
-        cascade='all, delete',
+        cascade='all, delete-orphan',
         passive_deletes=True,
     )
 

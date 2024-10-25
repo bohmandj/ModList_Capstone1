@@ -49,12 +49,6 @@ body {
     z-index: 999;
 }
 
-.split-container {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-}
-
 .section-heading-split {
     width: 100%;
     display: grid;
@@ -87,7 +81,8 @@ body {
     width: 100%;
 }
 
-a.standard-link {
+a.standard-link,
+a.standard-link:visited {
     cursor: pointer;
     text-decoration: underline;
     color: var(--bs-link-color);
@@ -517,7 +512,6 @@ li .dropdown .dropdown-content a,
 .form-page {
     display: grid;
     grid-template-columns: 1fr;
-    width: 70%;
     max-width: 800px;
     min-width: 350px;
     height: 100%;
@@ -584,6 +578,34 @@ form .form-switch .form-check-input {
     margin: 0;
     display: flex;
     align-items: center;
+}
+
+.form-buttons-container {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.form-page .edit-page-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    width: 100%;
+    height: fit-content;
+    gap: 10px;
+}
+
+.form-page .edit-page-buttons a,
+.form-page .edit-page-buttons form,
+.form-page .edit-page-buttons button {
+    min-width: 180px;
+    max-width: 100%;
+    height: fit-content;
+}
+
+.form-page .edit-page-buttons form button {
+    width: 100%;
+    height: fit-content;
 }
 
 /* ===================== User profile */

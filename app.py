@@ -197,7 +197,7 @@ def login():
             session['user_api_key'] = encrypted_api_key
             headers = {'apikey': user_api_key}
 
-            flash(f"Hello, {user.username}!", "success")
+            flash(f"Hello, {user.username}! Welcome back.", "success")
 
             # use list of all games from Nexus API to update all Games in db
             try:
@@ -332,6 +332,64 @@ def edit_password():
         return redirect(f'/users/{g.user.id}')
 
     return render_template('users/password.html', form=form, user=g.user)
+
+
+@app.route('/users/<int:user_id>/delete', methods=["POST"])
+@login_required
+def delete_user(user_id):
+    """Delete user's account.
+
+    - User is searched for in, and deleted from, the db.
+    """
+
+    if user_id != g.user.id:
+        description = "You may only delete the account to which you are currently signed in."
+        abort(403, description)
+
+    user = db.get_or_404(User, g.user.id, description=f"Sorry, we encountered an issue retrieving user data from our database. User account has not been deleted.<br>Please try again.")
+    username = user.username
+
+    try:
+        # Delete user and let db delete cascades clear user's assets
+        db.session.delete(user)
+        db.session.commit()
+
+    except Exception as e:
+        db.session.rollback()
+        print("Error deleting user from db - delete_user(): \n", e, "\nAttempting asset deletion before user deletion.")
+
+        user = db.session.execute(
+            db.select(User)
+            .options(db.selectinload(User.modlists))
+            .where(User.id == g.user.id)
+        ).scalars().first()
+    
+        if not user:
+            flash("User not deleted. An error was encountered attempting to locate user data. Please try again.", "danger")
+            return redirect(url_for("homepage"))
+
+        username = user.username
+
+        try:
+            # Clear all assets associated with the user from the db
+            for modlist in user.modlists:
+                modlist.mods.clear()
+                modlist.for_games.clear()
+                db.session.delete(modlist)
+            # Finally, delete the user
+            db.session.delete(user)
+            db.session.commit()
+            
+        except Exception as e:
+            db.session.rollback()
+            print("Error in asset deletion before user deletion - delete_user(): \n", e)
+            flash("An error occurred and your user account was not deleted. Please try again.", "danger")
+            return redirect(url_for('show_user_page', user_id=g.user.id))
+
+    do_logout()
+    flash(f"Success! User account '{username}' has been deleted!", 'success')
+
+    return redirect(url_for("homepage"))
 
 
 ##############################################################################

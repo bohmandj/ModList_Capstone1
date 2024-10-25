@@ -27,7 +27,7 @@
         {{ field(checked=False, class="form-check-input", type="checkbox", role="switch", id=field.name + '_switch') }}
       </div>
       <span>
-        <label for="flexSwitchCheck">
+        <label for="{{field.name + '_switch'}}">
           {{ field.label.text }}
           <br>
           <span style="font-size: 0.8rem;">
@@ -55,8 +55,8 @@
     {% endif %}
   </form>
 
-  <div class="split-container">
-    <div>
+  <div class="form-buttons-container">
+    <div class="edit-page-buttons">
       <button type="submit" form="user_form" class="btn btn-success">
         Save Changes
       </button>
@@ -65,21 +65,27 @@
         Cancel
       </a>
     </div>
-    <div>
+    <div class="edit-page-buttons">
       {% if user %}{# right hand buttons for edit user #}
       {% if form.current_password %}{# main edit-profile page (not edit-password page) #}
       <a href="{{ url_for('edit_password') }}" class="btn btn-outline-primary">
         Edit Password
       </a>
-      <!-- <a href="" class="btn btn-outline-danger">
+      <form method="POST" action="{{ url_for('delete_user', user_id=g.user.id) }}" style="display: inline-block;"
+        onsubmit="return confirm(`Are you sure you want to delete your user account: '{{ user.username }}'?\nOnce deleted, your account information can not be recovered`);">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" title="Click here to delete your user account." class="btn btn-outline-danger">
           Delete User Account
-        </a> -->
+        </button>
+      </form>
       {% endif %}{# ends 'if form.current_password' #}
       {% else %}{# right hand buttons for edit modlist page #}
+      <div></div>
       <form method="POST" action="{{ url_for('delete_modlist', user_id=g.user.id, modlist_id=modlist.id) }}"
         onsubmit="return confirm(`Are you sure you want to delete your modlist:\n    '{{ modlist.name }}'?`);">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button title="Click here to delete {{modlist.name}} from your modlists." class="btn btn-outline-danger">
+        <button type="submit" title="Click here to delete {{modlist.name}} from your modlists."
+          class="btn btn-outline-danger">
           Delete Modlist
         </button>
       </form>
