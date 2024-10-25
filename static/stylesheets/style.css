@@ -7,7 +7,7 @@
     --brand-color-primary-bright: #1c5bd9;
 
     --background-color-light: ;
-    --background-color-med-light: ;
+    --background-color-med-light: #aaaaaa;
     --background-color-med-dark: #202020;
     --background-color-dark: #151515;
 
@@ -289,6 +289,56 @@ svg.info-icon {
     color: #d3d3d3;
     text-align: center;
     margin: 5px 15px;
+}
+
+/* ======================= Scroll Up btn */
+
+button#scrollToTop {
+    display: none;
+    position: sticky;
+    width: fit-content;
+    height: fit-content;
+    bottom: 20px;
+    padding: 0;
+    margin-left: auto;
+    margin-right: -50px;
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
+    opacity: 25%;
+    z-index: 99;
+}
+
+button#scrollToTop:hover {
+    opacity: 100%;
+    /* background-color: #353535;
+    border: 2px solid #353535;
+    border-radius: 50%; */
+}
+
+button#scrollToTop svg {
+    height: 35px;
+    width: auto;
+    fill: #606060;
+    cursor: pointer;
+}
+
+@media (max-width: 767px) {
+
+    /* For phones */
+    #scrollToTop {
+        display: none;
+        /* Hide the button on small screens */
+    }
+}
+
+@media (min-width: 767.1px) {
+
+    /* For larger screens */
+    #scrollToTop {
+        display: block;
+        /* Show the button on larger screens */
+    }
 }
 
 /* ======================= Nav */
