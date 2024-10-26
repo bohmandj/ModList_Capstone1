@@ -6,7 +6,7 @@
     --brand-color-primary-dark: #000e29;
     --brand-color-primary-bright: #1c5bd9;
 
-    --background-color-light: ;
+    --background-color-light: #cccccc;
     --background-color-med-light: #aaaaaa;
     --background-color-med-dark: #202020;
     --background-color-dark: #151515;
@@ -932,7 +932,7 @@ fieldset[disabled] .btn-outline-nexus.active {
     background-color: #D98F40;
 }
 
-/* ===================== Games */
+/* ===================== Games (on homepage) */
 
 .card-page .game-section {
     width: 100%;
@@ -941,6 +941,7 @@ fieldset[disabled] .btn-outline-nexus.active {
     column-gap: 25px;
     row-gap: 25px;
     padding: 0px;
+    margin-bottom: 0;
 }
 
 .game-section .game-card {
@@ -982,48 +983,6 @@ fieldset[disabled] .btn-outline-nexus.active {
 
 .game-card .game-title span {
     width: 80%;
-}
-
-.game-abc {
-    width: 80%;
-    margin: 50px 0px;
-}
-
-.game-abc span {
-    text-decoration: underline;
-    margin: 5px;
-}
-
-.game-abc a {
-    text-decoration: none;
-    color: #ffffff;
-}
-
-.game-abc span:hover,
-.game-abc a:hover {
-    cursor: pointer;
-    color: #5170AF;
-}
-
-.game-abc a:visited {
-    color: #cccccc;
-}
-
-.game-abc ul {
-    list-style-type: none;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    column-gap: 5%;
-    row-gap: 10%;
-    margin-left: 0px;
-    margin-top: 20px;
-    padding: 0px;
-}
-
-.game-abc ul li {
-    list-style-type: none;
-    text-align: left;
-    width: 100%;
 }
 
 /* ===================== ModList Page (all user-made modlists) */
@@ -1981,6 +1940,67 @@ form .form-switch .form-check-input {
     height: 100%;
     color: #ffffff;
     text-align: center;
+}
+
+/* ============================ Home page Alphabet menu */
+
+.game-abc {
+    width: 100%;
+    margin: 0 auto;
+}
+
+.game-abc h2 {
+    margin: 20px auto;
+}
+
+.game-abc .alphabet-menu {
+    width: 80%;
+    margin: 0 auto;
+}
+
+.game-abc .alphabet-menu span {
+    font-size: x-large;
+    text-decoration: underline;
+    margin: 5px;
+}
+
+.game-abc a {
+    text-decoration: none;
+    color: #ffffff;
+}
+
+.game-abc span:hover,
+.game-abc a:hover {
+    cursor: pointer;
+    color: #5170AF;
+}
+
+.game-abc a:visited {
+    color: #cccccc;
+}
+
+.game-abc ul.game-list {
+    list-style-type: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    column-gap: 20px;
+    row-gap: 10px;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 20px;
+    padding: 0px;
+}
+
+.game-abc ul li {
+    text-align: left;
+    display: flex;
+    align-items: center;
+}
+
+.game-abc ul li a {
+    display: block;
+    width: 100%;
 }
 
 /* ============================ Signed out home */

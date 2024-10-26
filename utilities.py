@@ -19,11 +19,12 @@ def get_all_games_db():
 
     try:
         ordered_games = db.session.scalars(db.select(Game).order_by(Game.downloads.desc())).all()
+
+        return [{'id': game.id, 'domain_name': game.domain_name, 'name': game.name, 'downloads': game.downloads} for game in ordered_games]
+
     except Exception as e:
         print("Page: Homepage\nFunction: get_all_games_db()\nQuery failed to retrieve all game data from db; error: ", e)
         return e
-
-    return ordered_games
 
 
 def get_game_db(game_domain_name):

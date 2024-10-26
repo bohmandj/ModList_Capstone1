@@ -1,6 +1,10 @@
 {% extends 'base.html' %}
 
 {% block title %}Games{% endblock %}
+{% block script %}
+<script type="application/json" id="games-data">{{ games_list | tojson }}</script>
+<script src="{{ url_for('static', filename='js/home.js') }}"></script>
+{% endblock %}
 
 {% block content %}
 
@@ -28,16 +32,17 @@
 
     {% else %}{# handle game data retrieval success #}
     <li class="game-card">
-      <div class="game-img"
+      <a class="game-img" href="{{ url_for('show_game_page', game_domain_name=game.domain_name) }}"
         style="background-image: url(https://staticdelivery.nexusmods.com/Images/games/4_3/tile_{{game.id}}.jpg);"
-        alt="{{ game.name }} cover image">
-      </div>
+        alt="{{ game.name }} cover image" title="Open {{game.name}} page on ModList">
+      </a>
       <a class="nexus-btn-container" href="https://www.nexusmods.com/{{ game.domain_name }}" target="_blank"
         rel="noopener noreferrer" title="Open {{ game.name }} on Nexus to search all mods in a new tab.">
         <img class="nexus-btn"
           src="https://raw.githubusercontent.com/github/explore/781dbc058383a2ee8259ebbab057292f16172d5e/topics/nexus-mods/nexus-mods.png">
       </a>
-      <a class="game-title" href="{{ url_for('show_game_page', game_domain_name=game.domain_name) }}">
+      <a class="game-title" href="{{ url_for('show_game_page', game_domain_name=game.domain_name) }}"
+        title="Open {{game.name}} page on ModList">
         <span>{{ game.name }}</span>
       </a>
     </li>
@@ -45,6 +50,18 @@
 
     {% endfor %}
   </ul>
+
+  <h2>Search Games by Title</h2>
+  <div class="game-abc">
+    <div class="alphabet-menu">
+      {% for ltr in ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
+      'U', 'V', 'W', 'X', 'Y', 'Z'] %}
+      <span class="alphabet-letter" data-letter="{{ ltr }}">{{ ltr }}</span>
+      {% endfor %}
+      <span class="alphabet-letter" data-letter="#">#</span>
+    </div>
+    <ul class="game-list" style="display: none;"></ul>
+  </div>
 
 </div>
 
