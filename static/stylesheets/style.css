@@ -1942,6 +1942,10 @@ form .form-switch .form-check-input {
     text-align: center;
 }
 
+.card-page .load-more-btn {
+    margin: 20px auto;
+}
+
 /* ============================ Home page Alphabet menu */
 
 .game-abc {
