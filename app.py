@@ -232,167 +232,6 @@ def logout():
 
 
 ##############################################################################
-# User routes:
-
-@app.route('/users/<int:user_id>')
-def show_user_page(user_id):
-    """Show user profile page.
-    
-    - Display games for which user has lists with small
-      selection of their lists.
-    - Buttons to: go to list, go to game, make new list.
-    """
-
-    user = db.get_or_404(User, user_id, description=f"Sorry, we couldn't find a user with ID #{user_id}.<br>We either encountered an issue retrieving the data from our database, or the user does not exist.<br>Please check that the correct user id is being requested and try again.")
-
-    if not g.user or g.user.id != int(user_id):
-
-        modlists_by_game = get_public_modlists_by_game(user_id)
-
-        return render_template('users/profile-public.html', user=user, modlists_by_game=modlists_by_game)
-        
-    empty_modlists = get_empty_modlists(g.user.id)
-    modlists_by_game = get_recent_modlists_by_game(g.user.id)
-
-
-    return render_template('users/profile-user.html', user=user, empty_modlists=empty_modlists, modlists_by_game=modlists_by_game)
-
-
-@app.route('/users/edit', methods=["GET", "POST"])
-@login_required
-def edit_profile():
-    """Update profile info for current user."""
-
-    form = UserEditForm()
-
-    if form.validate_on_submit():
-
-        user = User.authenticate(g.user.username, form.current_password.data)
-        if user == False:
-            flash("Password did not match our records for the currently signed-in user account. Please try again.", 'danger')
-            return redirect(url_for('edit_profile'))
-
-        try:
-            g.user.username = form.username.data
-            g.user.email = form.email.data
-            g.user.hide_nsfw = form.hide_nsfw.data
-            db.session.commit()
-        
-        except IntegrityError as e:
-            db.session.rollback()
-            if e.__cause__.diag.constraint_name == "users_username_key":
-                flash("Username already taken, please try again with a different username.", 'danger')
-            if e.__cause__.diag.constraint_name == "users_email_key":
-                flash("Email already used - each email can only be used on one account", 'danger')
-            redirect(url_for('edit_profile'))
-
-        flash(f"Success! Edits to {form.username.data} saved.", 'success')
-
-        return redirect(url_for('show_user_page', user_id=g.user.id))
-
-    # pre-fill forms w/ user data
-    form.username.data = g.user.username
-    form.email.data = g.user.email
-    form.hide_nsfw.data = g.user.hide_nsfw
-
-    return render_template('users/edit.html', form=form, user=g.user)
-
-
-@app.route('/users/password', methods=["GET", "POST"])
-@login_required
-def edit_password():
-    """Update password for current user."""
-
-    form = UserPasswordForm()
-
-    if form.validate_on_submit():
-
-        user = User.authenticate(g.user.username, form.current_password.data)
-
-        if user == False:
-            flash("Password did not match our records for the currently signed-in user account. Please try again.", 'danger')
-            return render_template('users/password.html', form=form, user=g.user)
-
-        if form.new_password.data != form.new_confirm.data:
-            flash("New password and confirmation password did not match. Please try again.", 'danger')
-            return redirect(url_for('edit_password', form=form, user=g.user))
-
-        try:
-            hashed_password = user.hash_new_password(form.new_password.data)
-            user.password = hashed_password
-            db.session.commit()
-        except Exception as e:
-            db.session.rollback()
-            print("Page: edit_password\nFunction: hash_new_password()\n;Error making/committing new hashed password to db, error: ", e)
-            flash("Error saving new password. Please try again.", 'danger')
-            return redirect(url_for('edit_password', form=form, user=g.user))
-
-        flash("Success! New password saved.", 'success')
-
-        return redirect(f'/users/{g.user.id}')
-
-    return render_template('users/password.html', form=form, user=g.user)
-
-
-@app.route('/users/<int:user_id>/delete', methods=["POST"])
-@login_required
-def delete_user(user_id):
-    """Delete user's account.
-
-    - User is searched for in, and deleted from, the db.
-    """
-
-    if user_id != g.user.id:
-        description = "You may only delete the account to which you are currently signed in."
-        abort(403, description)
-
-    user = db.get_or_404(User, g.user.id, description=f"Sorry, we encountered an issue retrieving user data from our database. User account has not been deleted.<br>Please try again.")
-    username = user.username
-
-    try:
-        # Delete user and let db delete cascades clear user's assets
-        db.session.delete(user)
-        db.session.commit()
-
-    except Exception as e:
-        db.session.rollback()
-        print("Error deleting user from db - delete_user(): \n", e, "\nAttempting asset deletion before user deletion.")
-
-        user = db.session.execute(
-            db.select(User)
-            .options(db.selectinload(User.modlists))
-            .where(User.id == g.user.id)
-        ).scalars().first()
-    
-        if not user:
-            flash("User not deleted. An error was encountered attempting to locate user data. Please try again.", "danger")
-            return redirect(url_for("homepage"))
-
-        username = user.username
-
-        try:
-            # Clear all assets associated with the user from the db
-            for modlist in user.modlists:
-                modlist.mods.clear()
-                modlist.for_games.clear()
-                db.session.delete(modlist)
-            # Finally, delete the user
-            db.session.delete(user)
-            db.session.commit()
-            
-        except Exception as e:
-            db.session.rollback()
-            print("Error in asset deletion before user deletion - delete_user(): \n", e)
-            flash("An error occurred and your user account was not deleted. Please try again.", "danger")
-            return redirect(url_for('show_user_page', user_id=g.user.id))
-
-    do_logout()
-    flash(f"Success! User account '{username}' has been deleted!", 'success')
-
-    return redirect(url_for("homepage"))
-
-
-##############################################################################
 # Tracked Mods Modlist routes:
 
 
@@ -784,6 +623,167 @@ def new_modlist(user_id):
         return redirect(next_page or url_for("show_user_page", user_id=g.user.id))
 
     return render_template('users/modlist-new.html', form=form)
+
+
+##############################################################################
+# User routes:
+
+@app.route('/users/<int:user_id>/delete', methods=["POST"])
+@login_required
+def delete_user(user_id):
+    """Delete user's account.
+
+    - User is searched for in, and deleted from, the db.
+    """
+
+    if user_id != g.user.id:
+        description = "You may only delete the account to which you are currently signed in."
+        abort(403, description)
+
+    user = db.get_or_404(User, g.user.id, description=f"Sorry, we encountered an issue retrieving user data from our database. User account has not been deleted.<br>Please try again.")
+    username = user.username
+
+    try:
+        # Delete user and let db delete cascades clear user's assets
+        db.session.delete(user)
+        db.session.commit()
+
+    except Exception as e:
+        db.session.rollback()
+        print("Error deleting user from db - delete_user(): \n", e, "\nAttempting asset deletion before user deletion.")
+
+        user = db.session.execute(
+            db.select(User)
+            .options(db.selectinload(User.modlists))
+            .where(User.id == g.user.id)
+        ).scalars().first()
+    
+        if not user:
+            flash("User not deleted. An error was encountered attempting to locate user data. Please try again.", "danger")
+            return redirect(url_for("homepage"))
+
+        username = user.username
+
+        try:
+            # Clear all assets associated with the user from the db
+            for modlist in user.modlists:
+                modlist.mods.clear()
+                modlist.for_games.clear()
+                db.session.delete(modlist)
+            # Finally, delete the user
+            db.session.delete(user)
+            db.session.commit()
+            
+        except Exception as e:
+            db.session.rollback()
+            print("Error in asset deletion before user deletion - delete_user(): \n", e)
+            flash("An error occurred and your user account was not deleted. Please try again.", "danger")
+            return redirect(url_for('show_user_page', user_id=g.user.id))
+
+    do_logout()
+    flash(f"Success! User account '{username}' has been deleted!", 'success')
+
+    return redirect(url_for("homepage"))
+
+
+@app.route('/users/<int:user_id>')
+def show_user_page(user_id):
+    """Show user profile page.
+    
+    - Display games for which user has lists with small
+      selection of their lists.
+    - Buttons to: go to list, go to game, make new list.
+    """
+
+    user = db.get_or_404(User, user_id, description=f"Sorry, we couldn't find a user with ID #{user_id}.<br>We either encountered an issue retrieving the data from our database, or the user does not exist.<br>Please check that the correct user id is being requested and try again.")
+
+    if not g.user or g.user.id != int(user_id):
+
+        modlists_by_game = get_public_modlists_by_game(user_id)
+
+        return render_template('users/profile-public.html', user=user, modlists_by_game=modlists_by_game)
+        
+    empty_modlists = get_empty_modlists(g.user.id)
+    modlists_by_game = get_recent_modlists_by_game(g.user.id)
+
+
+    return render_template('users/profile-user.html', user=user, empty_modlists=empty_modlists, modlists_by_game=modlists_by_game)
+
+
+@app.route('/users/edit', methods=["GET", "POST"])
+@login_required
+def edit_profile():
+    """Update profile info for current user."""
+
+    form = UserEditForm()
+
+    if form.validate_on_submit():
+
+        user = User.authenticate(g.user.username, form.current_password.data)
+        if user == False:
+            flash("Password did not match our records for the currently signed-in user account. Please try again.", 'danger')
+            return redirect(url_for('edit_profile'))
+
+        try:
+            g.user.username = form.username.data
+            g.user.email = form.email.data
+            g.user.hide_nsfw = form.hide_nsfw.data
+            db.session.commit()
+        
+        except IntegrityError as e:
+            db.session.rollback()
+            if e.__cause__.diag.constraint_name == "users_username_key":
+                flash("Username already taken, please try again with a different username.", 'danger')
+            if e.__cause__.diag.constraint_name == "users_email_key":
+                flash("Email already used - each email can only be used on one account", 'danger')
+            redirect(url_for('edit_profile'))
+
+        flash(f"Success! Edits to {form.username.data} saved.", 'success')
+
+        return redirect(url_for('show_user_page', user_id=g.user.id))
+
+    # pre-fill forms w/ user data
+    form.username.data = g.user.username
+    form.email.data = g.user.email
+    form.hide_nsfw.data = g.user.hide_nsfw
+
+    return render_template('users/edit.html', form=form, user=g.user)
+
+
+@app.route('/users/password', methods=["GET", "POST"])
+@login_required
+def edit_password():
+    """Update password for current user."""
+
+    form = UserPasswordForm()
+
+    if form.validate_on_submit():
+
+        user = User.authenticate(g.user.username, form.current_password.data)
+
+        if user == False:
+            flash("Password did not match our records for the currently signed-in user account. Please try again.", 'danger')
+            return render_template('users/password.html', form=form, user=g.user)
+
+        if form.new_password.data != form.new_confirm.data:
+            flash("New password and confirmation password did not match. Please try again.", 'danger')
+            return redirect(url_for('edit_password', form=form, user=g.user))
+
+        try:
+            hashed_password = user.hash_new_password(form.new_password.data)
+            user.password = hashed_password
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            print("Page: edit_password\nFunction: hash_new_password()\n;Error making/committing new hashed password to db, error: ", e)
+            flash("Error saving new password. Please try again.", 'danger')
+            return redirect(url_for('edit_password', form=form, user=g.user))
+
+        flash("Success! New password saved.", 'success')
+
+        return redirect(f'/users/{g.user.id}')
+
+    return render_template('users/password.html', form=form, user=g.user)
 
 
 ##############################################################################
