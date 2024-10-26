@@ -77,7 +77,7 @@
         <h4 class="middle-text">What would you like to do with {{mod.name}}?</h4>
 
         <div class="modpage-buttons btns1">
-            <a href="{{ url_for('modlist_add_mod', user_id=g.user.id, mod_id=mod.id) }}" class="btn btn-primary"
+            <a href="{{ url_for('modlist_add_mod', mod_id=mod.id) }}" class="btn btn-primary"
                 title="Add {{mod.name}} to any of your modlists assigned to {{game.name}} or your empty modlists">
                 Add this mod to a modlist!
             </a>

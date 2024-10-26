@@ -65,7 +65,7 @@
 
         <div class="page-settings">
             {% if user.id == g.user.id %}
-            <a href="{{ url_for('edit_modlist', user_id=g.user.id, modlist_id=modlist.id) }}"
+            <a href="{{ url_for('edit_modlist', modlist_id=modlist.id) }}"
                 class="btn btn-outline-secondary page-settings-left"
                 title="Click here to edit the name, description, or privacy status of this modlist. Ability to delete a modlist is also found on the edit page.">
                 Edit Modlist
@@ -134,7 +134,7 @@
                             </a>
                             {% if user.id == g.user.id %}
                             <form method="POST"
-                                action="{{ url_for('modlist_delete_mod', user_id=g.user.id, modlist_id=modlist.id, mod_id=mod.id) }}"
+                                action="{{ url_for('modlist_delete_mod', modlist_id=modlist.id, mod_id=mod.id) }}"
                                 onsubmit="return confirm(`Are you sure you want to delete the mod:\n    '{{ mod.name }}'\nfrom the modlist:\n    '{{ modlist.name }}'?`);">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button title="Delete {{mod.name}} from {{modlist.name}}"
