@@ -489,26 +489,24 @@ def delete_modlist(modlist_id):
         flash(is_invalid, "danger")
         return redirect(url_for('show_modlist_page', user_id=modlist.user_id, modlist_id=modlist_id))
 
-    else:
-        user = db.session.execute(
-            db.select(User)
-            .options(db.selectinload(User.modlists))
-            .where(User.id == g.user.id)
-        ).scalars().first()
-        try:
-            # Remove all mods related to this modlist from modlist_mod table
-            if modlist.mods:
-                for mod in modlist.mods:
-                    modlist.mods.remove(mod)
-            # Delete the modlist itself
-            db.session.delete(modlist)
-            db.session.commit()
+    user = db.session.execute(
+        db.select(User)
+        .options(db.selectinload(User.modlists))
+        .where(User.id == g.user.id)
+    ).scalars().first()
+    try:
+        # Remove all mods related to this modlist from modlist_mod table
+        if modlist.mods:
+            modlist.mods.clear()
+        # Delete the modlist itself
+        db.session.delete(modlist)
+        db.session.commit()
 
-        except Exception as e:
-            db.session.rollback()
-            print("Error deleting modlist from db - delete_modlist(): ", e)
-            flash(f"An error occurred and modlist '{modlist.name}' was not deleted.\nPlease try again.", 'danger')
-            return redirect(url_for('show_modlist_page', user_id=modlist.user_id, modlist_id=modlist_id))
+    except Exception as e:
+        db.session.rollback()
+        print("Error deleting modlist from db - delete_modlist(): ", e)
+        flash(f"An error occurred and modlist '{modlist.name}' was not deleted.\nPlease try again.", 'danger')
+        return redirect(url_for('show_modlist_page', user_id=modlist.user_id, modlist_id=modlist_id))
 
     flash(f"Success! Modlist '{modlist.name}' has been deleted!", 'success')
     return redirect(url_for("show_user_page", user_id=g.user.id))
