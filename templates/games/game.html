@@ -5,7 +5,18 @@
 {% block content %}
 
 <div class="card-page">
-  <h1 class="page-heading">{{ game.name }}</h1>
+  <div class="d-inline-flex">
+    <h1 class="page-heading flex-grow-1 text-start">{{ game.name }}</h1>
+    <a href="{{url_for('show_all_games_page')}}" class="btn btn-outline-secondary mt-auto" style="height: fit-content;"
+      title="Go back to view page with lists of most popular games, and all games hosted on Nexus.">
+      <svg xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 320 512"><!--!Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.-->
+        <path
+          d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z" />
+      </svg>
+      All Games
+    </a>
+  </div>
 
   {% for cat in mod_categories %}
   <div class="mod-category">

@@ -156,36 +156,43 @@ form a.white-link:hover {
 .content-container a.btn-outline-nexus,
 .content-container a.btn-outline-nexus:visited {
     color: var(--nexus-color-primary);
+    fill: var(--nexus-color-primary);
 }
 
 .content-container a.btn-outline-primary,
 .content-container a.btn-outline-primary:visited {
     color: var(--bs-color-primary);
+    fill: var(--bs-color-primary);
 }
 
 .content-container a.btn-outline-secondary,
 .content-container a.btn-outline-secondary:visited {
     color: var(--bs-color-secondary);
+    fill: var(--bs-color-secondary);
 }
 
 .content-container a.btn-outline-success,
 .content-container a.btn-outline-success:visited {
     color: var(--bs-color-success);
+    fill: var(--bs-color-success);
 }
 
 .content-container a.btn-outline-danger,
 .content-container a.btn-outline-danger:visited {
     color: var(--bs-color-danger);
+    fill: var(--bs-color-danger);
 }
 
 .content-container a.btn-outline-warning,
 .content-container a.btn-outline-warning:visited {
     color: var(--bs-color-warning);
+    fill: var(--bs-color-warning);
 }
 
 .content-container a.btn-outline-info,
 .content-container a.btn-outline-info:visited {
     color: var(--bs-color-info);
+    fill: var(--bs-color-info);
 }
 
 .content-container a.btn-outline-primary:hover,
@@ -195,11 +202,19 @@ form a.white-link:hover {
 .content-container a.btn-outline-warning:hover,
 .content-container a.btn-outline-info:hover {
     color: #ffffff;
+    fill: #ffffff;
 }
 
 .content-container a.btn-warning:hover,
 .content-container a.btn-info:hover {
     color: #000000;
+}
+
+.content-container a.btn svg {
+    width: 1.2em;
+    aspect-ratio: 1/1;
+    position: relative;
+    bottom: 1px;
 }
 
 .content-container .modlistpage a.nexus-link {

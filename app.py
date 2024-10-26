@@ -500,79 +500,56 @@ def change_keep_tracked_status(user_id, mod_id, keep_action):
 # Users-made Modlist routes:
 
 
-@app.route('/users/<int:user_id>/modlists/<int:modlist_id>')
-@set_listview_query_vals
-def show_modlist_page(user_id, modlist_id, page=1, per_page=25, order="update"):
-    """Show the user's modlist page. 
-
-    Mod display order takes 'order' arguments from the query string - 'author' or 'name' valid, otherwise mods display most recently updated first.
-    Pagination takes 'page' and 'per_page' arguments from the query string.
-    """
-    print("SHOW_MODLIST_PAGE STARTED")
-    modlist = db.get_or_404(Modlist, modlist_id, description=f"Sorry, we couldn't find modlist #{modlist_id}.<br>We either encountered an issue retrieving the data from our database, or the modlist does not exist.<br>Please try again or use a different modlist.")
-
-    user = db.get_or_404(User, user_id, description=f"Sorry, we couldn't find user #{user_id}.<br>We either encountered an issue retrieving the data from our database, or the user does not exist.<br>Please try again or use a different user.")
-
-    if int(modlist.user_id) != int(user_id):
-        description = 'Make sure User ID and Modlist ID are compatible.<br>The  requested modlist must be owned by the requested user.'
-        abort(404, description)
-
-    page_mods = paginate_modlist_mods(user_id, modlist_id, page, per_page, order)
-
-    if not g.user:
-        hide_nsfw = True
-    else:
-        hide_nsfw = g.user.hide_nsfw
-    
-    print("SHOW_MODLIST_PAGE About to return users/modlist.html")
-    return render_template('users/modlist.html', page_mods=page_mods, page=page, per_page=per_page, order=order, user=user, modlist=modlist, hide_nsfw=hide_nsfw)
-
-
-@app.route('/users/<int:user_id>/modlists/new', methods=["GET", "POST"])
+@app.route('/users/<int:user_id>/modlists/<int:modlist_id>/mods/<int:mod_id>/delete', methods=["POST"])
 @login_required
-def new_modlist(user_id):
-    """Handle new modlist generation.
+def modlist_delete_mod(user_id, modlist_id, mod_id):
+    """Remove mod from modlist.
 
-    Create new modlist and add to DB. Redirect to new modlist page.
-
-    If form not valid, re-present form.
+    - db is searched for mod and modlist.
+    - if mod is found in list of mods contained in modlist, 
+      delete mod from modlist.
     """
 
-    form = ModlistAddForm()
+    modlist = db.get_or_404(Modlist, modlist_id, description=f"Sorry, we couldn't find a modlist with ID #{modlist_id}.<br>We either encountered an issue retrieving the data from our database, or the modlist does not exist.<br>Please check that the correct modlist id is being requested and try again.")
 
-    if form.validate_on_submit():
-        next_page = request.args.get('next')
+    is_invalid = check_modlist_uneditable(user_id, modlist, g.user.id)
+    if is_invalid:
+        flash(is_invalid, "danger")
+        return redirect(url_for('show_modlist_page', user_id=user_id, modlist_id=modlist_id))
 
+    else:
+        mod = db.get_or_404(Mod, mod_id, description=f"Sorry, we couldn't find a mod with ID #{mod_id}.<br>We either encountered an issue retrieving the data from our database, or the mod does not exist.<br>Please check that the correct mod id is being requested and try again.")
         try:
-            current_modlists = db.session.scalars(db.select(Modlist).where(Modlist.user_id==user_id).order_by(Modlist.name)).all()
+            if mod in modlist.mods:
+                modlist.mods.remove(mod)
+            else:
+                flash(f"Can't delete mod from modlist. {mod.name} not found in {modlist.name}.", 'danger')
+                return redirect(url_for('show_modlist_page', user_id=g.user.id, modlist_id=modlist_id))
 
-            if form.name.data in [modlist.name for modlist in current_modlists]:
-                raise ValueError(f"You already have a modlist named '{form.name.data}', please choose another name.")
-
-            modlist = Modlist.new_modlist(
-                name=form.name.data,
-                description=form.description.data,
-                private=form.private.data,
-                user=g.user
-            )
             db.session.commit()
-
-        except ValueError as e:
-            db.session.rollback()
-            flash(str(e), 'danger')
-            return redirect(url_for('new_modlist', user_id=user_id, form=form, next=next_page))
 
         except Exception as e:
             db.session.rollback()
-            print("Error creating modlist: ", e)
-            flash("Modlist was not created due to an error, please try again.", 'danger')
-            return redirect(url_for('new_modlist', user_id=user_id, form=form, next=next_page))
+            print("Error deleting mod from modlist in db - modlist_delete_mod(): ", e)
+            flash(f"Error removing {mod.name} from {modlist.name}, please try again.", 'danger')
+            return redirect(url_for('show_modlist_page', user_id=g.user.id, modlist_id=modlist_id))
 
-        return redirect(next_page or url_for("show_user_page", user_id=g.user.id))
+    flash(f'{mod.name} successfully removed from {modlist.name}!', 'success')
+    print(f"modlist.mods: {modlist.mods}")
+    print(f"len(modlist.mods): {len(modlist.mods)}")
+    if len(modlist.mods) <= 0:
+        for game in modlist.for_games:
+            try:
+                print(f"modlist.for_games: {modlist.for_games}")
+                modlist.for_games.remove(game)
+                db.session.commit()
+            except Exception as e:
+                print("Page: modlist_delete_mod, Function: modlist.for_games.remove(game)\nFailed to un-assign modlist's game assignment, error: ", e)
+                abort(500, f"Only mod was removed from modlist, but an error was encountered removing modlist's assignment to {game.name}.<br>Modlist will still only take mods for {game.name}.<br>Options to resolve future issues with this modlist are:<br>1. Add and remove a mod to reattempt game assignment removal<br>2. Delete this modlist and make a new one.")
 
-    return render_template('users/modlist-new.html', form=form)
+    return redirect(url_for('show_modlist_page', user_id=g.user.id, modlist_id=modlist_id))
 
-
+    
 @app.route('/users/<int:user_id>/modlists/<int:modlist_id>/edit', methods=["GET", "POST"])
 @login_required
 def edit_modlist(user_id, modlist_id):
@@ -674,6 +651,34 @@ def delete_modlist(user_id, modlist_id):
     return redirect(url_for("show_user_page", user_id=g.user.id))
 
 
+@app.route('/users/<int:user_id>/modlists/<int:modlist_id>')
+@set_listview_query_vals
+def show_modlist_page(user_id, modlist_id, page=1, per_page=25, order="update"):
+    """Show the user's modlist page. 
+
+    Mod display order takes 'order' arguments from the query string - 'author' or 'name' valid, otherwise mods display most recently updated first.
+    Pagination takes 'page' and 'per_page' arguments from the query string.
+    """
+    print("SHOW_MODLIST_PAGE STARTED")
+    modlist = db.get_or_404(Modlist, modlist_id, description=f"Sorry, we couldn't find modlist #{modlist_id}.<br>We either encountered an issue retrieving the data from our database, or the modlist does not exist.<br>Please try again or use a different modlist.")
+
+    user = db.get_or_404(User, user_id, description=f"Sorry, we couldn't find user #{user_id}.<br>We either encountered an issue retrieving the data from our database, or the user does not exist.<br>Please try again or use a different user.")
+
+    if int(modlist.user_id) != int(user_id):
+        description = 'Make sure User ID and Modlist ID are compatible.<br>The  requested modlist must be owned by the requested user.'
+        abort(404, description)
+
+    page_mods = paginate_modlist_mods(user_id, modlist_id, page, per_page, order)
+
+    if not g.user:
+        hide_nsfw = True
+    else:
+        hide_nsfw = g.user.hide_nsfw
+    
+    print("SHOW_MODLIST_PAGE About to return users/modlist.html")
+    return render_template('users/modlist.html', page_mods=page_mods, page=page, per_page=per_page, order=order, user=user, modlist=modlist, hide_nsfw=hide_nsfw)
+
+
 @app.route('/users/<int:user_id>/modlists/add/mods/<int:mod_id>', methods=["GET", "POST"])
 @login_required
 def modlist_add_mod(user_id, mod_id):
@@ -736,100 +741,53 @@ def modlist_add_mod(user_id, mod_id):
     return render_template('users/modlist-add.html', form=form, user=g.user, mod=mod, modlists_w_mod=modlists_w_mod, no_modlists=no_modlists)
 
 
-@app.route('/users/<int:user_id>/modlists/<int:modlist_id>/mods/<int:mod_id>/delete', methods=["POST"])
+@app.route('/users/<int:user_id>/modlists/new', methods=["GET", "POST"])
 @login_required
-def modlist_delete_mod(user_id, modlist_id, mod_id):
-    """Remove mod from modlist.
+def new_modlist(user_id):
+    """Handle new modlist generation.
 
-    - db is searched for mod and modlist.
-    - if mod is found in list of mods contained in modlist, 
-      delete mod from modlist.
+    Create new modlist and add to DB. Redirect to new modlist page.
+
+    If form not valid, re-present form.
     """
 
-    modlist = db.get_or_404(Modlist, modlist_id, description=f"Sorry, we couldn't find a modlist with ID #{modlist_id}.<br>We either encountered an issue retrieving the data from our database, or the modlist does not exist.<br>Please check that the correct modlist id is being requested and try again.")
+    form = ModlistAddForm()
 
-    is_invalid = check_modlist_uneditable(user_id, modlist, g.user.id)
-    if is_invalid:
-        flash(is_invalid, "danger")
-        return redirect(url_for('show_modlist_page', user_id=user_id, modlist_id=modlist_id))
+    if form.validate_on_submit():
+        next_page = request.args.get('next')
 
-    else:
-        mod = db.get_or_404(Mod, mod_id, description=f"Sorry, we couldn't find a mod with ID #{mod_id}.<br>We either encountered an issue retrieving the data from our database, or the mod does not exist.<br>Please check that the correct mod id is being requested and try again.")
         try:
-            if mod in modlist.mods:
-                modlist.mods.remove(mod)
-            else:
-                flash(f"Can't delete mod from modlist. {mod.name} not found in {modlist.name}.", 'danger')
-                return redirect(url_for('show_modlist_page', user_id=g.user.id, modlist_id=modlist_id))
+            current_modlists = db.session.scalars(db.select(Modlist).where(Modlist.user_id==user_id).order_by(Modlist.name)).all()
 
+            if form.name.data in [modlist.name for modlist in current_modlists]:
+                raise ValueError(f"You already have a modlist named '{form.name.data}', please choose another name.")
+
+            modlist = Modlist.new_modlist(
+                name=form.name.data,
+                description=form.description.data,
+                private=form.private.data,
+                user=g.user
+            )
             db.session.commit()
+
+        except ValueError as e:
+            db.session.rollback()
+            flash(str(e), 'danger')
+            return redirect(url_for('new_modlist', user_id=user_id, form=form, next=next_page))
 
         except Exception as e:
             db.session.rollback()
-            print("Error deleting mod from modlist in db - modlist_delete_mod(): ", e)
-            flash(f"Error removing {mod.name} from {modlist.name}, please try again.", 'danger')
-            return redirect(url_for('show_modlist_page', user_id=g.user.id, modlist_id=modlist_id))
+            print("Error creating modlist: ", e)
+            flash("Modlist was not created due to an error, please try again.", 'danger')
+            return redirect(url_for('new_modlist', user_id=user_id, form=form, next=next_page))
 
-    flash(f'{mod.name} successfully removed from {modlist.name}!', 'success')
-    print(f"modlist.mods: {modlist.mods}")
-    print(f"len(modlist.mods): {len(modlist.mods)}")
-    if len(modlist.mods) <= 0:
-        for game in modlist.for_games:
-            try:
-                print(f"modlist.for_games: {modlist.for_games}")
-                modlist.for_games.remove(game)
-                db.session.commit()
-            except Exception as e:
-                print("Page: modlist_delete_mod, Function: modlist.for_games.remove(game)\nFailed to un-assign modlist's game assignment, error: ", e)
-                abort(500, f"Only mod was removed from modlist, but an error was encountered removing modlist's assignment to {game.name}.<br>Modlist will still only take mods for {game.name}.<br>Options to resolve future issues with this modlist are:<br>1. Add and remove a mod to reattempt game assignment removal<br>2. Delete this modlist and make a new one.")
+        return redirect(next_page or url_for("show_user_page", user_id=g.user.id))
 
-    return redirect(url_for('show_modlist_page', user_id=g.user.id, modlist_id=modlist_id))
+    return render_template('users/modlist-new.html', form=form)
 
-    
+
 ##############################################################################
 # Game routes (& Mod routes):
-
-@app.route('/games/<string:game_domain_name>')
-@login_required
-@get_api_headers
-def show_game_page(game_domain_name, headers=None):
-    """Show game page with mods hosted by Nexus.
-    
-    - Nexus API is called to populate Mod categories on page.
-    -- Mod Categories: Trending, Latest Added, Latest Updated.
-    - Buttons linking to game page on Nexus for further browsing.
-    """
-
-    try:
-        game = get_game_db(game_domain_name)
-    except:
-        description = f"Sorry, an issue was encountered retrieving game information.<br>Please check that the requested game domain name: '{game_domain_name}' matches the one used for this game on Nexus and try again."
-        abort(404, description)
-
-    mod_categories = [
-        {'mod_cat': 'trending', 'section_title':'Trending Mods'}, 
-        {'mod_cat': 'latest_added', 'section_title':'Latest Added Mods'}, 
-        {'mod_cat': 'latest_updated', 'section_title':'Latest Updated Mods'}
-    ]
-
-    for cat in mod_categories:
-        nxs_category = get_mods_of_type_nxs(game, cat['mod_cat'], headers=headers)
-        
-        if nxs_category == "error":
-            cat['error'] = True # displays error message in category area on page
-        else:
-            try:
-                db_ready_data = filter_nxs_data(nxs_category, 'mods')
-                cat['data'] = db_ready_data
-                update_list_mods_db(db_ready_data)
-                link_mods_to_game(db_ready_data, game)
-                db.session.commit()
-
-            except Exception as e:
-                db.session.rollback()
-                print(f"Error func: show_game_page({game_domain_name})\nError detail: {e}")
-
-    return render_template('games/game.html', game=game, mod_categories=mod_categories)
 
 
 @app.route('/games/<string:game_domain_name>/mods/<int:mod_id>')
@@ -881,6 +839,67 @@ def show_mod_page(game_domain_name, mod_id, headers=None):
         tracked_mod_ids = session['tracked_mod_ids']
 
     return render_template('games/mod.html', game=game, mod=page_ready_mod, tracked_mod_ids=tracked_mod_ids)
+
+
+@app.route('/games/<string:game_domain_name>')
+@login_required
+@get_api_headers
+def show_game_page(game_domain_name, headers=None):
+    """Show game page with mods hosted by Nexus.
+    
+    - Nexus API is called to populate Mod categories on page.
+    -- Mod Categories: Trending, Latest Added, Latest Updated.
+    - Buttons linking to game page on Nexus for further browsing.
+    """
+
+    try:
+        game = get_game_db(game_domain_name)
+    except:
+        description = f"Sorry, an issue was encountered retrieving game information.<br>Please check that the requested game domain name: '{game_domain_name}' matches the one used for this game on Nexus and try again."
+        abort(404, description)
+
+    mod_categories = [
+        {'mod_cat': 'trending', 'section_title':'Trending Mods'}, 
+        {'mod_cat': 'latest_added', 'section_title':'Latest Added Mods'}, 
+        {'mod_cat': 'latest_updated', 'section_title':'Latest Updated Mods'}
+    ]
+
+    for cat in mod_categories:
+        nxs_category = get_mods_of_type_nxs(game, cat['mod_cat'], headers=headers)
+        
+        if nxs_category == "error":
+            cat['error'] = True # displays error message in category area on page
+        else:
+            try:
+                db_ready_data = filter_nxs_data(nxs_category, 'mods')
+                cat['data'] = db_ready_data
+                update_list_mods_db(db_ready_data)
+                link_mods_to_game(db_ready_data, game)
+                db.session.commit()
+
+            except Exception as e:
+                db.session.rollback()
+                print(f"Error func: show_game_page({game_domain_name})\nError detail: {e}")
+
+    return render_template('games/game.html', game=game, mod_categories=mod_categories)
+
+
+@app.route('/games')
+def show_all_games_page():
+    """Show list of popular games Nexus hosts mods for, and 
+    an alphabet menu to see list of games starting with that letter.
+    Click a game to go to that game page.
+    """ 
+
+    try:
+        games_list = get_all_games_db()
+    except Exception as e:
+        print("Error getting games from db: ", e)
+        flash("Problem occurred fetching games list, refresh page to reattempt.", 'warning')
+        return render_template('games/all-games.html', games_list=[{'name':"Error"}])
+
+    else:
+        return render_template('games/all-games.html', games_list=games_list)
 
 
 ##############################################################################
@@ -950,24 +969,20 @@ def track_mod(game_domain_name, mod_id, track_action, headers=None):
 def homepage():
     """Show homepage:
 
-    - anon users: sign up pitch page 
-      (must also be signed in to Nexus SSO for API to function)
+    - anon users: show sign up pitch page 
+      (must also be signed in to Nexus SSO or provide personal user 
+      account API key for API to function)
 
-    - logged in: show list of popular games Nexus hosts mods for 
-    """ 
+    - logged in: redirect to user's profile page 
+    """
 
-    if g.user:       
-        try:
-            games_list = get_all_games_db()
-        except Exception as e:
-            print("Error getting games from db: ", e)
-            flash("Problem occurred fetching games list, refresh page to reattempt.", 'warning')
-            return render_template('home.html', games_list=[{'name':"Error"}])
+    if not g.user:
+        return render_template('home-anon.html')
+        
+    empty_modlists = get_empty_modlists(g.user.id)
+    modlists_by_game = get_recent_modlists_by_game(g.user.id)
 
-        else:
-            return render_template('home.html', games_list=games_list)
-
-    return render_template('home-anon.html')
+    return render_template('users/profile-user.html', user=g.user, empty_modlists=empty_modlists, modlists_by_game=modlists_by_game)
 
 
 @app.errorhandler(400)
