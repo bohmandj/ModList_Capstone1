@@ -11,6 +11,11 @@ document.addEventListener('DOMContentLoaded', function () {
             const selectedLetter = this.getAttribute('data-letter');
             gameList.innerHTML = '';
             gameList.style.display = 'none';
+            document.querySelectorAll('.alphabet-menu span').forEach(l => {
+                l.classList.remove('active');
+            });
+
+            this.classList.add('active');
 
             let filteredGames;
             if (selectedLetter === '#') {

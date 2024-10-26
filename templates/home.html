@@ -9,7 +9,7 @@
 {% block content %}
 
 <div class="card-page">
-  <h1>Popular Games on Nexus</h1>
+  <h2>Most Popular Games on Nexus:</h2>
   <ul class="game-section">
     {% for game in games_list[:10] %}
 
@@ -53,7 +53,7 @@
 
   <button id="load-more" class="btn btn-outline-primary load-more-btn">See More Popular Games</button>
 
-  <h2>Search Games by Title</h2>
+  <h2>Search Games by Title:</h2>
   <div class="game-abc">
     <div class="alphabet-menu">
       {% for ltr in ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
@@ -62,7 +62,16 @@
       {% endfor %}
       <span class="alphabet-letter" data-letter="#">#</span>
     </div>
-    <ul class="game-list" style="display: none;"></ul>
+    <div class="shadowed_hr_outer">
+      <div class="shadowed_hr_inner">
+        <hr>
+      </div>
+    </div>
+    <ul class="game-list">
+      <li></li>
+      <li style="margin: 0 auto; text-align: center;">Click a letter to see a list of titles for all games hosted on
+        Nexus!</li>
+    </ul>
   </div>
 
 </div>

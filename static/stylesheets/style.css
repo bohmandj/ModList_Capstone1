@@ -1943,7 +1943,7 @@ form .form-switch .form-check-input {
 }
 
 .card-page .load-more-btn {
-    margin: 20px auto;
+    margin: 0px auto 30px;
 }
 
 /* ============================ Home page Alphabet menu */
@@ -1951,6 +1951,9 @@ form .form-switch .form-check-input {
 .game-abc {
     width: 100%;
     margin: 0 auto;
+    background-color: #202020;
+    border-radius: 20px;
+    padding: 20px;
 }
 
 .game-abc h2 {
@@ -1958,7 +1961,7 @@ form .form-switch .form-check-input {
 }
 
 .game-abc .alphabet-menu {
-    width: 80%;
+    width: 90%;
     margin: 0 auto;
 }
 
@@ -1966,6 +1969,10 @@ form .form-switch .form-check-input {
     font-size: x-large;
     text-decoration: underline;
     margin: 5px;
+}
+
+.alphabet-menu span.active {
+    color: #5170AF;
 }
 
 .game-abc a {
@@ -1988,7 +1995,7 @@ form .form-switch .form-check-input {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     column-gap: 20px;
-    row-gap: 10px;
+    row-gap: 15px;
     width: 100%;
     margin-left: auto;
     margin-right: auto;
