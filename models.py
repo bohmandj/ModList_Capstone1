@@ -1,4 +1,4 @@
-"""SWLAlchemy models for Capstone"""
+"""SQLAlchemy models for Capstone"""
 
 from flask_bcrypt import Bcrypt
 from flask_sqlalchemy import SQLAlchemy
