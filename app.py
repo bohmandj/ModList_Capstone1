@@ -5,7 +5,7 @@ from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 from functools import wraps
 from werkzeug.datastructures import ImmutableDict
-from werkzeug.urls import url_parse
+from urllib.parse import urlparse
 from flask_wtf.csrf import CSRFProtect
 from cryptography.fernet import Fernet
 import requests
@@ -214,8 +214,10 @@ def login():
 
             next_page = request.form.get('next')
 
-            if next_page and url_parse(next_page).netloc == '':
-                return redirect(next_page or url_for('homepage'))
+            if next_page:
+                parsed_url = urlparse(next_page)
+                if parsed_url.netloc == '' or parsed_url.scheme in ['http', 'https']:
+                    return redirect(next_page or url_for('homepage'))
             return redirect(url_for('homepage'))
 
         flash("Invalid credentials.", 'danger')
@@ -331,8 +333,10 @@ def change_keep_tracked_status(mod_id, keep_action):
         description = f"The action '{keep_action}' in the requested url is not valid. Please use 'add' or 'delete' to change whether or not a mod is in the Keep-Tracked tab of your Nexus Tracked Mods modlist."
         abort(400, description)
 
-    if next_page and url_parse(next_page).netloc == '':
-        return redirect(next_page or url_for('show_tracked_modlist_page', tab='tracked-mods'))
+    if next_page:
+        parsed_url = urlparse(next_page)
+        if parsed_url.netloc == '' or parsed_url.scheme in ['http', 'https']:
+            return redirect(next_page or url_for('show_tracked_modlist_page', tab='tracked-mods'))
     return redirect(url_for('show_tracked_modlist_page', tab='tracked-mods'))
 
 
@@ -627,8 +631,10 @@ def new_modlist():
             flash("Modlist was not created due to an error, please try again.", 'danger')
             return render_template('users/modlist-new.html', form=form, next=next_page)
 
-        if next_page and url_parse(next_page).netloc == '':
-            return redirect(next_page or url_for("show_user_page", user_id=g.user.id))
+        if next_page:
+            parsed_url = urlparse(next_page)
+            if parsed_url.netloc == '' or parsed_url.scheme in ['http', 'https']:
+                return redirect(next_page or url_for("show_user_page", user_id=g.user.id))
         return redirect(url_for("show_user_page", user_id=g.user.id))
 
     return render_template('users/modlist-new.html', form=form)
