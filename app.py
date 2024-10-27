@@ -757,18 +757,6 @@ def delete_user():
         db.session.rollback()
         print("Error deleting user from db - delete_user(): \n", e, "\nAttempting asset deletion before user deletion.")
 
-        user = db.session.execute(
-            db.select(User)
-            .options(db.selectinload(User.modlists))
-            .where(User.id == g.user.id)
-        ).scalars().first()
-    
-        if not user:
-            flash("User not deleted. An error was encountered attempting to locate user data. Please try again.", "danger")
-            return redirect(url_for("homepage"))
-
-        username = user.username
-
         try:
             # Clear all assets associated with the user from the db
             for modlist in user.modlists:
