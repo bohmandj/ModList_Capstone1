@@ -163,12 +163,13 @@ def signup():
                 flash("Email already used - each email can only be used on one account", 'danger')
             return render_template('users/signup.html', form=form)
 
-        Modlist.new_modlist(
+        modlist = Modlist.new_modlist(
             name='Nexus Tracked Mods', 
             description="This modlist automatically populates with all the mods in your Nexus account's Tracking Centre.", 
             private=True,
             user=user
         )
+        db.session.add(modlist)
         db.session.commit()
 
         return redirect(url_for('login'))
@@ -618,6 +619,7 @@ def new_modlist():
                 private=form.private.data,
                 user=g.user
             )
+            db.session.add(modlist)
             db.session.commit()
 
         except ValueError as e:

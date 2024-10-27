@@ -178,7 +178,7 @@ class Modlist(db.Model):
                 private=private,
                 user=user
             )
-        db.session.add(modlist)
+        return modlist
 
     def __repr__(self):
         return f'<ModList #{self.id}: "{self.name}", by {self.user.username}>'
