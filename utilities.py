@@ -596,6 +596,25 @@ def add_mod_modlist_choices(user_id, mod):
     return return_obj
 
 
+def flash_modlist_action_messages(mod_name, successfully_added, unowned_modlists, already_in_modlists, encountered_error):
+    """Helper function to flash messages for modlist actions.
+    Args:
+        mod_name (str): Name of the mod being added.
+        successfully_added (list): List of modlist names where the mod was successfully added.
+        unowned_modlists (list): List of modlist names not owned by the user.
+        already_in_modlists (list): List of modlist names where the mod already exists.
+        encountered_error (list): List of modlist names where an error occurred.
+    """
+    if successfully_added:
+        flash(f"{mod_name} was successfully added to: {', '.join(successfully_added)}.", "success")
+    if unowned_modlists:
+        flash(f"Mod '{mod_name}' can only be added to your own modlists. Not added to: {', '.join(unowned_modlists)}.", "danger")
+    if already_in_modlists:
+        flash(f"{mod_name} already exists in: {', '.join(already_in_modlists)}.", "danger")
+    if encountered_error:
+        flash(f"An error occurred while saving '{mod_name}' to: {', '.join(encountered_error)}. Please try again.", "danger")
+
+
 def get_recent_modlists_by_game(user_id):
     """Get list of user's modlists ordered by last_updated
     and grouped by game. Also indicates privacy status of all 

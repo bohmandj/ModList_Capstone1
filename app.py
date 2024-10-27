@@ -13,7 +13,7 @@ from forms import RegisterForm, LoginForm, UserEditForm, UserPasswordForm, Modli
 from models import db, connect_db, User, Modlist, Mod, Game
 
 from nexus_api import get_all_games_nxs, get_mods_of_type_nxs, get_mod_nxs, endorse_mod_nxs, track_mod_nxs
-from utilities import get_all_games_db, get_game_db, get_empty_modlists, get_tracked_modlist_db, get_recent_modlists_by_game, get_public_modlists_by_game, filter_nxs_data, filter_nxs_mod_page, update_all_games_db, update_list_mods_db, link_mods_to_game, add_mod_modlist_choices, check_modlist_uneditable, update_tracked_mods_from_nexus, get_tracked_not_keep_db, paginate_tracked_mods, paginate_modlist_mods
+from utilities import get_all_games_db, get_game_db, get_empty_modlists, get_tracked_modlist_db, get_recent_modlists_by_game, get_public_modlists_by_game, filter_nxs_data, filter_nxs_mod_page, update_all_games_db, update_list_mods_db, link_mods_to_game, add_mod_modlist_choices, flash_modlist_action_messages, check_modlist_uneditable, update_tracked_mods_from_nexus, get_tracked_not_keep_db, paginate_tracked_mods, paginate_modlist_mods
 
 CURR_USER_KEY = "curr_user"
 ORDER = "update"
@@ -530,33 +530,41 @@ def modlist_add_mod(mod_id):
 
         modlist_ids = form.users_modlists.data
 
-        for id in modlist_ids:
 
-            modlist = db.get_or_404(Modlist, id, description=f"Sorry, we couldn't find a modlist with ID #{id}.<br>We either encountered an issue retrieving the data from our database, or the modlist does not exist.<br>Please check that the correct modlist id is being requested and try again.")
-            game = db.get_or_404(Game, mod.for_games[0].id, description=f"Sorry, we couldn't find a game with ID #{mod.for_games[0].id}.<br>We either encountered an issue retrieving the data from our database, or the game does not exist.<br>Please check that the correct game id is being requested and try again.")
+        unowned_modlists = []
+        already_in_modlists = []
+        successfully_added = []
+        encountered_error = []
+
+        modlists = db.session.scalars(db.select(Modlist).where(Modlist.id.in_(modlist_ids))).all()
+        for modlist in modlists:
             
             if modlist.user_id != g.user.id:
-                flash("Mod can only be added to modlists owned by the currently signed in user.", "danger")
-                return redirect(url_for('show_mod_page', game_domain_name=mod.for_games[0].domain_name, mod_id=mod_id))
+                unowned_modlists.append(f"'{modlist.name}'")
+                continue
 
             if mod in modlist.mods:
-                flash(f"Can't add mod to modlist. {mod.name} already in {modlist.name}.", 'danger')
-                return redirect(url_for('show_mod_page', game_domain_name=mod.for_games[0].domain_name, mod_id=mod_id))
+                already_in_modlists.append(f"'{modlist.name}'")
+                continue
 
             try:
                 modlist.mods.append(mod)
                 modlist.mark_nsfw_if_nsfw(mod)
-                modlist.assign_modlist_for_games(game)
+                for game in mod.for_games:
+                    game = db.get_or_404(Game, game.id, description=f"Sorry, we couldn't find a game with ID #{game.id}.<br>We either encountered an issue retrieving the data from our database, or the game does not exist.<br>Please check that the correct game id is being requested and try again.")
+                    modlist.assign_modlist_for_games(game)
                 modlist.update_mlist_tstamp()
 
                 db.session.commit()
 
             except Exception as e:
                 db.session.rollback()
-                print("Error adding mod to modlist in db - modlist_add_mod(): ", e)
-                flash(f"Error saving {mod.name} to {modlist.name}, please try again.", 'danger')
+                print(f"Error adding mod to modlist in db - modlist_add_mod():  {e}\nError context: mod.name: {mod.name}; modlist.name: {modlist.name}")
+                encountered_error.append(f"'{modlist.name}'")
+            
+            successfully_added.append(modlist.name)
 
-            flash(f"{mod.name} successfully added to {modlist.name}!", "success")
+        flash_modlist_action_messages(mod.name, successfully_added, unowned_modlists, already_in_modlists, encountered_error)
 
         return redirect(url_for('show_mod_page', game_domain_name=mod.for_games[0].domain_name, mod_id=mod_id))
 
