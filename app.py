@@ -619,13 +619,13 @@ def new_modlist():
         except ValueError as e:
             db.session.rollback()
             flash(str(e), 'danger')
-            return redirect(url_for('new_modlist', user_id=g.user.id, form=form, next=next_page))
+            return render_template('users/modlist-new.html', form=form, next=next_page)
 
         except Exception as e:
             db.session.rollback()
             print("Error creating modlist: ", e)
             flash("Modlist was not created due to an error, please try again.", 'danger')
-            return redirect(url_for('new_modlist', user_id=g.user.id, form=form, next=next_page))
+            return render_template('users/modlist-new.html', form=form, next=next_page)
 
         if next_page and url_parse(next_page).netloc == '':
             return redirect(next_page or url_for("show_user_page", user_id=g.user.id))
@@ -687,7 +687,7 @@ def edit_profile():
                 flash("Username already taken, please try again with a different username.", 'danger')
             if e.__cause__.diag.constraint_name == "users_email_key":
                 flash("Email already used - each email can only be used on one account", 'danger')
-            redirect(url_for('edit_profile'))
+            return redirect(url_for('edit_profile'))
 
         flash(f"Success! Edits to {form.username.data} saved.", 'success')
 
@@ -718,7 +718,7 @@ def edit_password():
 
         if form.new_password.data != form.new_confirm.data:
             flash("New password and confirmation password did not match. Please try again.", 'danger')
-            return redirect(url_for('edit_password', form=form, user=g.user))
+            return render_template('users/password.html', form=form, user=g.user)
 
         try:
             hashed_password = user.hash_new_password(form.new_password.data)
@@ -728,7 +728,7 @@ def edit_password():
             db.session.rollback()
             print("Page: edit_password\nFunction: hash_new_password()\n;Error making/committing new hashed password to db, error: ", e)
             flash("Error saving new password. Please try again.", 'danger')
-            return redirect(url_for('edit_password', form=form, user=g.user))
+            return render_template('users/password.html', form=form, user=g.user)
 
         flash("Success! New password saved.", 'success')
 
