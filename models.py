@@ -15,86 +15,6 @@ db = SQLAlchemy(model_class=Base)
 ###########################################################
 # Association Tables:
 
-#Connection of a user to the user profiles they follow.
-follow_user = db.Table(
-    
-    'follow_user',
-
-    db.Column(
-        'user_id', 
-        db.ForeignKey('users.id'), 
-        primary_key=True
-    ),
-        
-    db.Column(
-        'followed_profile_id', 
-        db.ForeignKey('users.id'), 
-        primary_key=True
-    ),
-)
-
-
-#Connection of a user to the modlists they follow.
-follow_modlist = db.Table(
-    
-    'follow_modlist',
-
-    db.Column(
-        'user_id', 
-        db.ForeignKey('users.id'), 
-        primary_key=True
-    ),
-        
-    db.Column(
-        'modlist_id', 
-        db.ForeignKey('modlists.id'), 
-        primary_key=True
-    ),
-)
-
-
-#Connection of a mod to the mods it conflicts 
-#with and should not be installed together.
-mod_conflicts = db.Table(
-    
-    'mod_conflicts',
-
-    db.Column( 
-        'conflicting_mod_id', 
-        db.Integer,
-        db.ForeignKey('mods.id'), 
-        primary_key=True
-    ),
-        
-    db.Column( 
-        'conflicted_mod_id', 
-        db.Integer,
-        db.ForeignKey('mods.id'), 
-        primary_key=True
-    ),
-)
-
-
-#Connection of a mod to the mods required 
-#for it to function.
-mod_requirements = db.Table(
-    
-    'mod_requirements',
-
-    db.Column(
-        'mod_id', 
-        db.ForeignKey('mods.id'), 
-        primary_key=True
-    ),
-        
-    db.Column(
-        'required_mod_id', 
-        db.ForeignKey('mods.id'), 
-        primary_key=True
-    ),
-)
-
-
 #Connection of a user to the mods they want to put in the 'Keep Tracked' 
 #section of their 'Tracked on Nexus' modlist.
 keep_tracked = db.Table(
@@ -183,38 +103,6 @@ game_modlist = db.Table(
     )
 )
 
-###########################################################
-# Association Object:
-
-# !!!! Do not attempt to read AND write in same transaction. 
-# Changes on one will not show up in another until the 
-# Session is expired, which normally occurs automatically 
-# after Session.commit(). !!!!
-
-# Connection of a modlist to the mods it contains.
-# Also retains user's notes for this mod in this list.
-class User_Mod_Notes(db.Model):
-
-    __tablename__ = 'user_mod_connection'
-
-    user_id: Mapped[int] = mapped_column(
-        db.ForeignKey('users.id'), 
-        primary_key=True
-    )
-    mod_id: Mapped[int] = mapped_column(
-        db.ForeignKey('mods.id'), 
-        primary_key=True,
-        autoincrement=False
-    )
-
-    notes: Mapped[str] = mapped_column(db.Text, default='')
-
-    # association between User_Mod_Notes -> Mod
-    mod: Mapped['Mod'] = db.relationship(back_populates='user_mod_notes')
-
-    # association between User_Mod_Notes -> Modlist
-    user: Mapped['User'] = db.relationship(back_populates='user_mod_notes')
-
 
 ###########################################################
 # Model Classes:
@@ -269,12 +157,6 @@ class Modlist(db.Model):
         secondary=game_modlist,
         back_populates='subject_of_modlists',
         passive_deletes=True
-    )
-
-    # users that follow this modlist
-    followers: Mapped[List['User']] = db.relationship(
-        secondary=follow_modlist, 
-        back_populates='followed_modlists'
     )
 
     def update_mlist_tstamp(self):
@@ -347,95 +229,6 @@ class Mod(db.Model):
         passive_deletes=True
     )
 
-    # List of Users who have taken notes on this mod, 
-    #   bypassing the `User_Mod_Notes` class
-    users_with_notes: Mapped[List['User']] = db.relationship(
-        secondary='user_mod_connection', 
-        back_populates='mods_with_notes',
-        viewonly=True
-    )
-
-    # List of 'User_Mod_Notes' objects for 
-    #   User -> User_Mod_Notes -> Mod associated with this mod 
-    # Each 'User_Mod_Notes' contains 'notes' by 'user' about 'mod'
-    user_mod_notes: Mapped[List['User_Mod_Notes']] = db.relationship(
-        back_populates='mod'
-    )
-    
-    required_mods: Mapped[List['Mod']] = db.relationship(
-        'Mod',
-        secondary='mod_requirements',
-        primaryjoin='Mod.id==mod_requirements.c.mod_id', 
-        secondaryjoin='Mod.id==mod_requirements.c.required_mod_id', 
-        back_populates='mods_that_require_this',
-    )
-    
-    mods_that_require_this: Mapped[List['Mod']] = db.relationship(
-        'Mod',
-        secondary='mod_requirements',
-        primaryjoin='Mod.id==mod_requirements.c.required_mod_id', 
-        secondaryjoin='Mod.id==mod_requirements.c.mod_id', 
-        back_populates='required_mods',
-    )
-    
-    conflicting_mods: Mapped[List['Mod']] = db.relationship(
-        'Mod',
-        secondary='mod_conflicts',
-        primaryjoin='Mod.id==mod_conflicts.c.conflicted_mod_id', 
-        secondaryjoin='Mod.id==mod_conflicts.c.conflicting_mod_id', 
-        back_populates='conflicted_mods',
-    )
-
-    conflicted_mods: Mapped[List['Mod']] = db.relationship(
-        'Mod',
-        secondary='mod_conflicts',
-        primaryjoin='Mod.id==mod_conflicts.c.conflicting_mod_id', 
-        secondaryjoin='Mod.id==mod_conflicts.c.conflicted_mod_id', 
-        back_populates='conflicting_mods',
-    )
-
-    def check_conflicts(self, mlist_dot_mods):
-        """Does this mod conflict with any mods in `mlist_dot_mods`? 
-        
-        Returns list of mods: [{mod},{mod}] or None
-        """
-        con_mods = []
-
-        if self.conflicted_mods:
-            con_mods = [mod for mod in self.conflicted_mods if mod in mlist_dot_mods]
-        if self.conflicting_mods:
-            con_mods.extend([mod for mod in self.conflicting_mods if mod in mlist_dot_mods and mod not in con_mods])
-
-        if len(con_mods) >= 1:
-            return con_mods
-
-        return None
-
-    def check_requirements(self, mlist_dot_mods):
-        """Does this list have all the requirements stored for this mod?
-        
-        Returns list of required mods not in the list: [{mod},{mod}] or None
-        """
-
-        if self.required_mods:
-            req_mods = [mod for mod in self.required_mods if mod not in mlist_dot_mods]
-
-            if len(req_mods) >= 1:
-                return req_mods
-
-        return None
-
-    def get_notes_by(self, author):
-        """Returns 'notes' str from User_Mod_Notes obj associated 
-        with both this mod and author(user)"""
-
-        if self.user_mod_notes:
-            notes = [(UMNote.notes for UMNote in self.user_mod_notes if UMNote.user == author)]
-
-            return notes[0]
-        
-        return None
-
     def __repr__(self):
         if len(self.for_games) > 0:
             for_game = f' for "{self.for_games[0].name}"'
@@ -501,16 +294,6 @@ class User(db.Model):
 
     password: Mapped[str] = mapped_column(db.Text)
 
-    is_admin: Mapped[bool] = mapped_column(
-        db.Boolean, 
-        default=False
-    )
-
-    is_moderator: Mapped[bool] = mapped_column(
-        db.Boolean, 
-        default=False
-    )
-
     hide_nsfw: Mapped[bool] = mapped_column(
         db.Boolean, 
         default=True
@@ -523,87 +306,11 @@ class User(db.Model):
         passive_deletes=True,
     )
 
-    # modlists the user follows
-    followed_modlists: Mapped[List['Modlist']] = db.relationship(
-        secondary='follow_modlist',
-        back_populates='followers'
-    )
-
-    # List of Mods user has taken notes about, bypassing the `User_Mod_notes` class
-    mods_with_notes: Mapped[List['Mod']] = db.relationship(
-        secondary='user_mod_connection', 
-        back_populates='users_with_notes',
-        viewonly=True
-    )
-
-    # List of 'User_Mod_Notes' objects for 
-    #   User -> User_Mod_Notes -> Mod associated with this user 
-    # Each 'User_Mod_Notes' contains 'notes' by 'user' about 'mod'
-    user_mod_notes: Mapped[List['User_Mod_Notes']] = db.relationship(
-        back_populates='user'
-    )
-
     #  mods user is actually using Nexus Tracking for
     keep_tracked = db.relationship(
         'Mod',
         secondary='keep_tracked'
     )
-
-    # profiles this user follows
-    followed_profiles: Mapped[List["User"]] = db.relationship(
-        'User',
-        secondary='follow_user',
-        primaryjoin=(follow_user.c.user_id == id),
-        secondaryjoin=(follow_user.c.followed_profile_id == id), 
-        back_populates='followers',
-    )
-
-    # profiles that follow this user
-    followers = db.relationship(
-        'User',
-        secondary='follow_user',
-        primaryjoin=(follow_user.c.followed_profile_id == id),
-        secondaryjoin=(follow_user.c.user_id == id), 
-        back_populates='followed_profiles',
-    )
-
-    def is_followed_by_profile(self, profile):
-        """Is this user followed by `profile`? Returns bool"""
-
-        found_users = []
-
-        found_users = [user for user in self.followers if user == profile]
-
-        return len(found_users) == 1
-
-    def is_following_profile(self, profile):
-        """Is this user following 'profile'? Returns bool"""
-
-        found_users = []
-
-        found_users = [user for user in self.followed_profiles if user == profile]
-        
-        return len(found_users) == 1
-
-    def is_following_modlist(self, modlist):
-        """Is this user following 'modlist'? Returns bool"""
-
-        found_modlists = []
-
-        found_modlists = [mlist for mlist in self.followed_modlists if mlist == modlist]
-        
-        return len(found_modlists) == 1
-
-    def get_notes_for(self, mod):
-        """Returns 'notes' str from User_Mod_Notes obj associated 
-        with both this mod and author(user)"""
-
-        if self.user_mod_notes:
-            notes = [(UMNotes.notes for UMNotes in self.user_mod_notes if UMNotes.mod == mod)]
-
-            return notes[0]
-        
-        return None
 
     def hash_new_password(cls, password):
         """Save a new password to the user's data in db.
