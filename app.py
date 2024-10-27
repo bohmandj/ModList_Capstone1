@@ -732,7 +732,7 @@ def edit_password():
 
         flash("Success! New password saved.", 'success')
 
-        return redirect(f'/users/{g.user.id}')
+        return redirect(url_for('show_user_page', user_id=g.user.id))
 
     return render_template('users/password.html', form=form, user=g.user)
 
