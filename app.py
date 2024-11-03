@@ -157,10 +157,14 @@ def signup():
 
         except IntegrityError as e:
             db.session.rollback()
-            if e.__cause__.diag.constraint_name == "users_username_key":
-                flash("Username already taken", 'danger')
-            if e.__cause__.diag.constraint_name == "users_email_key":
-                flash("Email already used - each email can only be used on one account", 'danger')
+            if hasattr(e.__cause__, 'diag') and e.__cause__.diag.constraint_name:
+                constraint_name = e.__cause__.diag.constraint_name
+                if constraint_name == "users_username_key":
+                    flash("Username already taken", 'danger')
+                elif constraint_name == "users_email_key":
+                    flash("Email already used - each email can only be used on one account", 'danger')
+            else:
+                flash("An error occurred. Please try again.", 'danger')
             return render_template('users/signup.html', form=form)
 
         modlist = Modlist.new_modlist(
