@@ -93,7 +93,7 @@ def get_api_headers(f):
 
 
 ##############################################################################
-# User signup/login/logout
+# User signup / login / extra login functions / logout
 
 @app.before_request
 def add_user_to_g():
@@ -115,6 +115,35 @@ def do_login(user):
     or db update."""
 
     session[CURR_USER_KEY] = user.id
+
+
+def do_api_key_encryption(user_api_key):
+    """Encrypt user's Nexus personal API key provided 
+    at login and add to session"""
+
+    encrypted_api_key = cipher_suite.encrypt(user_api_key.encode())
+    session['user_api_key'] = encrypted_api_key
+
+
+def do_games_list_update(headers):
+    """Use list of all games from Nexus API 
+    to update all Games in db"""
+
+    try:
+        nexus_games = get_all_games_nxs(headers=headers)
+        db_ready_games = filter_nxs_data(nexus_games, 'games')
+        update_all_games_db(db_ready_games)
+    except:
+        flash("Problem occurred refreshing games list from Nexus.\nDisplayed games list may be out of date or incomplete.\nLog out and back in to reattempt.", "danger")
+
+
+def do_tracked_mods_update(user, headers):
+    """Use mods from Nexus Tracking Centre to update 
+    user's Nexus Tracked Mods modlist and add 
+    list of tracked mod ids to session"""
+
+    tracked_mod_ids = update_tracked_mods_from_nexus(user.id, headers=headers)
+    session['tracked_mod_ids'] = tracked_mod_ids
 
 
 def do_logout():
@@ -197,25 +226,13 @@ def login():
 
         if user:
             do_login(user)
-
-            user_api_key = form.user_api_key.data
-            encrypted_api_key = cipher_suite.encrypt(user_api_key.encode())
-            session['user_api_key'] = encrypted_api_key
-            headers = {'apikey': user_api_key}
-
             flash(f"Hello, {user.username}! Welcome back.", "success")
 
-            # use list of all games from Nexus API to update all Games in db
-            try:
-                nexus_games = get_all_games_nxs(headers=headers)
-                db_ready_games = filter_nxs_data(nexus_games, 'games')
-                update_all_games_db(db_ready_games)
-            except:
-                flash("Problem occurred refreshing games list from Nexus.\nDisplayed games list may be out of date or incomplete.\nLog out and back in to reattempt.", "danger")
-
-            # use mods from Nexus Tracking Centre to update user's Nexus Tracked Mods modlist
-            tracked_mod_ids = update_tracked_mods_from_nexus(user.id, headers=headers)
-            session['tracked_mod_ids'] = tracked_mod_ids
+            user_api_key = form.user_api_key.data
+            headers = {'apikey': user_api_key}
+            do_api_key_encryption(user_api_key)
+            do_games_list_update(headers)
+            do_tracked_mods_update(user, headers)
 
             next_page = request.form.get('next')
 
