@@ -128,6 +128,7 @@
 
                     <div class="mod-buttons">
                         <div class="buttons-subset">
+                            {% if g.user %}
                             <a href="{{ url_for('modlist_add_mod', user_id=g.user.id, mod_id=mod.id) }}"
                                 title="Add {{mod.name}} to one of your modlist" class="btn btn-outline-primary btn-sm">
                                 Add Mod to ModList
@@ -142,7 +143,8 @@
                                     Remove from ModList
                                 </button>
                             </form>
-                            {% endif %}
+                            {% endif %}{# ends 'if user.id == g.user.id' #}
+                            {% endif %}{# ends 'if g.user' #}
                         </div>
                         <div class="buttons-subset">
                             <a href="https://www.nexusmods.com/{{modlist.for_games[0].domain_name}}/mods/{{mod.id}}"
