@@ -36,7 +36,12 @@
           title="Go to {{index.game.name}} game page on Modlist">
           <h3 class="game-section-title">{{ index.game.name }}</h3>
         </a>
-        <div class="section-buttons"></div>
+        <div class="section-buttons">
+          <a href="https://www.nexusmods.com/{{ index.game.domain_name }}" target="_blank" rel="noopener noreferrer"
+            title="Go to Nexus to search and browse all mods for {{index.game.name}}" class="btn btn-outline-nexus">
+            Open {{ index.game.name}} on Nexus
+          </a>
+        </div>
       </div>
 
       <div class="games-modlists">
