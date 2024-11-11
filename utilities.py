@@ -222,7 +222,7 @@ def paginate_modlist_mods(user_id, modlist_id, page=1, per_page=25, order='updat
         order = Mod.updated_timestamp.desc()
 
     stmt = (
-        db.session.query(Mod)
+        db.select(Mod)
         .join(modlist_mod)
         .filter(modlist_mod.c.modlist_id == modlist_id)
         .order_by(order)
