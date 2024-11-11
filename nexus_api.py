@@ -93,7 +93,6 @@ def get_mod_nxs(game_domain_name, mod_id, headers=None):
 
     try:
         res = requests.get(url, headers=headers)
-        print("RES from API: ", res.json())
         res.raise_for_status()
     except requests.exceptions.HTTPError as e:
         print("Page: Mod page, Function: get_mod_nxs()\nFailed to retrieve Nexus API data, error: ", e)
@@ -120,7 +119,6 @@ def get_tracked_mods_nxs(headers=None):
     Example returned mod data:
     [{'mod_id': int, 'domain_name': str}]
     """
-    print(f"headers: {headers}")
 
     url = f'{base_url}/v1/user/tracked_mods.json'
 
@@ -133,7 +131,6 @@ def get_tracked_mods_nxs(headers=None):
         raise e
 
     tracked_mods = res.json()
-    print("response headers: ", res.headers)
 
     return tracked_mods
 

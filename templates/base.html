@@ -7,7 +7,6 @@
 
   <link rel="stylesheet" href="https://unpkg.com/bootstrap/dist/css/bootstrap.css">
   <script src="https://unpkg.com/jquery"></script>
-  <!-- <script src="https://unpkg.com/popper"></script> -->
   <script src="https://unpkg.com/bootstrap"></script>
   <script src="{{ url_for('static', filename='js/base.js') }}"></script>
   {% block script %}{% endblock %}
@@ -60,7 +59,7 @@
     </div>
   </nav>
 
-  <div class="content-container"> <!-- main body content populated by jinja -->
+  <div class="content-container">
     {% for category, message in get_flashed_messages(with_categories=True) %}
     <div class="alert alert-{{ category }} alert-dismissible">
       {{ message }}

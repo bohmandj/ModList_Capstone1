@@ -186,7 +186,6 @@ def paginate_tracked_mods(user_id, page=1, per_page=25, order='update', tab='tra
         tracked_modlist = get_tracked_modlist_db(user_id, load_mods=False)
 
     if tab == 'keep-tracked-mods':
-        # Query to get the keep tracked mods
         mods_stmt = (
             db.select(Mod)
             .join(keep_tracked)
@@ -367,7 +366,6 @@ def update_tracked_mods_from_nexus(user_id, headers=None):
 
     try:
         nexus_tracked_data = get_tracked_mods_nxs(headers=headers)
-        print(f"nexus_tracked_data in update_tracked_mods_from_nexus(): {nexus_tracked_data[:5]}")
         unpublished_ids = add_missing_tracked_mods_db(user_id, nexus_tracked_data, headers=headers)
     except Exception as e:
         print("Page: login() or Tracked Mods page\nFunction:\n____get_tracked_mods_nxs(), or\n____add_missing_tracked_mods_db()\n____in update_tracked_mods_from_nexus()\nFailed to retrieve Nexus API data, error: ", e)
@@ -375,7 +373,6 @@ def update_tracked_mods_from_nexus(user_id, headers=None):
     else:
         try:
             tracked_mod_ids = sync_tracked_modlist_mods_db(user_id, nexus_tracked_data, unpublished_ids)
-            print(f"tracked_mod_ids in update_tracked_mods_from_nexus(): {tracked_mod_ids}")
         except Exception as e:
             print('sync_tracked_modlist_mods_db() Error:\n  ', e)
             flash(f"An error was encountered syncing mods in your Nexus Tracked Mods modlist to the official Nexus Tracking Centre records.  \nIf mods displayed in your Nexus Tracked Mods modlist are inaccurate, click 'Re-Sync with Nexus Tracking Centre' button to reattempt sync.", "warning")

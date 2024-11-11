@@ -279,7 +279,6 @@ def show_tracked_modlist_page(tab='tracked-mods', page=1, per_page=25, order="up
     Mod display order takes 'order' arguments from the query string - 'author' or 'name' valid, otherwise mods display most recently updated first.
     Pagination takes 'page' and 'per_page' arguments from the query string.
     """
-    print(f"headers 361: {headers}")
 
     if tab == 'tracked-sync':
         tracked_mod_ids = update_tracked_mods_from_nexus(g.user.id, headers=headers)
@@ -374,7 +373,7 @@ def show_modlist_page(user_id, modlist_id, page=1, per_page=25, order="update"):
     Mod display order takes 'order' arguments from the query string - 'author' or 'name' valid, otherwise mods display most recently updated first.
     Pagination takes 'page' and 'per_page' arguments from the query string.
     """
-    print("SHOW_MODLIST_PAGE STARTED")
+
     modlist = db.get_or_404(Modlist, modlist_id, description=f"Sorry, we couldn't find modlist #{modlist_id}.<br>We either encountered an issue retrieving the data from our database, or the modlist does not exist.<br>Please try again or use a different modlist.")
 
     user = db.get_or_404(User, user_id, description=f"Sorry, we couldn't find user #{user_id}.<br>We either encountered an issue retrieving the data from our database, or the user does not exist.<br>Please try again or use a different user.")
@@ -390,7 +389,6 @@ def show_modlist_page(user_id, modlist_id, page=1, per_page=25, order="update"):
     else:
         hide_nsfw = g.user.hide_nsfw
     
-    print("SHOW_MODLIST_PAGE About to return users/modlist.html")
     return render_template('users/modlist.html', page_mods=page_mods, page=page, per_page=per_page, order=order, user=user, modlist=modlist, hide_nsfw=hide_nsfw)
 
 
@@ -429,12 +427,10 @@ def modlist_delete_mod(modlist_id, mod_id):
             return redirect(url_for('show_modlist_page', user_id=modlist.user_id, modlist_id=modlist_id))
 
     flash(f'{mod.name} successfully removed from {modlist.name}!', 'success')
-    print(f"modlist.mods: {modlist.mods}")
-    print(f"len(modlist.mods): {len(modlist.mods)}")
+    
     if len(modlist.mods) <= 0:
         for game in modlist.for_games:
             try:
-                print(f"modlist.for_games: {modlist.for_games}")
                 modlist.for_games.remove(game)
                 db.session.commit()
             except Exception as e:
@@ -1061,17 +1057,3 @@ def unprocessable_entity(error):
 def internal_server_error(error):
     message = "The server encountered an internal error and was unable to complete your request.<br>Either the server is overloaded or there is an error in the application."
     return render_template('errors/http-error.html', error=error, error_message=message), 500
-
-
-##############################################################################
-# Turn off all caching in Flask
-#   (useful for dev; in production handled elsewhere)
-@app.after_request
-def add_header(req):
-    """Add non-caching headers on every request."""
-
-    req.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-    req.headers["Pragma"] = "no-cache"
-    req.headers["Expires"] = "0"
-    req.headers['Cache-Control'] = 'public, max-age=0'
-    return req
