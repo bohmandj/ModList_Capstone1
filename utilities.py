@@ -248,7 +248,8 @@ def add_missing_tracked_mods_db(user_id, nexus_tracked_data, headers=None):
     Returns list of unpublished ids that should not get sync'd 
     in user's modlist.
     """
-    current_tracked_ids = get_tracked_mods_db(user_id, just_ids=True)
+
+    all_mod_ids_in_db = set(db.session.execute(db.select(Mod.id)).scalars().all())
 
     nexus_tracked_ids_by_game = group_nexus_tracked_by_game(nexus_tracked_data)
 
@@ -263,7 +264,7 @@ def add_missing_tracked_mods_db(user_id, nexus_tracked_data, headers=None):
         nexus_data_to_add = []
 
         for id in nexus_tracked_ids_by_game[domain_name]:
-            if id not in current_tracked_ids:
+            if id not in all_mod_ids_in_db:
                 try:
                     sleep(sleep_interval)
                     new_nexus_data = get_mod_nxs(domain_name, id, headers=headers)
