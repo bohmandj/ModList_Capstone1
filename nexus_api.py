@@ -1,7 +1,6 @@
 import requests
 from flask import abort, flash, session
 from flask_sqlalchemy import SQLAlchemy
-from secretkeys import nexus_api_key
 from app import db
 from models import User, Modlist, Mod, Game
 
