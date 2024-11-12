@@ -23,15 +23,16 @@ PER_PAGE = "25"
 app = Flask(__name__)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = (
-    os.environ.get('DATABASE_URL', 'postgresql:///modlist_db'))
+    os.environ.get('SUPABASE_DB_URL', 'postgresql:///modlist_db'))
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ECHO'] = False
-app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = True
+app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', "it's a secret")
 app.config['WTF_CSRF_ENABLED'] = True
+app.config["SQLALCHEMY_ENGINE_OPTIONS"] = { "pool_pre_ping": True, }
 csrf = CSRFProtect(app)
-toolbar = DebugToolbarExtension(app)
+# toolbar = DebugToolbarExtension(app)
 
 connect_db(app)
 with app.app_context():
