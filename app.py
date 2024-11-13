@@ -1058,3 +1058,9 @@ def unprocessable_entity(error):
 def internal_server_error(error):
     message = "The server encountered an internal error and was unable to complete your request.<br>Either the server is overloaded or there is an error in the application."
     return render_template('errors/http-error.html', error=error, error_message=message), 500
+
+
+
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 10000))
+    app.run(host='0.0.0.0', port=port)
